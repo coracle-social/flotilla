@@ -21,7 +21,7 @@ import {command, writer} from "@app/core/domain"
 import {removeTrustedRelay} from "@app/core/settings"
 import {registerRetention} from "@app/core/database"
 import {pullAndListen, registerSync, syncApplicationData, syncEach} from "@app/core/sync"
-import {optInSpaceNotifications} from "@app/features/push"
+import {optInSpaceNotifications} from "@app/tools/push/actions"
 import {syncedSpaceUrls} from "@app/navigation/history"
 import {publishRoomList} from "@app/features/spaces/rooms/lists"
 

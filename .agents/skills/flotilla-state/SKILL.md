@@ -373,7 +373,7 @@ Settings are an encrypted app-data event with d-tag `flotilla/settings`, read th
 
 A preference that should follow the user across devices goes in `SettingsValues` and
 `defaultSettings`. One that belongs to a device goes in a `kv` store, as push, sound and badge do
-in `notificationSettings` (`@app/features/push`). Per-space alert preferences are published (`alerts`); the device's
+in `alertSettings` (`@app/tools/alerts/settings`). Per-space alert preferences are published (`alerts`); the device's
 push permission is not.
 
 `checked`, the read markers behind badges, lives in `kv`, and `syncCheckedRemote` mirrors it to

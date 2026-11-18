@@ -16,7 +16,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {badgesSupported} from "@app/shell/badges"
   import {alertSettings} from "@app/tools/alerts/settings"
-  import {saveAlertSettings} from "@app/features/push"
+  import {saveAlertSettings} from "@app/tools/push/actions"
 
   const showSound = !Capacitor.isNativePlatform()
 

@@ -15,7 +15,7 @@ export type RelaySubscription = {
   ignore: Filter[]
 }
 
-export const diffRelaySubscriptions = (
+const diffRelaySubscriptions = (
   current: Map<string, RelaySubscription>,
   next: Map<string, RelaySubscription>,
 ): {added: RelaySubscription[]; removed: RelaySubscription[]} => {
@@ -40,7 +40,11 @@ export const diffRelaySubscriptions = (
 // NIP-9a: asks a relay to post matching events to the push server's callback
 export const syncRelaySubscriptions = (
   signal: AbortSignal,
-  sync: (added: RelaySubscription[], removed: RelaySubscription[]) => void,
+  sync: (changes: {
+    subscriptions: RelaySubscription[]
+    added: RelaySubscription[]
+    removed: RelaySubscription[]
+  }) => void,
 ) => {
   const $pubkey = User.require(app.get()).pubkey
   let subscriptions = new Map<string, RelaySubscription>()
@@ -81,7 +85,7 @@ export const syncRelaySubscriptions = (
       subscriptions = next
 
       if (added.length > 0 || removed.length > 0) {
-        sync(added, removed)
+        sync({subscriptions: Array.from(next.values()), added, removed})
       }
     }),
   )

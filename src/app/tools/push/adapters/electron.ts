@@ -1,9 +1,9 @@
 import {registerPlugin} from "@capacitor/core"
 import type {Unsubscriber} from "svelte/store"
 import {app} from "@app/core/app"
-import type {PushAdapter} from "@app/features/push/adapter"
-import {createWebNotifications} from "@app/features/push/adapters/web"
-import type {Notify} from "@app/features/push/adapters/web"
+import type {PushAdapter} from "@app/tools/push/adapter"
+import {createWebNotifications} from "@app/tools/push/adapters/web"
+import type {Notify} from "@app/tools/push/adapters/web"
 import {pushToast} from "@app/navigation/toast"
 import {goToEvent} from "@app/navigation/locations"
 

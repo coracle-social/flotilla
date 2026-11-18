@@ -8,8 +8,9 @@ import {app} from "@app/core/app"
 import {network, roomLists} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {alertSettings} from "@app/tools/alerts/settings"
-import {deleteReminderSchedule, putReminderSchedule, pushRegistration} from "@app/features/push"
-import type {Reminder} from "@app/features/push"
+import {deleteReminderSchedule, putReminderSchedule} from "@app/tools/push/server"
+import {pushRegistration} from "@app/tools/push/registration"
+import type {Reminder} from "@app/tools/push/server"
 import {pushToast} from "@app/navigation/toast"
 
 const getLeadTimes = () => {

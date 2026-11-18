@@ -12,7 +12,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {getPermissionMessage, isGranted} from "@lib/push/permission"
-  import {enableMessageNotifications} from "@app/features/push"
+  import {enableMessageNotifications} from "@app/tools/push/actions"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

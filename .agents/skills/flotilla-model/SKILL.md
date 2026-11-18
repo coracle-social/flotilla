@@ -159,7 +159,7 @@ Joining a space (`attemptRelayAccess` and `completeSpaceJoin` in `src/app/featur
 3. Translate refusals: a `mute:` reply (`matchReason`) is ignored, and the free-text "invite code"
    means rejected and "claim" means the space needs an invite.
 4. `completeSpaceJoin`: opt into the space's notifications (`optInSpaceNotifications` in
-   `src/app/features/push`, which asks for push permission first when push is on), `roomLists.addRelay(url)`,
+   `src/app/tools/push`, which asks for push permission first when push is on), `roomLists.addRelay(url)`,
    restart sync, and `Sync.push` the user's `RELAYS`,
    `MESSAGING_RELAYS`, `FOLLOWS` and `PROFILE` to the space so other members can see them.
 
@@ -313,7 +313,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
 
 - **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; `LIVEKIT_PARTICIPANTS`
   (39004, a local constant in `src/app/features/spaces/calls/participants.ts`); `STATUS` (30315) in `src/app/tools/people/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
-  subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/features/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
+  subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/tools/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
   (15) in `Conversation.svelte`.
 - **Factory exists but bypassed:** DMs built with `makeEvent` in `Conversation.svelte` (`DirectMessage`);
   relay lists in `SignUp.svelte` (`RelayList`, `MessagingRelayList`); deletes in

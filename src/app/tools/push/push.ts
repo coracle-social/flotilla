@@ -2,12 +2,12 @@ import {Capacitor} from "@capacitor/core"
 import {isGranted} from "@lib/push/permission"
 import type {PushPermission} from "@lib/push/permission"
 import {alertSettings, updateAlertSettings} from "@app/tools/alerts/settings"
-import type {PushAdapter} from "@app/features/push/adapter"
-import {AndroidFallbackNotifications} from "@app/features/push/adapters/android"
-import {CapacitorNotifications} from "@app/features/push/adapters/capacitor"
-import {createElectronNotifications} from "@app/features/push/adapters/electron"
-import {createWebNotifications} from "@app/features/push/adapters/web"
-import {useFallback} from "@app/features/push/registration"
+import type {PushAdapter} from "@app/tools/push/adapter"
+import {createAndroidFallbackNotifications} from "@app/tools/push/adapters/android"
+import {createCapacitorNotifications} from "@app/tools/push/adapters/capacitor"
+import {createElectronNotifications} from "@app/tools/push/adapters/electron"
+import {createWebNotifications} from "@app/tools/push/adapters/web"
+import {useFallback} from "@app/tools/push/registration"
 
 type PushTransport = "web" | "electron" | "capacitor" | "poll"
 
@@ -32,9 +32,9 @@ const makeAdapter = (transport: PushTransport): PushAdapter => {
     case "electron":
       return createElectronNotifications()
     case "poll":
-      return new AndroidFallbackNotifications()
+      return createAndroidFallbackNotifications()
     case "capacitor":
-      return new CapacitorNotifications()
+      return createCapacitorNotifications()
     default:
       return createWebNotifications()
   }

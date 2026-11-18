@@ -1,17 +1,9 @@
-import type {PushPermission} from "@lib/push/permission"
-import type {PushAdapter} from "@app/features/push/adapter"
+import type {PushAdapter} from "@app/tools/push/adapter"
 
 // Resolves the static import after the push plugin is removed; Android selects the fallback adapter.
-export class CapacitorNotifications implements PushAdapter {
-  async check(): Promise<PushPermission> {
-    return "unavailable"
-  }
-
-  async request(): Promise<PushPermission> {
-    return "unavailable"
-  }
-
-  async enable() {}
-
-  async disable() {}
-}
+export const createCapacitorNotifications = (): PushAdapter => ({
+  check: async () => "unavailable",
+  request: async () => "unavailable",
+  enable: async () => {},
+  disable: async () => {},
+})

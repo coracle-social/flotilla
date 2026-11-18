@@ -19,7 +19,7 @@ await replace(
 )
 
 await cp("fdroid/overlay/analytics.ts", "src/app/shell/analytics.ts")
-await cp("fdroid/overlay/capacitor.ts", "src/app/features/push/adapters/capacitor.ts")
+await cp("fdroid/overlay/capacitor.ts", "src/app/tools/push/adapters/capacitor.ts")
 await cp(
   "fdroid/overlay/FallbackSecp256k1Provider.kt",
   "android/app/src/main/java/social/flotilla/notifications/FallbackSecp256k1Provider.kt",

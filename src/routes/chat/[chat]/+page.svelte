@@ -17,7 +17,7 @@
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import {alertSettings} from "@app/tools/alerts/settings"
-  import {checkPushPermission} from "@app/features/push"
+  import {checkPushPermission} from "@app/tools/push/push"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -2,7 +2,7 @@ import {getPermissionMessage, isGranted} from "@lib/push/permission"
 import {setSpaceNotifications} from "@app/core/settings"
 import {alertSettings, updateAlertSettings} from "@app/tools/alerts/settings"
 import type {AlertSettings} from "@app/tools/alerts/settings"
-import {checkPushPermission, requestPushPermission} from "@app/features/push/push"
+import {checkPushPermission, requestPushPermission} from "@app/tools/push/push"
 import {pushToast} from "@app/navigation/toast"
 
 export const optInSpaceNotifications = async (url: string, notify: boolean) => {

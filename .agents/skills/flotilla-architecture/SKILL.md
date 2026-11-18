@@ -163,7 +163,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 Outside `spaces/`:
 
 - Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range)
-- Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
+- Platform: `reminders.ts`
 
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
 
@@ -184,7 +184,7 @@ Outside `spaces/`:
   builds the voice providers with the user's settings, `stt.ts` holds a composer's dictation, kept
   across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
   read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
-  opens its prompt)
+  opens its prompt), and `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, each made by a `create*Notifications` factory, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API)
 - `areas/`: `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `badges.ts` (the app icon badge, drawn from the unread count), `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
@@ -279,8 +279,8 @@ Flotilla's own native code:
   `flotilla://share` URL. `handleDeepLink` in `src/app/components/flows/deepLinks.ts` passes that to
   `shareFromNative`.
 
-`Push` in `src/app/features/push/push.ts` chooses an adapter at runtime: the Android fallback, Capacitor
-`PushNotifications` (FCM/APNs through `PUSH_SERVER`), or web notifications.
+`src/app/tools/push/push.ts` chooses an adapter at runtime: the Android polling fallback, Capacitor
+`PushNotifications` (FCM/APNs through `PUSH_SERVER`), Electron's desktop notifications, or web notifications. The F-Droid build swaps `adapters/capacitor.ts` for `fdroid/overlay/capacitor.ts`, which has no push plugin to call.
 
 ## Env and branding
 

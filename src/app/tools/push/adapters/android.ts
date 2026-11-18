@@ -1,15 +1,15 @@
 import {throttle} from "throttle-debounce"
 import {App} from "@capacitor/app"
 import {registerPlugin} from "@capacitor/core"
-import {maybe, now} from "@welshman/lib"
+import {now} from "@welshman/lib"
 import type {Session} from "@welshman/app"
 import {toPermission} from "@lib/push/permission"
 import {app} from "@app/core/app"
 import {session} from "@app/core/session"
-import type {PushAdapter} from "@app/features/push/adapter"
-import {requiresFallback, useFallback} from "@app/features/push/registration"
-import type {RelaySubscription} from "@app/features/push/relaySubscriptions"
-import {syncRelaySubscriptions} from "@app/features/push/relaySubscriptions"
+import type {PushAdapter} from "@app/tools/push/adapter"
+import {requiresFallback, useFallback} from "@app/tools/push/registration"
+import type {RelaySubscription} from "@app/tools/push/relaySubscriptions"
+import {syncRelaySubscriptions} from "@app/tools/push/relaySubscriptions"
 
 // The worker needs the pubkey to build auth events. Keep in sync with AndroidPushFallbackWorker.kt.
 type AndroidPushFallbackState = {
@@ -27,34 +27,36 @@ type AndroidPushFallbackPlugin = {
 
 const AndroidPushFallback = registerPlugin<AndroidPushFallbackPlugin>("AndroidPushFallback")
 
-export class AndroidFallbackNotifications implements PushAdapter {
-  _controller = maybe<AbortController>()
-  _subscriptions = new Map<string, RelaySubscription>()
-  _activeSince = now()
+export const createAndroidFallbackNotifications = (): PushAdapter => {
+  let controller: AbortController | undefined
+  let subscriptions: RelaySubscription[] = []
+  let activeSince = now()
 
-  async check() {
+  const check = async () => {
     const {receive} = await AndroidPushFallback.checkNotificationPermission()
 
     return toPermission(receive)
   }
 
-  async request() {
+  const request = async () => {
     const {receive} = await AndroidPushFallback.requestNotificationPermission()
 
     return toPermission(receive)
   }
 
-  async enable() {
-    if (!this._controller) {
-      this._controller = new AbortController()
+  const enable = async () => {
+    if (!controller) {
+      controller = new AbortController()
+
+      const {signal} = controller
 
       const doSync = throttle(1000, () => {
         AndroidPushFallback.syncState({
           state: {
             pubkey: app.get().user?.pubkey,
             session: session.get(),
-            activeSince: this._activeSince,
-            subscriptions: Array.from(this._subscriptions.values()),
+            activeSince,
+            subscriptions,
           },
         })
       })
@@ -63,38 +65,33 @@ export class AndroidFallbackNotifications implements PushAdapter {
 
       App.addListener("appStateChange", ({isActive}) => {
         if (!isActive) {
-          this._activeSince = now()
+          activeSince = now()
           doSync()
         }
       }).then(handle => {
         appStateListener = handle
       })
 
-      this._controller.signal.addEventListener("abort", () => {
+      signal.addEventListener("abort", () => {
         appStateListener?.remove()
       })
 
-      syncRelaySubscriptions(this._controller.signal, (added, removed) => {
-        for (const subscription of added) {
-          this._subscriptions.set(`${subscription.relay}:${subscription.key}`, subscription)
-        }
-
-        for (const subscription of removed) {
-          this._subscriptions.delete(`${subscription.relay}:${subscription.key}`)
-        }
-
+      syncRelaySubscriptions(signal, changes => {
+        subscriptions = changes.subscriptions
         doSync()
       })
     }
   }
 
-  async disable() {
-    this._controller?.abort()
-    this._controller = undefined
-    this._subscriptions.clear()
+  const disable = async () => {
+    controller?.abort()
+    controller = undefined
+    subscriptions = []
 
     await AndroidPushFallback.syncState({state: {}})
 
     useFallback.set(requiresFallback)
   }
+
+  return {check, request, enable, disable}
 }

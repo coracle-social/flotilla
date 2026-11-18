@@ -5,7 +5,7 @@ import {isGranted, toPermission} from "@lib/push/permission"
 import type {PushPermission} from "@lib/push/permission"
 import {alertSettings} from "@app/tools/alerts/settings"
 import {onAlert} from "@app/tools/alerts/stream"
-import type {PushAdapter} from "@app/features/push/adapter"
+import type {PushAdapter} from "@app/tools/push/adapter"
 import {renderEventAsSummary} from "@app/tools/render"
 import {goToEvent} from "@app/navigation/locations"
 
