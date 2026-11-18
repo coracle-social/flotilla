@@ -11,7 +11,7 @@
   import type {Interactions} from "@app/features/interactions"
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import {events, network} from "@app/core/plugins"
-  import {buildCommentTree} from "@app/features/notes"
+  import {buildCommentTree} from "@app/tools/notes"
 
   type Props = {
     event: TrustedEvent

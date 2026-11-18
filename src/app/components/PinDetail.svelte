@@ -18,7 +18,7 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {events, network} from "@app/core/plugins"
   import type {Interactions} from "@app/features/interactions"
-  import {buildCommentTree} from "@app/features/notes"
+  import {buildCommentTree} from "@app/tools/notes"
 
   type Props = {
     url: string

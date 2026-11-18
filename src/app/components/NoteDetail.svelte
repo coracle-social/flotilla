@@ -13,8 +13,8 @@
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {makeInteractions} from "@app/features/interactions"
-  import {notes} from "@app/features/notes"
-  import type {CommentNode} from "@app/features/notes"
+  import {deriveNote, deriveReplies, loadNote, loadThread} from "@app/tools/notes"
+  import type {CommentNode} from "@app/tools/notes"
 
   type Props = {
     ref: IEventRef
@@ -25,9 +25,9 @@
   const {ref, reply = false, thread = false}: Props = $props()
 
   const interactions = makeInteractions({withReplies: true})
-  const loaded = $notes.deriveEvent(ref)
+  const loaded = deriveNote(ref)
   const event = $derived($loaded)
-  const replies = $derived(event ? $notes.deriveReplies(event) : readable<CommentNode[]>([]))
+  const replies = $derived(event ? deriveReplies(event) : readable<CommentNode[]>([]))
 
   const setReplyTo = (comment?: TrustedEvent) => {
     replyTo = comment
@@ -35,12 +35,7 @@
 
   const clearReplyTo = () => setReplyTo(undefined)
 
-  // The ancestors of a threaded note arrive root first, nearest parent last.
-  const loadThread = (event: TrustedEvent) =>
-    $notes.loadThread(event, chain => {
-      threadRoot = chain.threadRoot
-      parents = chain.parents
-    })
+  const retry = () => loadNote(ref)
 
   let replyTo: TrustedEvent | undefined = $state()
   let threadRoot: TrustedEvent | undefined = $state()
@@ -62,7 +57,11 @@
   $effect(() => {
     if (thread && event && !threadRequested) {
       threadRequested = true
-      loadThread(event)
+      // The ancestors of a threaded note arrive root first, nearest parent last.
+      loadThread(event, chain => {
+        threadRoot = chain.threadRoot
+        parents = chain.parents
+      })
         .catch(error => console.error(error))
         .finally(() => {
           loading = false
@@ -138,7 +137,7 @@
       <LoadingFallback
         loadingMessage="Loading note..."
         failureMessage="Failed to load note."
-        retry={() => void $notes.load(ref)} />
+        {retry} />
     {/if}
   </ModalBody>
 </Modal>

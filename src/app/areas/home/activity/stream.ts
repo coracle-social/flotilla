@@ -31,8 +31,8 @@ import {
   isActivity,
 } from "@app/areas/home/activity/model"
 import type {ActivityFacet, ActivityItem} from "@app/areas/home/activity/model"
-import {makeNoteResolver} from "@app/features/notes/resolver"
-import type {NoteResolver} from "@app/features/notes/resolver"
+import {makeNoteResolver} from "@app/tools/notes"
+import type {NoteResolver} from "@app/tools/notes"
 
 export const includedActivityFacets = synced<ActivityFacet[]>({
   key: "includedHomeActivityTypes",

@@ -13,7 +13,7 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import type {Interactions} from "@app/features/interactions"
-  import type {CommentNode} from "@app/features/notes"
+  import type {CommentNode} from "@app/tools/notes"
 
   type Props = {
     node: CommentNode
