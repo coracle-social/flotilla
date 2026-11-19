@@ -11,6 +11,7 @@
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
+    cancelJoinVoiceRoom,
     isParticipantSpeaking,
     mediaStateByIdentity,
     participantKey,
@@ -19,7 +20,6 @@
     loadCallParticipants,
     type CallParticipant,
   } from "@app/areas/spaces/calls"
-  import {cancelJoinVoiceRoom} from "@app/areas/spaces/calls/engine"
   import {profiles} from "@app/core/plugins"
 
   type Props = {

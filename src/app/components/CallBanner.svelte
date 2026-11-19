@@ -18,6 +18,7 @@
     callMicMuted,
     deriveIsCallActiveElsewhere,
     endCall,
+    toggleMute,
   } from "@app/areas/spaces/calls"
 
   const {relay, h} = $derived($page.params)
@@ -38,12 +39,6 @@
       return
     }
     void navigate(pages.room.path({url: $callTargetRoom.url, h: $callTargetRoom.h}))
-  }
-
-  const toggleMute = async () => {
-    const engine = await import("@app/areas/spaces/calls/engine")
-
-    await engine.toggleMute()
   }
 </script>
 

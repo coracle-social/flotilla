@@ -1,4 +1,4 @@
-import {derived, get, writable} from "svelte/store"
+import {derived, writable} from "svelte/store"
 import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
 import type {CallParticipant} from "@app/areas/spaces/calls/participants"
@@ -55,17 +55,6 @@ export const deriveIsCallActiveElsewhere = (url: string | undefined, h: string |
       $targetRoom !== undefined &&
       !($targetRoom.url === url && $targetRoom.h === h),
   )
-
-// leaveVoiceRoom no-ops during Joining, so cancel the in-flight join instead.
-export const endCall = async () => {
-  const engine = await import("@app/areas/spaces/calls/engine")
-
-  if (get(callState) === CallState.Joining) {
-    engine.cancelJoinVoiceRoom()
-  } else {
-    await engine.leaveVoiceRoom()
-  }
-}
 
 export const speakingParticipants = writable<CallParticipant[]>([])
 

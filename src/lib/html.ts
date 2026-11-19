@@ -1,6 +1,8 @@
 import {readable} from "svelte/store"
 import {sleep} from "@welshman/lib"
 import {Capacitor} from "@capacitor/core"
+import {Directory, Filesystem} from "@capacitor/filesystem"
+import {Share} from "@capacitor/share"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
 /** Whether the tab is visible and focused, since `document.hidden` alone misses window blur. */
@@ -133,9 +135,6 @@ const readBlobAsBase64 = (blob: Blob) =>
 export const downloadBlob = async (filename: string, blob: Blob) => {
   // The <a download> blob trick is a no-op in native WebViews, so write the file and share it.
   if (["android", "ios"].includes(Capacitor.getPlatform())) {
-    const {Filesystem, Directory} = await import("@capacitor/filesystem")
-    const {Share} = await import("@capacitor/share")
-
     const {uri} = await Filesystem.writeFile({
       path: filename,
       data: await readBlobAsBase64(blob),

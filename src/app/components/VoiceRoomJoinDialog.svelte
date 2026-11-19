@@ -15,8 +15,13 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {displayRoom} from "@app/areas/spaces/rooms"
-  import {deriveCallParticipants, loadCallParticipants} from "@app/areas/spaces/calls"
-  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/areas/spaces/calls/engine"
+  import {
+    AbortError,
+    TimeoutError,
+    deriveCallParticipants,
+    joinVoiceRoom,
+    loadCallParticipants,
+  } from "@app/areas/spaces/calls"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

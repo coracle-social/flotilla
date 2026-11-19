@@ -56,6 +56,8 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
 
 `src/app/index.ts` is exempt because `registerAll` calls into every layer.
 
+`scripts/startup.mjs` keeps large modules out of the startup bundle. It runs as `pnpm run check:startup` and in the pre-commit hook. It follows the root layout's static imports, skipping `import type` and `export type`, and fails when they reach a module on its list, such as `livekit-client` or the icon catalog. It prints the chain of imports that reaches each one.
+
 - **lib → app.** None. A lib component that needs app behavior takes it as a prop, or moves to
   `src/app/components`, as `IconInput` and its picker buttons did, and as `Link` did, which routes a
   click through `navigate`, with `PrimaryNavItem`, which renders it. Their CSS families stay in
@@ -152,11 +154,7 @@ hosting (`areas/hosting/`, with its own auth) and bookmarks (`areas/bookmarks.ts
 - `spaces/payments.ts`: relay fees, checkout, and the paid-space gate
 - `spaces/management.ts`: NIP-86 admin checks and bans; `roles.ts` and `actionItems.ts` (the admin
   review queue)
-- `spaces/calls/`: `state.ts` (call state), `participants.ts`, `layout.ts` (the video layout and
-  spotlight), `endpoint.ts` (the relay's LiveKit endpoint), `engine.ts` (LiveKit join, leave,
-  devices, the video tiles a call shows), `screenShare/`. Everything but `engine.ts` stays free of
-  livekit values, since the root layout loads `calls/index.ts` and `engine.ts` is imported
-  lazily.
+- `spaces/calls/`: `state.ts` (call state), `participants.ts`, `layout.ts` (the video layout and spotlight), `endpoint.ts` (the relay's LiveKit endpoint), `engine.ts` (LiveKit join, leave and end, devices, the video tiles a call shows), `controls.ts` (the engine's operations as async functions that load the engine on first use), `errors.ts` (the errors a join throws), `screenShare/`. Everything but `engine.ts` stays free of livekit values, since the root layout loads `calls/index.ts`. Components call the engine through `controls.ts`. Only `VideoCallContent` imports `engine.ts`, for the tile helpers, and the room page loads it.
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
   `pinboards.ts`, and `reminders.ts` (the calendar's reminder source, the events the user attends or hosts, and `setEventReminders`, which the RSVP and event forms call)
 

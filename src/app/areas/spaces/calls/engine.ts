@@ -19,6 +19,7 @@ import {ScreenShare, ScreenShareDenied} from "@app/areas/spaces/calls/screenShar
 import type {PickSource} from "@app/areas/spaces/calls/screenShare"
 import {pushToast} from "@app/navigation/toast"
 import {fetchLivekitToken} from "@app/areas/spaces/calls/endpoint"
+import {AbortError, TimeoutError} from "@app/areas/spaces/calls/errors"
 import {
   CallState,
   DeviceKind,
@@ -37,20 +38,6 @@ import {resetVideoCallLayout, resetVideoSpotlight} from "@app/areas/spaces/calls
 
 const LIVEKIT_DEFAULT_DEVICE_ID = "default"
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]
-
-export class AbortError extends Error {
-  constructor() {
-    super("Aborted")
-    this.name = "AbortError"
-  }
-}
-
-export class TimeoutError extends Error {
-  constructor(message = "Timed out") {
-    super(message)
-    this.name = "TimeoutError"
-  }
-}
 
 const whenAborted = (signal?: AbortSignal) => {
   if (!signal) {
@@ -255,6 +242,15 @@ export const leaveVoiceRoom = async () => {
 export const cancelJoinVoiceRoom = () => {
   clearReconnectSchedule()
   abortJoinVoiceRoom()
+}
+
+// leaveVoiceRoom no-ops during Joining, so cancel the in-flight join instead.
+export const endCall = async () => {
+  if (get(callState) === CallState.Joining) {
+    cancelJoinVoiceRoom()
+  } else {
+    await leaveVoiceRoom()
+  }
 }
 
 export const toggleMute = async () => {

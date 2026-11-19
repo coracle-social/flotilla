@@ -4,8 +4,7 @@
 import fs from "fs"
 import path from "path"
 import ts from "typescript"
-
-const ROOT = path.resolve(import.meta.dirname, "..")
+import {ROOT, getScript, resolveImport} from "./imports.mjs"
 
 // Highest first; a module may import its own layer and the layers below it.
 const LAYERS = [
@@ -22,13 +21,6 @@ const LAYERS = [
 // registerAll calls every layer's registerX, so it imports from all of them.
 const COMPOSITION_ROOTS = new Set(["src/app/index.ts"])
 
-const ALIASES = {
-  "@src/": "src/",
-  "@app/": "src/app/",
-  "@lib/": "src/lib/",
-  "@assets/": "src/assets/",
-}
-
 const walk = dir =>
   fs.readdirSync(dir, {withFileTypes: true}).flatMap(entry => {
     const file = path.join(dir, entry.name)
@@ -39,42 +31,6 @@ const walk = dir =>
 
     return /\.(ts|js|svelte)$/.test(entry.name) && !entry.name.endsWith(".d.ts") ? [file] : []
   })
-
-const getScript = file => {
-  const text = fs.readFileSync(file, "utf8")
-
-  if (file.endsWith(".svelte")) {
-    return [...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)]
-      .map(match => match[1])
-      .join("\n")
-  }
-
-  return text
-}
-
-const resolveImport = (from, specifier) => {
-  const [bare] = specifier.split("?")
-  const alias = Object.keys(ALIASES).find(prefix => bare.startsWith(prefix))
-
-  let base
-  if (alias) {
-    base = path.join(ROOT, ALIASES[alias], bare.slice(alias.length))
-  } else if (bare.startsWith(".")) {
-    base = path.resolve(path.dirname(from), bare)
-  }
-
-  if (base) {
-    const candidates = [
-      base,
-      `${base}.ts`,
-      `${base}.js`,
-      `${base}.svelte`,
-      path.join(base, "index.ts"),
-    ]
-
-    return candidates.find(file => fs.existsSync(file) && fs.statSync(file).isFile())
-  }
-}
 
 const getLayer = file => LAYERS.findIndex(([, prefix]) => file.startsWith(prefix))
 

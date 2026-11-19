@@ -155,6 +155,7 @@ callbacks and hot paths.
 - Comments, naming, conditionals and single-use indirection are covered by the Cleanup Pass above.
 - Do not use `any`. If there are type errors related to `unknown`, they are likely because the upstream definition of the data is incorrect.
 - When dynamically building classes, use `cx` from `classnames` rather than embedded ternaries or svelte 4's old `class:` syntax.
+- Load a large module with a dynamic import, either where it's used or behind a module of async functions that callers import statically, as `calls/controls.ts` does for the call engine. Add the module to the list in `scripts/startup.mjs`, which fails when the root layout reaches it through static imports. A dynamic import never resolves an import cycle. Move the code that causes the cycle instead.
 - When creating forms, use `FieldInline` or `Field` instead of custom elements/tailwindcss
 - Do not define svelte event handlers inline, instead name them and put them in the script section of templates
 - Size a component off its own container, not the screen: put `@container` on the element and use `@md:`/`@2xl:`, rather than `sm:`/`md:`. The navs are `hidden md:flex` and take 326px out of the page at `md`, so a `md:` breakpoint inside a page turns a wide layout on at the exact width where the page column gets narrower. Screen breakpoints are for chrome that appears or disappears with the viewport.
@@ -241,6 +242,7 @@ pnpm run format           # Format changed files
 pnpm run lint             # Check formatting and linting
 pnpm run check            # Type check
 pnpm run check:layers     # Check imports against the dependency graph
+pnpm run check:startup    # Check that the root layout doesn't import deferred modules statically
 ```
 
 To check that a refactor keeps behavior, run the old and new modules side by side with Node 24, which runs TypeScript directly. Get the old module from `git show HEAD:path`. Replace the app modules they import with stubs that record calls. Import welshman packages by absolute path, because pnpm links them through symlinks that `readlink -f node_modules/@welshman/lib` resolves. Run both modules with the same inputs and diff the recordings.
@@ -255,7 +257,7 @@ To check that a refactor keeps behavior, run the old and new modules side by sid
 
 - `master` branch auto-deploys to production
 - Work on feature branches based on `dev` branch
-- Pre-commit hooks run lint, the type check and the layering check
+- Pre-commit hooks run lint, the type check, the layering check and the startup check
 
 ## Environment Variables
 
