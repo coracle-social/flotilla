@@ -27,7 +27,7 @@ import {
   router,
   searchRelayLists,
 } from "@app/core/plugins"
-import {DEFAULT_SEARCH_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
+import {DEFAULT_SEARCH_RELAYS, DEFAULT_SPACES, PLATFORM_RELAYS} from "@app/core/env"
 import {registerSync} from "@app/core/sync"
 
 export const user = withGetter(derived(app, $app => $app.user))
@@ -90,10 +90,14 @@ export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
 
-// Platform relays, where configured, stand in for the spaces the user has joined.
-export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
-  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
-)
+// Platform relays, where configured, stand in for the spaces the user has joined, and a visitor gets the defaults.
+export const activeSpaceUrls = derived([user, userSpaceUrls], ([$user, $userSpaceUrls]) => {
+  if (PLATFORM_RELAYS.length > 0) {
+    return PLATFORM_RELAYS
+  }
+
+  return $user ? $userSpaceUrls : DEFAULT_SPACES
+})
 
 // Syncing
 

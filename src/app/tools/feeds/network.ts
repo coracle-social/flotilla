@@ -1,4 +1,4 @@
-import {derived, readable} from "svelte/store"
+import {derived, get, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {
   HOUR,
@@ -35,6 +35,7 @@ import {includedNoteFacets, includesAnyFacet, whenIncluded} from "@app/tools/fee
 import type {FacetCounts, NoteFacet} from "@app/tools/feeds/facets"
 import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/tools/notes"
+import {bootstrapPubkeys} from "@app/tools/people/people"
 import {derivePinnedEvents} from "@app/tools/people/pins"
 import {CONTENT_KINDS, getPublishedTimestamp} from "@app/tools/content"
 
@@ -261,7 +262,8 @@ const loadFollowPubkeys = async () => {
     return followList?.pubkeys() ?? []
   }
 
-  return []
+  // A visitor follows the deployment's suggestions, and an unset list mustn't become an empty author.
+  return get(bootstrapPubkeys).filter(identity)
 }
 
 export const makeNetworkFeed = (): NoteFeed => {

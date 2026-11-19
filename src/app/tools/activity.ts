@@ -28,12 +28,13 @@ export const latestActivityByPath = readable(new Map<string, Activity>(), set =>
   derived(sources, $sources => indexBy(activity => activity.path, $sources.flat())).subscribe(set),
 )
 
-// Every path whose latest event somebody else wrote and the reader has not opened since.
+// Every path whose latest event somebody else wrote and the user has not opened since, so a visitor has none.
 export const unreadPaths = derived(
   [app, latestActivityByPath, checked],
   ([$app, $latestActivityByPath, $checked]) => {
     const isUnread = (path: string, latestEvent: TrustedEvent) =>
-      latestEvent.pubkey !== $app.user?.pubkey && !isChecked($checked, path, latestEvent.created_at)
+      Boolean($app.user && latestEvent.pubkey !== $app.user.pubkey) &&
+      !isChecked($checked, path, latestEvent.created_at)
 
     const paths = new Set<string>()
 

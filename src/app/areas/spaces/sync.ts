@@ -8,7 +8,7 @@ import {pullAndListen, syncEach} from "@app/core/sync"
 import {hasBlossomSupport} from "@app/tools/uploads"
 import {CONTENT_KINDS} from "@app/tools/content"
 import {currentSpaceUrls} from "@app/navigation/history"
-import {userSpaceUrls} from "@app/core/user"
+import {activeSpaceUrls} from "@app/core/user"
 
 export const syncCurrentSpace = (filters: Filter[]) =>
   syncEach(currentSpaceUrls, url => pullAndListen(url, filters))
@@ -21,15 +21,15 @@ export const syncSpaceRelays = () => {
     }
   })
 
-  const unsubscribeUser = userSpaceUrls.subscribe($userSpaceUrls => {
-    for (const url of $userSpaceUrls) {
+  const unsubscribeActive = activeSpaceUrls.subscribe($activeSpaceUrls => {
+    for (const url of $activeSpaceUrls) {
       relays.get().load(url)
     }
   })
 
   return () => {
     unsubscribeCurrent()
-    unsubscribeUser()
+    unsubscribeActive()
   }
 }
 

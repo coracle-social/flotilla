@@ -95,5 +95,8 @@ export const syncActivity = (): Unsubscriber => {
     }
   }
 
+  // A visitor has no inbox to wait for.
+  activityLoaded.set(true)
+
   return noop
 }
