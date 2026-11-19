@@ -34,6 +34,7 @@
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -42,7 +43,7 @@
   const {events} = feed
   const olderStatus = feed.older.status
 
-  const makeEvent = () => pushModal(CalendarEventCreate, {url})
+  const makeEvent = () => withLogin("create an event", () => pushModal(CalendarEventCreate, {url}))
 
   const showToday = () => {
     cursor = new Date()

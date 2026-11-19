@@ -63,7 +63,7 @@
 
   const onEmoji = (emoji: string) => {
     history.back()
-    withLogin("react", () => publishReaction(url, event, {content: emoji, tags: []}))
+    publishReaction(url, event, {content: emoji, tags: []})
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
@@ -136,7 +136,10 @@
           Zap
         </ZapButton>
       {/if}
-      <Button class="{tile} button-outline button-primary" onclick={showEmojiPicker}>
+      <Button
+        class="{tile} button-outline button-primary"
+        disabled={!$user}
+        onclick={showEmojiPicker}>
         <Icon size={6} icon={SmileCircle} />
         React
       </Button>

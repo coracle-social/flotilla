@@ -14,6 +14,7 @@
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import {formatDay, groupEventsByDay, makeDayKey} from "@app/areas/spaces/calendar"
   import {pushModal} from "@app/navigation/dialogs"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -28,7 +29,8 @@
 
   const back = () => history.back()
 
-  const makeEvent = () => pushModal(CalendarEventCreate, {url, date}, {nested: true})
+  const makeEvent = () =>
+    withLogin("create an event", () => pushModal(CalendarEventCreate, {url, date}, {nested: true}))
 </script>
 
 <Modal>

@@ -23,6 +23,7 @@
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const REPLY_BATCH_SIZE = 20
 
@@ -74,10 +75,11 @@
     revealed = nextCount
   }
 
-  const openReply = (post: TrustedEvent) => {
-    replyTo = post
-    showReply = true
-  }
+  const openReply = (post: TrustedEvent) =>
+    withLogin("reply", () => {
+      replyTo = post
+      showReply = true
+    })
 
   const closeReply = () => {
     showReply = false

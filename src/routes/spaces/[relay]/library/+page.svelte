@@ -24,6 +24,7 @@
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -68,7 +69,7 @@
     term ? $pins.filter(pin => pin.boards().length > 0 && pinMatchesTerm(pin, term)) : [],
   )
 
-  const createShelf = () => pushModal(PinboardEdit, {url})
+  const createShelf = () => withLogin("create a shelf", () => pushModal(PinboardEdit, {url}))
 
   onMount(() => {
     const controller = new AbortController()

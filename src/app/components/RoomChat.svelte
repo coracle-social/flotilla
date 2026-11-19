@@ -33,6 +33,7 @@
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
   import {PublishBuilder, ScheduleError, prependParent} from "@app/tools/publish"
+  import {promptLogin, withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -101,7 +102,9 @@
   // Restart the feed now that we're a member
   const onJoin = () => transcript?.restart()
 
-  const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
+  const replyTo = (event: TrustedEvent) => withLogin("reply", () => composeArea?.reply(event))
+
+  const logIn = () => promptLogin("send a message")
 
   const onSubmit = async ({content, tags, scheduleAt, parent, share, edit}: ComposeValues) => {
     if (edit) {
@@ -231,7 +234,7 @@
             <p class="opacity-75">Only members are allowed to post to this room.</p>
             <RoomMembershipButton {url} {h} label="Ask to Join" {onJoin} />
           </div>
-        {:else}
+        {:else if $user}
           <ComposeArea
             {url}
             {h}
@@ -241,6 +244,11 @@
             canEdit={canEditEvent}
             emptyAction={isVoiceRoom && !voiceConnectedHere ? callButton : undefined}
             bind:this={composeArea} />
+        {:else}
+          <div class="card m-4 flex flex-row items-center justify-between px-4 py-3">
+            <p class="opacity-75">Log in to join the conversation.</p>
+            <Button class="button button-primary button-sm" onclick={logIn}>Log in</Button>
+          </div>
         {/if}
       </div>
     </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {formatTimestampRelative, now, uniq} from "@welshman/lib"
+  import {formatTimestampRelative, now} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {POLL_RESPONSE, relay, tagSpec, tagValues} from "@welshman/util"
   import {Poll, PollResponse} from "@welshman/domain"
@@ -10,7 +10,6 @@
   import {events} from "@app/core/plugins"
   import {reader, writer} from "@app/core/domain"
   import {PublishBuilder} from "@app/tools/publish"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     urls: string[]
@@ -62,22 +61,17 @@
   const publishCurrentSelection = () =>
     publishSelection(pollType === "singlechoice" ? selectedIds.slice(0, 1) : selectedIds)
 
-  const setSingleChoice = (id: string) =>
-    withLogin("vote", () => {
-      selectedIds = [id]
-      publishCurrentSelection()
-    })
+  const setSingleChoice = (id: string) => {
+    selectedIds = [id]
+    publishCurrentSelection()
+  }
 
   const toggleMultipleChoice = (id: string) => {
-    const selected = !selectedIds.includes(id)
+    selectedIds = selectedIds.includes(id)
+      ? selectedIds.filter(selectedId => selectedId !== id)
+      : [...selectedIds, id]
 
-    withLogin("vote", () => {
-      selectedIds = selected
-        ? uniq([...selectedIds, id])
-        : selectedIds.filter(selectedId => selectedId !== id)
-
-      publishCurrentSelection()
-    })
+    publishCurrentSelection()
   }
 
   const poll = reader(Poll)(event)

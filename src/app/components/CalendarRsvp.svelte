@@ -15,7 +15,6 @@
   import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/areas/spaces/calendar"
   import {setEventReminders} from "@app/areas/spaces/reminders"
   import {pushToast} from "@app/navigation/toast"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -26,31 +25,29 @@
 
   const {url, event, rsvps, onShowPeople}: Props = $props()
 
-  const setStatus = (status: RsvpStatus) => {
-    const retracted = ownStatus === status ? ownRsvp : undefined
+  const setStatus = async (status: RsvpStatus) => {
+    if (loading) {
+      return
+    }
 
-    withLogin("RSVP", async () => {
-      if (loading) {
-        return
+    loading = true
+
+    const retracting = ownRsvp && ownStatus === status
+
+    try {
+      if (retracting) {
+        await retractRsvp(url, ownRsvp)
+      } else {
+        await publishRsvp(url, event, status)
       }
 
-      loading = true
-
-      try {
-        if (retracted) {
-          await retractRsvp(url, retracted)
-        } else {
-          await publishRsvp(url, event, status)
-        }
-
-        await setEventReminders(url, event, !retracted && isAttending(status))
-      } catch (e) {
-        console.error(e)
-        pushToast({theme: "error", message: "Failed to update your RSVP."})
-      } finally {
-        loading = false
-      }
-    })
+      await setEventReminders(url, event, !retracting && isAttending(status))
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your RSVP."})
+    } finally {
+      loading = false
+    }
   }
 
   const accept = () => setStatus("accepted")
@@ -74,15 +71,15 @@
   <div class="flex flex-wrap items-center gap-2">
     <span class="text-sm opacity-75">Are you going?</span>
     <div class="join">
-      <Button class={statusClass("accepted")} disabled={loading} onclick={accept}>
+      <Button class={statusClass("accepted")} disabled={loading || !$user} onclick={accept}>
         <Icon icon={CheckCircle} size={4} />
         Going
       </Button>
-      <Button class={statusClass("tentative")} disabled={loading} onclick={maybe}>
+      <Button class={statusClass("tentative")} disabled={loading || !$user} onclick={maybe}>
         <Icon icon={QuestionCircle} size={4} />
         Maybe
       </Button>
-      <Button class={statusClass("declined")} disabled={loading} onclick={decline}>
+      <Button class={statusClass("declined")} disabled={loading || !$user} onclick={decline}>
         <Icon icon={CloseCircle} size={4} />
         Can't go
       </Button>

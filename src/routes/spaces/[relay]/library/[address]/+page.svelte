@@ -25,6 +25,7 @@
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -51,7 +52,7 @@
 
   const back = () => history.back()
 
-  const addLink = () => pushModal(PinSave, {url, address})
+  const addLink = () => withLogin("add a link", () => pushModal(PinSave, {url, address}))
 
   const showContributors = () =>
     pushModal(ProfileList, {

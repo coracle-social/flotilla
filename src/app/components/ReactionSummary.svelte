@@ -108,31 +108,23 @@
 
   const includesUser = (pubkeys: string[]) => Boolean($user && pubkeys.includes($user.pubkey))
 
-  const findOwn = (events: TrustedEvent[]) => events.find(spec({pubkey: $user?.pubkey}))
-
-  const toggleOwn = (events: TrustedEvent[], values: EventContent) => {
-    const own = findOwn(events)
-
-    withLogin("react", () => {
-      if (own) {
-        deleteReaction(own)
-      } else if (!findOwn(events)) {
-        // Checked again, since a returning user's earlier reaction is among these once they've logged in.
-        createReaction(values)
-      }
-    })
-  }
-
   const toggleReaction = (events: TrustedEvent[]) => {
-    const [event] = events
-    const shortcode = event.content.replace(/:/g, "")
+    const reaction = events.find(spec({pubkey: $user?.pubkey}))
 
-    toggleOwn(events, {
-      content: event.content,
-      tags: getEmojis(event)
-        .filter(spec({shortcode}))
-        .map(emoji => ["emoji", emoji.shortcode, emoji.url]),
-    })
+    if (reaction) {
+      deleteReaction(reaction)
+    } else {
+      const [event] = events
+
+      const shortcode = event.content.replace(/:/g, "")
+
+      createReaction({
+        content: event.content,
+        tags: getEmojis(event)
+          .filter(spec({shortcode}))
+          .map(emoji => ["emoji", emoji.shortcode, emoji.url]),
+      })
+    }
   }
 
   const showReactors = (pubkeys: string[], title: string, subtitle: string) =>
@@ -154,10 +146,25 @@
     }
   }
 
-  const toggleLike = () => toggleOwn($reactions, {content: "+", tags: []})
+  const toggleLike = () => {
+    const own = $reactions.find(spec({pubkey: $user?.pubkey}))
 
-  const onEmoji = (content: string) =>
-    toggleOwn($reactions.filter(spec({content})), {content, tags: []})
+    if (own) {
+      deleteReaction(own)
+    } else {
+      createReaction({content: "+", tags: []})
+    }
+  }
+
+  const onEmoji = (content: string) => {
+    const own = $reactions.find(spec({pubkey: $user?.pubkey, content}))
+
+    if (own) {
+      deleteReaction(own)
+    } else {
+      createReaction({content, tags: []})
+    }
+  }
 
   const permissions = deriveSpacePermissions(url)
 
@@ -249,7 +256,10 @@
         {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
         {@const onClick = () => onReactionClick(events, pubkeys, info)}
         <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
-          <Button class={summaryClass(includesUser(pubkeys))} onclick={stopPropagation(onClick)}>
+          <Button
+            class={summaryClass(includesUser(pubkeys))}
+            disabled={!$user}
+            onclick={stopPropagation(onClick)}>
             <Reaction event={events[0]} />
             {#if events.length > 1}
               <span>{events.length}</span>
@@ -279,13 +289,18 @@
         {placement}
         class="flex">
         {#if emojiMenu}
-          <EmojiButton {onEmoji} aria-label="Add a reaction" class={summaryClass(isOwn)}>
+          <EmojiButton
+            {onEmoji}
+            aria-label="Add a reaction"
+            class={summaryClass(isOwn)}
+            disabled={!$user}>
             {@render reactLabel()}
           </EmojiButton>
         {:else}
           <Button
             aria-label="Likes"
             class={summaryClass(isOwn)}
+            disabled={!$user}
             onclick={stopPropagation(toggleLike)}>
             {@render reactLabel()}
           </Button>

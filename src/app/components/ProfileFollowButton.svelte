@@ -7,7 +7,6 @@
   import {user} from "@app/core/user"
   import {followLists} from "@app/core/plugins"
   import {pushToast} from "@app/navigation/toast"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     pubkey: string
@@ -23,37 +22,33 @@
 
   const loading = $derived(wanted !== undefined)
 
-  const toggleFollow = () => {
-    const following = !isFollowing
+  const toggleFollow = async () => {
+    wanted = !isFollowing
 
-    withLogin("follow this person", async () => {
-      wanted = following
+    try {
+      const command = wanted
+        ? await $followLists.follow(["p", pubkey])
+        : await $followLists.unfollow(pubkey)
+      const publication = publish(command)
 
-      try {
-        const command = wanted
-          ? await $followLists.follow(["p", pubkey])
-          : await $followLists.unfollow(pubkey)
-        const publication = publish(command)
+      // `publish` returns before the repository holds the new list, which is what the label reads.
+      await publication.written()
 
-        // `publish` returns before the repository holds the new list, which is what the label reads.
-        await publication.written()
-
-        publication.settled().then(({state}) => {
-          if (state.stage === "failed") {
-            pushToast({theme: "error", message: "Failed to update your follows."})
-          }
-        })
-      } catch (e) {
-        console.error(e)
-        pushToast({theme: "error", message: "Failed to update your follows."})
-      } finally {
-        wanted = undefined
-      }
-    })
+      publication.settled().then(({state}) => {
+        if (state.stage === "failed") {
+          pushToast({theme: "error", message: "Failed to update your follows."})
+        }
+      })
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your follows."})
+    } finally {
+      wanted = undefined
+    }
   }
 </script>
 
-<Button class={className} disabled={loading} onclick={toggleFollow}>
+<Button class={className} disabled={loading || !$user} onclick={toggleFollow}>
   {#if loading}
     <Spinner size="xs" />
   {:else}

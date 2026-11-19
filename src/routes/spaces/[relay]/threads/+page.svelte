@@ -26,6 +26,7 @@
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -48,6 +49,8 @@
   const board = $derived($page.url.searchParams.get("board") ?? undefined)
   const inBoard = $derived(board !== undefined)
   const back = () => history.back()
+  const startTopic = () =>
+    withLogin("start a topic", () => pushModal(ThreadCreate, {url, h: board ?? undefined}))
   const boardName = $derived(board === "" ? "General" : board ? displayRoom(url, board) : "")
   const boardItems = $derived(
     inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],
@@ -92,9 +95,7 @@
     <strong>{inBoard ? boardName : "Threads"}</strong>
   {/snippet}
   {#snippet action()}
-    <Button
-      class="button button-primary button-sm"
-      onclick={() => pushModal(ThreadCreate, {url, h: board ?? undefined})}>
+    <Button class="button button-primary button-sm" onclick={startTopic}>
       <Icon icon={Add} />
       New topic
     </Button>

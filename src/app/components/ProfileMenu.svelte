@@ -16,7 +16,6 @@
   import {derivePubkeyMuted} from "@app/tools/people/muting"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     pubkey: string
@@ -37,28 +36,24 @@
 
   const showShare = () => pushModal(ProfileQrCode, {pubkey})
 
-  const toggleMute = () => {
-    const muted = $isMuted
+  const toggleMute = async () => {
+    loading = true
 
-    withLogin("mute this person", async () => {
-      loading = true
-
-      try {
-        if (muted) {
-          await $muteLists.unmute(pubkey).then(publish)
-          pushToast({message: "You are no longer muting this person."})
-        } else {
-          await $muteLists.mutePublicly(["p", pubkey]).then(publish)
-          pushToast({message: "You have muted this person."})
-        }
-      } catch (error) {
-        console.error(error)
-        pushToast({theme: "error", message: "Failed to update your mutes."})
-      } finally {
-        loading = false
-        onClick()
+    try {
+      if ($isMuted) {
+        await $muteLists.unmute(pubkey).then(publish)
+        pushToast({message: "You are no longer muting this person."})
+      } else {
+        await $muteLists.mutePublicly(["p", pubkey]).then(publish)
+        pushToast({message: "You have muted this person."})
       }
-    })
+    } catch (error) {
+      console.error(error)
+      pushToast({theme: "error", message: "Failed to update your mutes."})
+    } finally {
+      loading = false
+      onClick()
+    }
   }
 
   // The menu closes on any click in it, except on an item that closes it once its work is done.
@@ -90,7 +85,7 @@
   {/if}
   {#if !isSelf}
     <li class="menu-holds-open">
-      <Button onclick={toggleMute} disabled={loading}>
+      <Button onclick={toggleMute} disabled={loading || !$user}>
         {#if loading}
           <Spinner size="xs" />
         {:else}

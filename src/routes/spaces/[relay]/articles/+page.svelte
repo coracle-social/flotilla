@@ -20,6 +20,7 @@
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -31,7 +32,8 @@
   const loading = $derived($status === "loading")
   const exhausted = $derived($status === "exhausted")
 
-  const createArticle = () => goto(pages.articleCreate.path({url}))
+  const createArticle = () =>
+    withLogin("write an article", () => goto(pages.articleCreate.path({url})))
 
   let author: string | undefined = $state()
   let topic: string | undefined = $state()

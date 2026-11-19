@@ -32,6 +32,7 @@
   import {reader} from "@app/core/domain"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
+  import {withLogin} from "@app/components/flows/login"
 
   const {params}: PageProps = $props()
 
@@ -40,7 +41,8 @@
   const {events} = feed
   const status = feed.older.status
 
-  const createClassified = () => pushModal(ClassifiedCreate, {url})
+  const createClassified = () =>
+    withLogin("post a listing", () => pushModal(ClassifiedCreate, {url}))
 
   const setTopic = (value?: string) => () => {
     const path = pages.classifieds.path({url, topic: value || undefined})

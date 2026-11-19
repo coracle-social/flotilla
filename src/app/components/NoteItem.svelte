@@ -14,6 +14,7 @@
   import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import {isReplyTo} from "@app/tools/targets"
   import {openEventNote} from "@app/navigation/overlays"
+  import {user} from "@app/core/user"
 
   type Props = {
     event: TrustedEvent
@@ -46,7 +47,7 @@
   // A kind 1 reply e-tags every note above it, so only the ones answering this note count.
   const replyCount = $derived($related.filter(e => isReplyTo(e, event)).length)
 
-  const openReplies = () => openEventNote(event, {reply: true})
+  const openReplies = () => openEventNote(event, {reply: Boolean($user)})
 
   onMount(() => loadReplies(event, url))
 </script>

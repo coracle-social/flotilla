@@ -10,6 +10,10 @@
       background-color 0.15s ease,
       border-color 0.15s ease;
 
+    &:disabled {
+      @apply cursor-default opacity-50;
+    }
+
     &:checked {
       @apply bg-primary border-primary;
     }
@@ -34,6 +38,9 @@
 
     &:checked {
       @apply border-primary;
+    }
+    &:disabled {
+      @apply cursor-default opacity-50;
     }
     &:checked::after {
       content: "";

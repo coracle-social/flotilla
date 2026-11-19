@@ -13,6 +13,7 @@
   import NoteItem from "@app/components/NoteItem.svelte"
   import {deriveNote, deriveReplies, loadNote, loadThread} from "@app/tools/notes"
   import type {CommentNode} from "@app/tools/notes"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     ref: IEventRef
@@ -79,7 +80,7 @@
   <ModalBody>
     {#if event}
       {@const note = event}
-      {@const replyToNote = () => setReplyTo(note)}
+      {@const replyToNote = () => withLogin("reply", () => setReplyTo(note))}
       {#if loading}
         <Spinner class="justify-center py-4" />
       {/if}

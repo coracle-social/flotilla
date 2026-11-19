@@ -18,6 +18,7 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {events, network} from "@app/core/plugins"
   import {buildCommentTree} from "@app/tools/notes"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -37,7 +38,7 @@
 
   const clearReplyTo = () => setReplyTo(undefined)
 
-  const replyToPin = () => setReplyTo(pin.event)
+  const replyToPin = () => withLogin("comment", () => setReplyTo(pin.event))
 
   let replyTo: TrustedEvent | undefined = $state()
 

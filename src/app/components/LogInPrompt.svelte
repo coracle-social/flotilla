@@ -11,7 +11,7 @@
 
   type Props = {
     action: string
-    onLogin: () => unknown
+    onLogin?: () => unknown
   }
 
   const {action, onLogin}: Props = $props()
