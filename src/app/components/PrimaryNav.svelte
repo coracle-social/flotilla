@@ -5,6 +5,7 @@
   import Letter from "@assets/icons/nav/letter.png"
   import Magnifier from "@assets/icons/nav/magnifier.png"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Login from "@assets/icons/login-3.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
   import Sidebar from "@assets/icons/sidebar-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -12,6 +13,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@app/components/PrimaryNavItem.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
+  import LogIn from "@app/components/LogIn.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
@@ -22,7 +24,7 @@
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
   import {lastSpaceUrl} from "@app/navigation/history"
-  import {userProfile} from "@app/core/user"
+  import {user, userProfile} from "@app/core/user"
 
   type Props = {
     children?: Snippet
@@ -33,6 +35,8 @@
   const chatHandler = () => openMessages()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
+
+  const logIn = () => pushModal(LogIn)
 
   const showSearch = () => pushModal(Search)
 
@@ -57,13 +61,19 @@
     <Divider />
   {/if}
   <div class="mt-auto flex flex-col items-center">
-    <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
-      {#if $userProfile?.picture()}
-        <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
-      {:else}
-        <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
-      {/if}
-    </PrimaryNavItem>
+    {#if $user}
+      <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
+        {#if $userProfile?.picture()}
+          <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
+        {:else}
+          <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
+        {/if}
+      </PrimaryNavItem>
+    {:else}
+      <PrimaryNavItem title="Log in" aria-label="Log in" onclick={logIn}>
+        <Icon icon={Login} size={8} />
+      </PrimaryNavItem>
+    {/if}
     {#if PLATFORM_RELAYS.length === 0}
       <PrimaryNavItem
         href="/spaces"

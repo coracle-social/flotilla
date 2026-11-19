@@ -13,6 +13,7 @@
   import Link from "@app/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
+  import LogInOptions from "@app/components/LogInOptions.svelte"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
@@ -28,6 +29,10 @@
         <Link href={pages.profile.path({pubkey: $user.pubkey})}>
           <Profile inert pubkey={$user.pubkey} />
         </Link>
+      {:else}
+        <div class="flex w-full flex-col gap-3">
+          <LogInOptions />
+        </div>
       {/if}
       <div class="grid grid-cols-3 gap-3 w-full">
         <Link
@@ -79,8 +84,10 @@
       </div>
       <div class="flex gap-3 items-center opacity-75 text-sm">
         <Link href="/settings/about">About</Link>
-        /
-        <Button onclick={logout}>Log Out</Button>
+        {#if $user}
+          /
+          <Button onclick={logout}>Log Out</Button>
+        {/if}
       </div>
     </div>
   </ModalBody>

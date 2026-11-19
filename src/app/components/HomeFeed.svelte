@@ -14,7 +14,7 @@
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import PostCreateButton from "@app/components/PostCreateButton.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {requireUser} from "@app/core/user"
+  import {requireUser, user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
@@ -69,7 +69,7 @@
   {/snippet}
   {#snippet action()}
     <div class="flex shrink-0 items-center gap-2">
-      {#if !HIDE_NOSTR}
+      {#if $user && !HIDE_NOSTR}
         <Button
           aria-label="Relay settings"
           class="button button-neutral button-xs"
@@ -82,7 +82,9 @@
       </PostCreateButton>
     </div>
   {/snippet}
-  <HealthCheckList class="bg-surface-less @3xl:hidden" />
+  {#if $user}
+    <HealthCheckList class="bg-surface-less @3xl:hidden" />
+  {/if}
   {#if tab === "activity"}
     <HomeActivity />
   {/if}
