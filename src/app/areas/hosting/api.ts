@@ -2,6 +2,7 @@ import {Capacitor} from "@capacitor/core"
 import type {Maybe} from "@welshman/lib"
 import {now} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
+import {UserError} from "@lib/util"
 import {user} from "@app/core/user"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/core/env"
 import type {
@@ -19,7 +20,7 @@ import type {
 } from "@app/areas/hosting/model"
 import {boolToFlag, isPaidPlan, RELAY_FLAG_DEFAULTS} from "@app/areas/hosting/model"
 
-export class HostingError extends Error {
+export class HostingError extends UserError {
   status: number
 
   constructor(message: string, status: number) {

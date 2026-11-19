@@ -40,6 +40,7 @@
     type RelayFlag,
     type UpdateRelayInput,
   } from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     relay: HostedRelay
@@ -79,10 +80,9 @@
   const copyTarget = () => clip(recordTarget)
 
   // Verification runs in a backend poller; reload to pick up the result.
-  const verify = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: verify} = trackSubmit(
+    () => "Verification failed.",
+    async () => {
       const updated = await getRelay(relay.id)
 
       pushToast({
@@ -92,14 +92,8 @@
       })
 
       await followHostedRelay(relay, updated)
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Verification failed.")})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 {#snippet flagToggle(title: string, flag: RelayFlag, gated = false)}
@@ -240,11 +234,11 @@
         <Button
           class="button button-neutral button-sm self-start"
           onclick={verify}
-          disabled={loading}>
-          {#if !loading}
+          disabled={$loading}>
+          {#if !$loading}
             <Icon icon={Refresh} size={4} />
           {/if}
-          <Spinner {loading} size="sm">Verify DNS record</Spinner>
+          <Spinner loading={$loading} size="sm">Verify DNS record</Spinner>
         </Button>
       </div>
     {/if}

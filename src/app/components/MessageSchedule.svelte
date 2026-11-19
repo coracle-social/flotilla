@@ -16,8 +16,8 @@
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {ScheduleError} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -33,13 +33,12 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
-    if (ready && scheduleAt) {
-      const ed = await editor
+  const {loading, submit} = trackSubmit(
+    () => "Failed to schedule your message.",
+    async () => {
+      if (ready && scheduleAt) {
+        const ed = await editor
 
-      loading = true
-
-      try {
         await onSchedule({
           content: ed.getText({blockSeparator: "\n"}).trim(),
           tags: ed.storage.nostr.getEditorTags(),
@@ -50,23 +49,13 @@
         pushToast({
           message: `Your message is scheduled for ${new Date(scheduleAt * 1000).toLocaleString([], {dateStyle: "medium", timeStyle: "short"})}.`,
         })
-      } catch (e) {
-        if (e instanceof ScheduleError) {
-          pushToast({theme: "error", message: e.message})
-        } else {
-          console.error(e)
-          pushToast({theme: "error", message: "Failed to schedule your message."})
-        }
-      } finally {
-        loading = false
       }
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let scheduleAt: Maybe<number> = $state(Math.ceil(now() / HOUR + 1) * HOUR)
 
-  const ready = $derived(scheduleAt && scheduleAt > now() && !$empty && !$uploading && !loading)
+  const ready = $derived(scheduleAt && scheduleAt > now() && !$empty && !$uploading)
 
   const editor = makeEditor({url, content, empty, submit, uploading, placeholder: "Message"})
 </script>
@@ -82,12 +71,12 @@
     <DateTimeInput bind:value={scheduleAt} disablePast />
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" onclick={submit} disabled={!ready}>
-      <Spinner {loading}>Schedule</Spinner>
+    <Button class="button button-primary" onclick={submit} disabled={!ready || $loading}>
+      <Spinner loading={$loading}>Schedule</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

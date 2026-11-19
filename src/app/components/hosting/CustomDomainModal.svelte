@@ -19,10 +19,10 @@
     canonicalRelayHost,
     flagToBool,
     followHostedRelay,
-    hostingErrorMessage,
     updateRelay,
     type HostedRelay,
   } from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     relay: HostedRelay
@@ -36,30 +36,22 @@
     domain = ""
   }
 
-  const submit = async (value: string) => {
-    if (!loading) {
-      loading = true
+  const {loading, submit} = trackSubmit(
+    () => "Failed to save domain.",
+    async (value: string) => {
+      const updated = await updateRelay(relay.id, {custom_domain: value})
 
-      try {
-        const updated = await updateRelay(relay.id, {custom_domain: value})
+      pushToast({message: value ? "Custom domain saved." : "Custom domain removed."})
+      back()
 
-        pushToast({message: value ? "Custom domain saved." : "Custom domain removed."})
-        back()
-
-        // Removing a verified domain moves the relay back to its subdomain.
-        await followHostedRelay(relay, updated)
-      } catch (e) {
-        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to save domain.")})
-      } finally {
-        loading = false
-      }
-    }
-  }
+      // Removing a verified domain moves the relay back to its subdomain.
+      await followHostedRelay(relay, updated)
+    },
+  )
 
   const onSubmit = () => submit(domain.trim())
 
   let domain = $state(relay.custom_domain ?? "")
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -110,12 +102,12 @@
     </Field>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Save</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Save</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

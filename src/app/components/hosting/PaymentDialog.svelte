@@ -34,6 +34,7 @@
     type Invoice,
     type InvoiceItem,
   } from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     invoice: Invoice
@@ -49,8 +50,6 @@
   let bolt11Error = $state("")
   let items = $state<InvoiceItem[]>([])
   let paid = $state(false)
-  let checking = $state(false)
-  let redirecting = $state(false)
 
   let pollTimer: ReturnType<typeof setTimeout> | undefined
   let destroyed = false
@@ -142,46 +141,28 @@
     }
   }
 
-  const checkPayment = async () => {
-    if (checking) {
-      return
-    }
-
-    checking = true
-
-    try {
+  const {loading: checking, submit: checkPayment} = trackSubmit(
+    () => "Failed to check payment status",
+    async () => {
       if (!(await reconcile())) {
         pushToast({message: "Payment not yet confirmed. Please try again after sending."})
       }
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to check payment status")})
-    } finally {
-      checking = false
-    }
-  }
+    },
+  )
 
   // Nested so this dialog stays mounted, and its poll collects once the wallet is saved.
   const connectWallet = () => {
     pushModal(PaymentSetup, {initialTab: "nwc"}, {nested: true})
   }
 
-  const payWithCard = async () => {
-    if (redirecting) {
-      return
-    }
-
-    redirecting = true
-
-    try {
+  const {loading: redirecting, submit: payWithCard} = trackSubmit(
+    () => "Failed to open checkout",
+    async () => {
       const {url} = await createInvoiceCheckout(invoice.id)
 
       window.location.href = url
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to open checkout")})
-    } finally {
-      redirecting = false
-    }
-  }
+    },
+  )
 
   onMount(() => {
     void loadItems()
@@ -285,8 +266,8 @@
           <Button
             class="button button-primary button-block"
             onclick={payWithCard}
-            disabled={redirecting}>
-            <Spinner loading={redirecting}>Pay {amountLabel} by card</Spinner>
+            disabled={$redirecting}>
+            <Spinner loading={$redirecting}>Pay {amountLabel} by card</Spinner>
           </Button>
         </div>
       {/if}
@@ -305,8 +286,8 @@
         <Button
           class="button button-primary"
           onclick={checkPayment}
-          disabled={checking || bolt11Status !== "ready"}>
-          <Spinner loading={checking}>Check payment</Spinner>
+          disabled={$checking || bolt11Status !== "ready"}>
+          <Spinner loading={$checking}>Check payment</Spinner>
         </Button>
       {/if}
     {/if}

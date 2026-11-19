@@ -77,7 +77,7 @@ Conventions below.
 - **Positive conditionals** — prefer `if (ready) { ... }` over `if (!ready) return`. Nesting is fine; when it gets deep that's the signal the function is doing too much, so split it. Many early returns belong in validation or pipeline functions, not everywhere else.
 - **Truthiness** — test values directly (`if (invoice.paid_at)`) instead of comparing against `null`/`undefined`, and put the truthy branch first in a ternary.
 - **Standard names** — `loading` for in-flight state, `on*` for handlers bound to an event, a plain verb (`submit`, `save`) for the action itself. Use `{prop}` shorthand when the names match.
-- **Errors** — toast a human-readable message and `console.error` anything unexpected (e.g. a non-`HostingError`). Never swallow an error you didn't anticipate. An async action with a spinner runs through `trackSubmit` from `components/flows/submit.ts`, which returns the `loading` store and the guarded action, and logs and toasts what the action didn't catch.
+- **Errors** — toast a human-readable message and `console.error` anything unexpected. Never swallow an error you didn't anticipate. An error whose message is written for the user extends `UserError` from `lib/util.ts`, as `HostingError` and `ScheduleError` do, and is toasted without being logged. An async action with a spinner runs through `trackSubmit` from `components/flows/submit.ts`, which returns the `loading` store and the guarded action, toasts a `UserError`'s message, and logs and toasts anything else the action didn't catch.
 
 ## State Management
 

@@ -15,14 +15,13 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/navigation/toast"
   import {
     exportRelayData,
     importRelayData,
-    hostingErrorMessage,
     type HostedRelay,
     type ImportResult,
   } from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     relay: HostedRelay
@@ -41,34 +40,22 @@
     result = undefined
   }
 
-  const download = async () => {
-    exporting = true
-
-    try {
+  const {loading: exporting, submit: download} = trackSubmit(
+    () => "Failed to export relay data.",
+    async () => {
       await downloadText(`${relay.subdomain}.jsonl`, await exportRelayData(relay.id))
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to export relay data.")})
-    } finally {
-      exporting = false
-    }
-  }
+    },
+  )
 
-  const upload = async () => {
-    if (file) {
-      importing = true
-
-      try {
+  const {loading: importing, submit: upload} = trackSubmit(
+    () => "Failed to import relay data.",
+    async () => {
+      if (file) {
         result = await importRelayData(relay.id, file)
-      } catch (e) {
-        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to import relay data.")})
-      } finally {
-        importing = false
       }
-    }
-  }
+    },
+  )
 
-  let exporting = $state(false)
-  let importing = $state(false)
   let file: Maybe<File> = $state()
   let result: Maybe<ImportResult> = $state()
 </script>
@@ -87,11 +74,11 @@
       <p class="text-sm text-content-muted">
         Download a copy of every event on the relay, for a backup or a move to another host.
       </p>
-      <Button class="button button-primary" onclick={download} disabled={exporting}>
-        {#if !exporting}
+      <Button class="button button-primary" onclick={download} disabled={$exporting}>
+        {#if !$exporting}
           <Icon icon={Download} size={4} />
         {/if}
-        <Spinner loading={exporting}>Download events</Spinner>
+        <Spinner loading={$exporting}>Download events</Spinner>
       </Button>
     </div>
 
@@ -101,7 +88,7 @@
       <h3 class="text-sm font-semibold uppercase tracking-wider text-content-muted">Import</h3>
       <p class="text-sm text-content-muted">
         Add the events in a file to the relay. Each one carries its own signature, so a tampered or
-        unsigned line is skipped and reported, and importing the same file twice changes nothing.
+        unsigned line is skipped and reported, and $importing the same file twice changes nothing.
       </p>
       <input
         id={inputId}
@@ -118,8 +105,8 @@
           <span class="min-w-0 break-all text-sm text-content-muted">{file.name}</span>
         {/if}
       </div>
-      <Button class="button button-primary" onclick={upload} disabled={importing || !file}>
-        <Spinner loading={importing}>Import events</Spinner>
+      <Button class="button button-primary" onclick={upload} disabled={$importing || !file}>
+        <Spinner loading={$importing}>Import events</Spinner>
       </Button>
     </div>
 

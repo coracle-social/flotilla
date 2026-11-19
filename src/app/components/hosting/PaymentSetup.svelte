@@ -18,7 +18,8 @@
   import {user} from "@app/core/user"
   import {pushToast} from "@app/navigation/toast"
   import {getNwcClient, wallet} from "@app/tools/wallet"
-  import {hosting, hostingErrorMessage, updateTenant, createPortalSession} from "@app/areas/hosting"
+  import {hosting, updateTenant, createPortalSession} from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Tab = "nwc" | "card"
 
@@ -45,72 +46,54 @@
   }
 
   let nwcUrl = $state("")
-  let saving = $state(false)
   let saved = $state(false)
-  let redirecting = $state(false)
 
   // The two wallets stay separate records, and this reuses the same connection.
   const spendingWalletUrl =
     $wallet?.type === WalletType.NWC ? getNwcClient().nostrWalletConnectUrl : undefined
 
   // The tenant's autopay wallet is a write-only backend NWC, distinct from the app's own.
-  const persistNwc = async (url?: string) => {
-    if (!url || saving) {
-      return
-    }
+  const {loading: persisting, submit: persistNwc} = trackSubmit(
+    () => "Failed to save wallet connection",
+    async (url?: string) => {
+      if (!url || $disconnecting) {
+        return
+      }
 
-    saving = true
-
-    try {
       await updateTenant($user.pubkey, {nwc_url: url})
       saved = true
       void $hosting.refresh()
-    } catch (e) {
-      pushToast({
-        theme: "error",
-        message: hostingErrorMessage(e, "Failed to save wallet connection"),
-      })
-    } finally {
-      saving = false
-    }
-  }
+    },
+  )
 
   const saveNwc = () => persistNwc(nwcUrl.trim())
 
   const useSpendingWallet = () => persistNwc(spendingWalletUrl)
 
-  const disconnectNwc = async () => {
-    if (saving) {
-      return
-    }
+  const {loading: disconnecting, submit: disconnectNwc} = trackSubmit(
+    () => "Failed to disconnect wallet",
+    async () => {
+      if ($persisting) {
+        return
+      }
 
-    saving = true
-
-    try {
       await updateTenant($user.pubkey, {nwc_url: ""})
       void $hosting.refresh()
       pushToast({message: "Lightning wallet disconnected."})
       back()
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to disconnect wallet")})
-    } finally {
-      saving = false
-    }
-  }
+    },
+  )
 
-  const openPortal = async () => {
-    redirecting = true
-
-    try {
+  const {loading: redirecting, submit: openPortal} = trackSubmit(
+    () => "Failed to open billing portal",
+    async () => {
       const {url} = await createPortalSession($user.pubkey)
 
       window.location.href = url
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to open billing portal")})
-    } finally {
-      redirecting = false
-    }
-  }
+    },
+  )
+
+  const saving = $derived($persisting || $disconnecting)
 </script>
 
 <Modal>
@@ -209,8 +192,8 @@
           <Spinner loading={saving}>Save</Spinner>
         </Button>
       {:else}
-        <Button class="button button-primary" disabled={redirecting} onclick={openPortal}>
-          <Spinner loading={redirecting}>Add a payment card</Spinner>
+        <Button class="button button-primary" disabled={$redirecting} onclick={openPortal}>
+          <Spinner loading={$redirecting}>Add a payment card</Spinner>
         </Button>
       {/if}
     {/if}

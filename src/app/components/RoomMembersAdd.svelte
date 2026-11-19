@@ -36,7 +36,7 @@
   const {loading, submit: addMembers} = trackSubmit(
     () => "Failed to add members.",
     async () => {
-      // Show $loading for auto submit callback
+      // Show loading for auto submit callback
       await sleep(500)
 
       const error = await addRoomMembers(url, {h}, pubkeys)

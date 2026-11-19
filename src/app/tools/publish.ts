@@ -6,6 +6,7 @@ import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter} from "@welshman/domain"
 import type {Command} from "@welshman/app"
+import {UserError} from "@lib/util"
 import {publisher, relays, router} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {loadSendDelay} from "@app/core/settings"
@@ -102,7 +103,7 @@ export class PublishBuilder<W extends EventWriter<BaseEventReader>> {
   }
 }
 
-export class ScheduleError extends Error {}
+export class ScheduleError extends UserError {}
 
 export const prependParent = async (
   parent: Maybe<TrustedEvent>,

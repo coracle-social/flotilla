@@ -1,5 +1,6 @@
 <script module lang="ts">
   import type {HostedRelay} from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   export type RelayFormValues = Pick<
     HostedRelay,
@@ -23,7 +24,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
-  import {hosting, hostingErrorMessage} from "@app/areas/hosting"
+  import {hosting} from "@app/areas/hosting"
   import {HOSTING_RELAY_DOMAIN} from "@app/core/env"
   import {pushToast} from "@app/navigation/toast"
   import {resolveImageInput} from "@app/tools/uploads"
@@ -60,7 +61,6 @@
 
   const plans = $hosting.plans
 
-  let loading = $state(false)
   let name = $state(initialValues.info_name ?? "")
   let subdomain = $state(initialValues.subdomain ?? "")
   let icon = $state(initialValues.info_icon ?? "")
@@ -110,20 +110,19 @@
     planId = id
   }
 
-  const trySubmit = async () => {
-    if (mode === "create" && !planId) {
-      return pushToast({theme: "error", message: "Please select a plan"})
-    }
+  const {loading, submit: trySubmit} = trackSubmit(
+    () => "Failed to save space",
+    async () => {
+      if (mode === "create" && !planId) {
+        return pushToast({theme: "error", message: "Please select a plan"})
+      }
 
-    const error = validateSubdomain(subdomain)
+      const error = validateSubdomain(subdomain)
 
-    if (error) {
-      return pushToast({theme: "error", message: error})
-    }
+      if (error) {
+        return pushToast({theme: "error", message: error})
+      }
 
-    loading = true
-
-    try {
       const resolvedIcon = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
       icon = resolvedIcon ?? ""
@@ -137,12 +136,8 @@
         info_icon: icon,
         info_description: description,
       })
-    } catch (e) {
-      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to save space")})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(trySubmit)}>
@@ -215,12 +210,12 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>{saveLabel}</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>{saveLabel}</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

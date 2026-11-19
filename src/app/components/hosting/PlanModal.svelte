@@ -15,13 +15,8 @@
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
-  import {
-    hosting,
-    hostingErrorMessage,
-    isPaidPlan,
-    updateRelay,
-    type HostedRelay,
-  } from "@app/areas/hosting"
+  import {hosting, isPaidPlan, updateRelay, type HostedRelay} from "@app/areas/hosting"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     relay: HostedRelay
@@ -32,9 +27,6 @@
   const plans = $hosting.plans
 
   let selected = $state(relay.plan_id)
-  let saving = $state(false)
-
-  const canSave = $derived(!saving && selected !== relay.plan_id)
 
   const back = () => history.back()
 
@@ -42,11 +34,10 @@
     selected = id
   }
 
-  const save = async () => {
-    if (canSave) {
-      saving = true
-
-      try {
+  const {loading: saving, submit: save} = trackSubmit(
+    () => "Failed to update plan.",
+    async () => {
+      if (selected !== relay.plan_id) {
         // Leaving the paid plans turns off the features only they include.
         const updated = await updateRelay(
           relay.id,
@@ -67,13 +58,11 @@
         } else {
           back()
         }
-      } catch (e) {
-        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to update plan.")})
-      } finally {
-        saving = false
       }
-    }
-  }
+    },
+  )
+
+  const canSave = $derived(!$saving && selected !== relay.plan_id)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(save)}>
@@ -85,12 +74,12 @@
     <PricingTable plans={$plans} selectable value={selected} onSelect={selectPlan} />
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={saving}>
+    <Button class="button button-link" onclick={back} disabled={$saving}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="button button-primary" disabled={!canSave}>
-      <Spinner loading={saving}>Save</Spinner>
+      <Spinner loading={$saving}>Save</Spinner>
     </Button>
   </ModalFooter>
 </Modal>
