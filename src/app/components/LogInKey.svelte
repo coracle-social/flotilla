@@ -22,6 +22,12 @@
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
 
+  type Props = {
+    onLogin?: () => unknown
+  }
+
+  const {onLogin}: Props = $props()
+
   let keyInput = $state("")
   let password = $state("")
 
@@ -55,7 +61,8 @@
       }
 
       await login(toSession(nip01, {secret}))
-      clearModals()
+      await clearModals()
+      onLogin?.()
     },
   )
 

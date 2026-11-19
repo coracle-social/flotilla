@@ -5,22 +5,44 @@ import {withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
 import type {Session} from "@welshman/app"
 import {getTestSession, publishTestEvents} from "@lib/test/session"
-import {app, replaceApp} from "@app/core/app"
-import {hasCachedIdentity, kv, openRepository, pluginCaches, ss} from "@app/core/storage"
+import {app, replaceApp, upgradeApp} from "@app/core/app"
+import {
+  hasCachedIdentity,
+  kv,
+  openRepository,
+  pluginCaches,
+  rememberIdentity,
+  ss,
+} from "@app/core/storage"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
 // Set by a tab that logs out, so the others stop showing what it deleted
 const LOGGED_OUT = "flotilla-logged-out"
 
-const openSession = async ($session: Session) => {
+const loadUser = async ($session: Session) => {
   const $user = await User.fromSession($session)
 
-  if (!$user) {
-    throw new Error(`Unable to log in using ${$session.method}`)
+  if ($user) {
+    return $user
   }
 
+  throw new Error(`Unable to log in using ${$session.method}`)
+}
+
+const openSession = async ($session: Session) => {
+  const $user = await loadUser($session)
+
   replaceApp($user, await openRepository($user.pubkey))
+  session.set($session)
+}
+
+// A visitor's events stay in memory for the rest of the session, and the database opens at the next start.
+const upgradeSession = async ($session: Session) => {
+  const $user = await loadUser($session)
+
+  await rememberIdentity($user.pubkey)
+  upgradeApp($user)
   session.set($session)
 }
 
@@ -32,7 +54,13 @@ export const registerLoginHandler = (handler: () => unknown) => {
 
 // Restoring a session at startup opens it without these, since they're for a user logging in.
 export const login = async ($session: Session) => {
-  await openSession($session)
+  // A password reset logs the same account in again, which replaces its app as at startup.
+  if (app.get().user) {
+    await openSession($session)
+  } else {
+    await upgradeSession($session)
+  }
+
   await Promise.all(loginHandlers.map(call))
 }
 

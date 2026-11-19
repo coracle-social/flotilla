@@ -1,16 +1,10 @@
 <script lang="ts">
   import {page} from "$app/stores"
-  import Login from "@assets/icons/login-3.svg?dataurl"
-  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
-  import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import CardButton from "@lib/components/CardButton.svelte"
   import Link from "@app/components/Link.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
-  import SignUp from "@app/components/SignUp.svelte"
+  import LogInOptions from "@app/components/LogInOptions.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {parseInviteLink} from "@app/areas/spaces/invites"
   import {
@@ -20,15 +14,10 @@
     PLATFORM_NAME,
     PLATFORM_DESCRIPTION,
   } from "@app/core/env"
-  import {pushModal} from "@app/navigation/dialogs"
 
   const invite = $derived(
     $page.url.pathname === "/join" ? parseInviteLink($page.url.href) : undefined,
   )
-
-  const logIn = () => pushModal(LogIn)
-
-  const signUp = () => pushModal(SignUp)
 </script>
 
 <Modal>
@@ -42,32 +31,7 @@
         <p class="m-auto max-w-sm text-center">{PLATFORM_DESCRIPTION}</p>
       {/if}
     </div>
-    <Button aria-label="Log in" onclick={logIn}>
-      <CardButton primary>
-        {#snippet icon()}
-          <div><Icon icon={Login} size={7} /></div>
-        {/snippet}
-        {#snippet title()}
-          <div>Log in</div>
-        {/snippet}
-        {#snippet info()}
-          <div>If you've been here before, you know the drill.</div>
-        {/snippet}
-      </CardButton>
-    </Button>
-    <Button onclick={signUp}>
-      <CardButton>
-        {#snippet icon()}
-          <div><Icon icon={AddCircle} size={7} /></div>
-        {/snippet}
-        {#snippet title()}
-          <div>Create an account</div>
-        {/snippet}
-        {#snippet info()}
-          <div>Just a few questions and you'll be on your way.</div>
-        {/snippet}
-      </CardButton>
-    </Button>
+    <LogInOptions />
     <p class="text-center text-xs opacity-75">
       By using <Link external class="link" href={PLATFORM_ABOUT}>{PLATFORM_NAME}</Link>, you consent
       to our

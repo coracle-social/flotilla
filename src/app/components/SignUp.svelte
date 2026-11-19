@@ -35,6 +35,12 @@
   import {domain, roomLists} from "@app/core/plugins"
   import {login} from "@app/core/session"
 
+  type Props = {
+    onLogin?: () => unknown
+  }
+
+  const {onLogin}: Props = $props()
+
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
   setKey("signup.profile", {})
@@ -43,7 +49,7 @@
 
   const hasPomade = POMADE_SIGNERS.length >= 3
 
-  const showLogIn = () => pushModal(LogIn)
+  const showLogIn = () => pushModal(LogIn, {onLogin})
 
   const completeSignup = async () => {
     // Join default spaces so the relay is warmed up before we publish below
@@ -77,7 +83,8 @@
     await Promise.all(publications.map(publication => publication.settled()))
 
     // Go to the dashboard
-    clearModals()
+    await clearModals()
+    onLogin?.()
   }
 
   const flows = {

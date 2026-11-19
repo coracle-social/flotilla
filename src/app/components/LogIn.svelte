@@ -28,6 +28,12 @@
   import {pushToast} from "@app/navigation/toast"
   import {login} from "@app/core/session"
 
+  type Props = {
+    onLogin?: () => unknown
+  }
+
+  const {onLogin}: Props = $props()
+
   let signers: Nip55AppInfo[] = $state([])
   let loading: string | undefined = $state()
 
@@ -35,13 +41,14 @@
 
   const disabled = $derived(loading ? true : undefined)
 
-  const signUp = () => pushModal(SignUp)
+  const signUp = () => pushModal(SignUp, {onLogin})
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
   const onSuccess = async (session: Session) => {
     await login(session)
-    clearModals()
+    await clearModals()
+    onLogin?.()
   }
 
   const loginWithNip07 = async () => {
@@ -89,11 +96,11 @@
     }
   }
 
-  const loginWithEmail = () => pushModal(LogInEmail)
+  const loginWithEmail = () => pushModal(LogInEmail, {onLogin})
 
-  const loginWithBunker = () => pushModal(LogInBunker)
+  const loginWithBunker = () => pushModal(LogInBunker, {onLogin})
 
-  const loginWithKey = () => pushModal(LogInKey)
+  const loginWithKey = () => pushModal(LogInKey, {onLogin})
 
   const hasSigner = $derived(getNip07() || signers.length > 0)
 

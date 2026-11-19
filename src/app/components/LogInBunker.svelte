@@ -26,6 +26,12 @@
   import {pushToast} from "@app/navigation/toast"
   import {NIP46_PERMS} from "@app/core/nip46"
 
+  type Props = {
+    onLogin?: () => unknown
+  }
+
+  const {onLogin}: Props = $props()
+
   const back = () => {
     if (mode === "connect") {
       selectBunker()
@@ -45,7 +51,8 @@
         }),
       )
 
-      clearModals()
+      await clearModals()
+      onLogin?.()
     },
     onError: message => pushToast({theme: "error", message}),
   })
@@ -105,7 +112,8 @@
       controller.loading.set(false)
     }
 
-    clearModals()
+    await clearModals()
+    onLogin?.()
   }
 
   const selectConnect = () => {

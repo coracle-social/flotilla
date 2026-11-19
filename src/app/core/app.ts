@@ -3,7 +3,7 @@ import type {Readable} from "svelte/store"
 import {always} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {RouteOverrides} from "@welshman/util"
-import {withGetter} from "@welshman/store"
+import {MemoryRepository, withGetter} from "@welshman/store"
 import type {ReadableWithGetter} from "@welshman/store"
 import {
   App,
@@ -77,7 +77,8 @@ const makeApp = (user?: User, stores: AppStores = {}) => {
 
 const appStore = withGetter(writable<Maybe<App>>(undefined))
 
-const getApp = () => appStore.get() ?? setApp(makeApp())
+const getApp = () =>
+  appStore.get() ?? setApp(makeApp(undefined, {repository: new MemoryRepository()}))
 
 const setApp = (instance: App) => {
   appStore.set(instance)
@@ -85,7 +86,7 @@ const setApp = (instance: App) => {
   return instance
 }
 
-// An app is scoped to a single identity, so logging in replaces it wholesale.
+// An app is scoped to a single identity, so logging in replaces it.
 export const app: ReadableWithGetter<App> = {
   get: getApp,
   subscribe: run => {
@@ -99,6 +100,11 @@ export const app: ReadableWithGetter<App> = {
 export const replaceApp = (user: User, stores: AppStores) => {
   appStore.get()?.cleanup()
   setApp(makeApp(user, stores))
+}
+
+// A visitor who logs in keeps the page they're on, so the user's app takes over the visitor's events and the visitor's app stays up for whatever closed over it.
+export const upgradeApp = (user: User) => {
+  setApp(makeApp(user, {repository: getApp().repository}))
 }
 
 // Anything bound at module load reads through this, or it keeps reading a discarded app.

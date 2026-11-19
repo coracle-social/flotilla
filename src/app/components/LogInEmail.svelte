@@ -26,13 +26,14 @@
 
   type Props = {
     email?: string
+    onLogin?: () => unknown
   }
 
-  let {email = $bindable("")}: Props = $props()
+  let {email = $bindable(""), onLogin}: Props = $props()
 
   const back = () => history.back()
 
-  const loginWithOTP = () => pushModal(LogInOTP, {email})
+  const loginWithOTP = () => pushModal(LogInOTP, {email, onLogin})
 
   const {loading, submit: onSubmit} = trackSubmit(
     () => POMADE_NETWORK_ERROR_MESSAGE,
@@ -49,12 +50,13 @@
       }
 
       if (uniq(options.map(o => o.pubkey)).length > 1) {
-        pushModal(LogInSelect, {email, options, clientSecret})
+        pushModal(LogInSelect, {email, options, clientSecret, onLogin})
       } else {
         const res = await selectPomadeLogin(clientSecret, options[0], email)
 
         if (res.ok) {
-          clearModals()
+          await clearModals()
+          onLogin?.()
         } else {
           console.error(res.messages)
 

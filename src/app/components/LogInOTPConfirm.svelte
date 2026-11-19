@@ -24,9 +24,10 @@
   type Props = {
     email: string
     peersByPrefix: Map<string, string>
+    onLogin?: () => unknown
   }
 
-  const {email, peersByPrefix}: Props = $props()
+  const {email, peersByPrefix, onLogin}: Props = $props()
 
   const back = () => history.back()
 
@@ -49,12 +50,13 @@
       }
 
       if (uniq(options.map(o => o.pubkey)).length > 1) {
-        pushModal(LogInSelect, {email, options, clientSecret})
+        pushModal(LogInSelect, {email, options, clientSecret, onLogin})
       } else {
         const res = await selectPomadeLogin(clientSecret, options[0], email)
 
         if (res.ok) {
-          clearModals()
+          await clearModals()
+          onLogin?.()
         } else {
           console.error(res.messages)
 

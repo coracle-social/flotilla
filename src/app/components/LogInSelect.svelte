@@ -22,9 +22,10 @@
     email: string
     options: AccountOption[]
     clientSecret: string
+    onLogin?: () => unknown
   }
 
-  const {email, options, clientSecret}: Props = $props()
+  const {email, options, clientSecret, onLogin}: Props = $props()
 
   const back = () => history.back()
 
@@ -34,7 +35,8 @@
       const res = await selectPomadeLogin(clientSecret, option, email)
 
       if (res.ok) {
-        clearModals()
+        await clearModals()
+        onLogin?.()
       } else {
         console.error(res.messages)
 
