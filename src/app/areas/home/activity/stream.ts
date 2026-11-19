@@ -19,7 +19,7 @@ import {observeEventsById, synced, throttled} from "@welshman/store"
 import {app} from "@app/core/app"
 import {kv} from "@app/core/storage"
 import {latestActivityByPath, unreadPaths} from "@app/tools/activity"
-import {checked, isChecked, setChecked} from "@app/tools/checked"
+import {checked, getChecked, isChecked, setChecked} from "@app/tools/checked"
 import {isEventMuted} from "@app/tools/people/muting"
 import {
   getActivityFacet,
@@ -43,7 +43,12 @@ export const includedActivityFacets = synced<ActivityFacet[]>({
 // The stream is no route of its own, so what has been read sits under a path nothing navigates to.
 const activityPath = "/home/notifications"
 
-export const readActivity = () => setChecked(activityPath)
+// A view shows nothing newer than when it opened, so reading it marks only what came before.
+export const readActivity = (until: number) => {
+  if ((getChecked(activityPath) ?? 0) < until) {
+    setChecked(activityPath, until)
+  }
+}
 
 const shortDate = (ts: number) =>
   Intl.DateTimeFormat(LOCALE, {dateStyle: "short"}).format(secondsToDate(ts))
@@ -139,12 +144,14 @@ const activityEvents = derived(
 )
 
 // Mentions have no filter chip, so they always show.
-const includedEvents = derived([activityEvents, includedActivityFacets], ([$events, $facets]) =>
-  $events.filter(event => {
-    const facet = getActivityFacet(event)
+const isIncluded = (facets: ActivityFacet[], event: TrustedEvent) => {
+  const facet = getActivityFacet(event)
 
-    return facet === "mentions" || $facets.includes(facet)
-  }),
+  return facet === "mentions" || facets.includes(facet)
+}
+
+const includedEvents = derived([activityEvents, includedActivityFacets], ([$events, $facets]) =>
+  $events.filter(event => isIncluded($facets, event)),
 )
 
 export const activityUnread = derived(
@@ -162,11 +169,10 @@ const chatsAndSpaces = derived(
   },
 )
 
-// Every row the filters let through, newest first.
-export const activityItems = derived(
-  [chatsAndSpaces, includedEvents, notes, includedActivityFacets],
-  ([{chats, spaces}, $includedEvents, $notes, $facets]) => {
-    const includeSpaces = $facets.includes("spaces")
+// Every row the facets let through, newest first.
+export const deriveActivityItems = (facets: ActivityFacet[]) =>
+  derived([chatsAndSpaces, activityEvents, notes], ([{chats, spaces}, $events, $notes]) => {
+    const includeSpaces = facets.includes("spaces")
     // A direct message has no url, so the spaces filter never hides it, and 12 chats show what is going on.
     const items: ActivityItem[] = chats
       .filter(item => includeSpaces || !item.activity.url)
@@ -176,11 +182,15 @@ export const activityItems = derived(
       items.push(...spaces)
     }
 
-    items.push(...getNoteItems($includedEvents, $notes))
+    items.push(
+      ...getNoteItems(
+        $events.filter(event => isIncluded(facets, event)),
+        $notes,
+      ),
+    )
 
     return sortBy(item => -item.timestamp, items)
-  },
-)
+  })
 
 export const activityCounts = derived(
   [chatsAndSpaces, activityEvents],

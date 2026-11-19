@@ -4,7 +4,7 @@
   import {goto} from "$app/navigation"
   import {page} from "$app/stores"
   import {sortBy} from "@welshman/lib"
-  import {CLASSIFIED} from "@welshman/util"
+  import {CLASSIFIED, sortEventsDesc} from "@welshman/util"
   import {Classified} from "@welshman/domain"
   import {fly} from "@lib/transition"
   import CaseMinimalistic from "@assets/icons/case-minimalistic.svg?dataurl"
@@ -75,7 +75,7 @@
     const matches = scoped.filter(event => tab === "all" || getStatus(event) === tab)
 
     if (sort === "new") {
-      return sortBy(event => -event.created_at, matches)
+      return sortEventsDesc(matches)
     }
 
     if (sort === "price-asc") {

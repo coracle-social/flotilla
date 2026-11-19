@@ -1,44 +1,42 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {
+  HOUR,
+  MONTH,
   countBy,
-  groupBy,
   identity,
+  int,
   ms,
+  now,
   partition,
   removeUndefined,
   sortBy,
-  uniq,
 } from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
-import {synced} from "@welshman/store"
-import {
-  EventRef,
-  GENERIC_REPOST,
-  NOTE,
-  REACTION,
-  REPOST,
-  ZAP_RECEIPT,
-  sortEventsDesc,
-} from "@welshman/util"
-import type {Filter, IEventRef, TrustedEvent} from "@welshman/util"
+import type {Maybe, MaybeAsync} from "@welshman/lib"
+import {EventRef, GENERIC_REPOST, NOTE, REACTION, REPOST, ZAP_RECEIPT} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
+import {appendOnly} from "@lib/order"
 import {combinePagers} from "@lib/pager"
-import type {Pager} from "@lib/pager"
+import type {Pager, PagerStatus} from "@lib/pager"
+import {app} from "@app/core/app"
 import {ENABLE_ZAPS} from "@app/core/env"
-import {kv} from "@app/core/storage"
-import {userFollowPubkeys} from "@app/core/user"
+import {followLists} from "@app/core/plugins"
 import {makeAuthorFeed} from "@app/tools/feeds/author"
 import type {AuthorFeed} from "@app/tools/feeds/author"
+import {
+  getEntries,
+  getNoteKey,
+  getNoteParentRef,
+  groupByCandidate,
+  groupByNote,
+} from "@app/tools/feeds/cards"
+import type {DrawnEvent, NoteEntry, NoteGroup} from "@app/tools/feeds/cards"
+import {includedNoteFacets, includesAnyFacet, whenIncluded} from "@app/tools/feeds/facets"
+import type {FacetCounts, NoteFacet} from "@app/tools/feeds/facets"
 import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/tools/notes"
 import {derivePinnedEvents} from "@app/tools/people/pins"
 import {CONTENT_KINDS, getPublishedTimestamp} from "@app/tools/content"
-
-export type NoteFacet = "notes" | "replies" | "interactions"
-
-export type FacetCounts = Map<NoteFacet, number>
-
-export type NoteEntry = {key: string; note: TrustedEvent; replies: TrustedEvent[]}
 
 export type NoteFeedStatus = "loading" | "ready" | "empty" | "filtered"
 
@@ -51,155 +49,59 @@ export type NoteFeed = {
   stop: () => void
 }
 
-type NoteGroup = {
-  key: string
-  ref: EventRef
-  facets: NoteFacet[]
-  note?: TrustedEvent
-  replies: TrustedEvent[]
+type StatusInputs = {
+  entries: NoteEntry[]
+  groups: NoteGroup[]
+  resolved: Map<string, Maybe<TrustedEvent>>
+  loading: boolean
+  olderStatus: PagerStatus
+  included: NoteFacet[]
+  sourceFacets: NoteFacet[]
 }
 
-type DrawnEvent = {event: TrustedEvent; facet: NoteFacet}
-
-const isNoteFacet = (value: unknown): value is NoteFacet =>
-  value === "notes" || value === "replies" || value === "interactions"
-
-// The stored key outlives the facet's old names, so a "popular" or "engaged" comes back as interactions.
-const readIncludedNoteFacets = async (key: string): Promise<NoteFacet[] | undefined> => {
-  const stored = await kv.get<unknown[]>(key)
-
-  if (Array.isArray(stored)) {
-    const migrated = stored.map(value =>
-      value === "popular" || value === "engaged" ? "interactions" : value,
-    )
-
-    return migrated.filter(isNoteFacet)
-  }
-}
-
-export const includedNoteFacets = synced<NoteFacet[]>({
-  key: "includedNetworkFeedTypes",
-  defaultValue: ["notes", "replies"],
-  storage: {get: readIncludedNoteFacets, set: kv.set},
-})
-
-// An addressable note is keyed by its address, so a reply naming only its latest version lands on it.
-const getNoteKey = (ref: IEventRef): string => new EventRef(ref).getAddressOrId() ?? ""
-
-const getNoteParentRef = (event: TrustedEvent): Maybe<EventRef> => {
-  if (event.kind === NOTE) {
-    return getTargetRef(event)
-  }
-}
-
-const includesAnyFacet = (included: NoteFacet[], facets: NoteFacet[]): boolean =>
-  facets.some(facet => included.includes(facet))
-
-const mergeInto = (
-  groups: Map<string, NoteGroup>,
-  key: string,
-  ref: IEventRef,
-  facets: NoteFacet[],
-): NoteGroup => {
-  const group: NoteGroup = groups.get(key) ?? {key, ref: new EventRef(ref), facets: [], replies: []}
-
-  group.ref = EventRef.merge(group.ref, ref)
-  group.facets = uniq([...group.facets, ...facets])
-  groups.set(key, group)
-
-  return group
-}
-
-const dedupeDrawn = (drawn: DrawnEvent[]) =>
-  Array.from(
-    groupBy(({event}) => event.id, drawn),
-    ([, items]) => ({
-      event: items[0].event,
-      facets: uniq(items.map(({facet}) => facet)),
-    }),
-  )
-
-const groupByCandidate = (drawn: DrawnEvent[], targets: EventRef[]): NoteGroup[] => {
-  const groups = new Map<string, NoteGroup>()
-
-  for (const {event, facets} of dedupeDrawn(drawn)) {
-    const parent = getNoteParentRef(event)
-    const ref = parent ?? EventRef.fromEvent(event)
-    const key = getNoteKey(ref)
-
-    if (key) {
-      const group = mergeInto(groups, key, ref, facets)
-
-      if (parent) {
-        group.replies = [...group.replies, event]
-      } else if (!group.note) {
-        group.note = event
-      }
-    }
+const getStatus = ({
+  entries,
+  groups,
+  resolved,
+  loading,
+  olderStatus,
+  included,
+  sourceFacets,
+}: StatusInputs): NoteFeedStatus => {
+  if (entries.length > 0) {
+    return "ready"
   }
 
-  for (const ref of targets) {
-    const key = getNoteKey(ref)
-
-    if (key) {
-      mergeInto(groups, key, ref, ["interactions"])
-    }
+  if (!includesAnyFacet(included, sourceFacets)) {
+    return "filtered"
   }
 
-  return Array.from(groups.values())
-}
-
-// Candidates that name one note by different keys are one card once the note tells them apart.
-const groupByNote = (
-  groups: NoteGroup[],
-  resolved: Map<string, Maybe<TrustedEvent>>,
-): NoteGroup[] => {
-  const rekeyed = new Map<string, NoteGroup>()
-
-  for (const group of groups) {
-    const note = group.note ?? resolved.get(group.key)
-    const key = note ? getNoteKey(EventRef.fromEvent(note)) : group.key
-    const merged = mergeInto(rekeyed, key, group.ref, group.facets)
-
-    merged.note ??= note
-    merged.replies = [...merged.replies, ...group.replies]
+  if (loading || olderStatus !== "exhausted") {
+    return "loading"
   }
 
-  return Array.from(rekeyed.values())
+  // A note that failed to load can't be drawn whatever the facets say, so it isn't one they hide.
+  if (groups.some(group => group.note || !resolved.has(group.key))) {
+    return "filtered"
+  }
+
+  return "empty"
 }
 
-const getEntries = (
-  visible: NoteGroup[],
-  included: NoteFacet[],
-  pinnedKeys: Set<string>,
-): NoteEntry[] => {
-  const entries = visible.flatMap(group => {
-    if (group.note) {
-      // The replies drawn under a card belong to the replies facet alone.
-      const replies = included.includes("replies") ? sortEventsDesc(group.replies) : []
-
-      return [{key: group.key, note: group.note, replies}]
-    }
-
-    return []
-  })
-
-  const sorted = sortBy(entry => -getPublishedTimestamp(entry.note), entries)
-  const [pinned, rest] = partition(entry => pinnedKeys.has(entry.key), sorted)
-
-  return [...pinned, ...rest]
-}
+const byPublished = (entry: NoteEntry) => getPublishedTimestamp(entry.note)
 
 const makeNoteFeed = ({
   noteSource,
   interactionSource,
   pinned = readable<TrustedEvent[]>([]),
   included = readable<NoteFacet[]>(["notes", "replies", "interactions"]),
+  at,
 }: {
   noteSource: AuthorFeed
   interactionSource?: AuthorFeed
   pinned?: Readable<TrustedEvent[]>
   included?: Readable<NoteFacet[]>
+  at: number
 }): NoteFeed => {
   const sourceFacets: NoteFacet[] = interactionSource
     ? ["notes", "replies", "interactions"]
@@ -240,8 +142,37 @@ const makeNoteFeed = ({
     $pinned => new Set($pinned.map(event => getNoteKey(EventRef.fromEvent(event)))),
   )
 
-  const entries = derived([visible, included, pinnedKeys], ([$visible, $included, $pinnedKeys]) =>
-    getEntries($visible, $included, $pinnedKeys),
+  // Each filter is a list of its own, so changing it sorts the cards again; within one, a card keeps its place.
+  const entries = derived(
+    included,
+    ($included, set) => {
+      const cards = derived([groups, pinnedKeys], ([$groups, $pinnedKeys]) =>
+        partition(
+          entry => $pinnedKeys.has(entry.key),
+          getEntries(
+            $groups.filter(group => includesAnyFacet($included, group.facets)),
+            $included,
+          ),
+        ),
+      )
+
+      const pinnedCards = derived(cards, ([$pinnedCards]) =>
+        sortBy(entry => -byPublished(entry), $pinnedCards),
+      )
+
+      const otherCards = appendOnly(
+        derived(cards, ([, $otherCards]) => $otherCards),
+        entry => entry.key,
+        byPublished,
+        at,
+      )
+
+      return derived([pinnedCards, otherCards], ([$pinnedCards, $otherCards]) => [
+        ...$pinnedCards,
+        ...$otherCards,
+      ]).subscribe(set)
+    },
+    [] as NoteEntry[],
   )
 
   const unresolved = derived([visible, resolver.notes], ([$visible, $resolved]) =>
@@ -279,26 +210,16 @@ const makeNoteFeed = ({
 
   const status = derived(
     [entries, groups, resolver.notes, loading, older.status, included],
-    ([$entries, $groups, $resolved, $loading, $olderStatus, $included]): NoteFeedStatus => {
-      if ($entries.length > 0) {
-        return "ready"
-      }
-
-      if (!includesAnyFacet($included, sourceFacets)) {
-        return "filtered"
-      }
-
-      if ($loading || $olderStatus !== "exhausted") {
-        return "loading"
-      }
-
-      // A note that failed to load can't be drawn whatever the facets say, so it isn't one they hide.
-      if ($groups.some(group => group.note || !$resolved.has(group.key))) {
-        return "filtered"
-      }
-
-      return "empty"
-    },
+    ([$entries, $groups, $resolved, $loading, $olderStatus, $included]) =>
+      getStatus({
+        entries: $entries,
+        groups: $groups,
+        resolved: $resolved,
+        loading: $loading,
+        olderStatus: $olderStatus,
+        included: $included,
+        sourceFacets,
+      }),
   )
 
   const stop = () => {
@@ -311,44 +232,72 @@ const makeNoteFeed = ({
   return {entries, counts, status, loading, older, stop}
 }
 
-const makeNoteSource = (pubkeys: Readable<string[]>): AuthorFeed =>
+const makeNoteSource = (pubkeys: MaybeAsync<string[]>, at: number, interval: number): AuthorFeed =>
   makeAuthorFeed({
     pubkeys,
+    at,
+    interval,
     getFilters: authors => [{kinds: [NOTE, ...CONTENT_KINDS], authors}],
   })
 
+const getInteractionFilters = (authors: string[]) => {
+  const filters: Filter[] = [{kinds: [REACTION, REPOST, GENERIC_REPOST], authors}]
+
+  // A receipt is published by the recipient's wallet, which names the zapper in its P tag.
+  if (ENABLE_ZAPS) {
+    filters.push({kinds: [ZAP_RECEIPT], "#P": authors})
+  }
+
+  return filters
+}
+
+// The follows the feed starts with, loaded first if they aren't here yet.
+const loadFollowPubkeys = async () => {
+  const pubkey = app.get().user?.pubkey
+
+  if (pubkey) {
+    const followList = await followLists.get().load(pubkey)
+
+    return followList?.pubkeys() ?? []
+  }
+
+  return []
+}
+
 export const makeNetworkFeed = (): NoteFeed => {
-  const noteSource = makeNoteSource(userFollowPubkeys)
+  const at = now()
+  const controller = new AbortController()
+  const follows = loadFollowPubkeys()
 
-  // Follows' interactions are asked for once their facet is first shown, and stay live after.
-  const shown = readable(false, set =>
-    includedNoteFacets.subscribe($facets => {
-      if ($facets.includes("interactions")) {
-        set(true)
-      }
-    }),
-  )
-
+  // Follows' interactions are asked for the first time their facet is shown.
   const interactionSource = makeAuthorFeed({
-    pubkeys: derived([userFollowPubkeys, shown], ([$pubkeys, $shown]) => ($shown ? $pubkeys : [])),
-    getFilters: authors => {
-      const filters: Filter[] = [{kinds: [REACTION, REPOST, GENERIC_REPOST], authors}]
-
-      // A receipt is published by the recipient's wallet, which names the zapper in its P tag.
-      if (ENABLE_ZAPS) {
-        filters.push({kinds: [ZAP_RECEIPT], "#P": authors})
-      }
-
-      return filters
-    },
+    pubkeys: whenIncluded("interactions", controller.signal).then(() => follows),
+    at,
+    interval: int(HOUR),
+    getFilters: getInteractionFilters,
   })
 
-  return makeNoteFeed({noteSource, interactionSource, included: includedNoteFacets})
+  const feed = makeNoteFeed({
+    noteSource: makeNoteSource(follows, at, int(HOUR)),
+    interactionSource,
+    included: includedNoteFacets,
+    at,
+  })
+
+  const stop = () => {
+    controller.abort()
+    feed.stop()
+  }
+
+  return {...feed, stop}
 }
 
 export const makeProfileFeed = (pubkey: string): NoteFeed => {
+  const at = now()
+
   return makeNoteFeed({
-    noteSource: makeNoteSource(readable([pubkey])),
+    noteSource: makeNoteSource([pubkey], at, int(MONTH)),
     pinned: derivePinnedEvents(pubkey),
+    at,
   })
 }

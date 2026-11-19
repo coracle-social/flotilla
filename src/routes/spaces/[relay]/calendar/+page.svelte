@@ -130,7 +130,10 @@
       rangeLoading = true
 
       feed
-        .load(dateToSeconds(days[0]), dateToSeconds(addDays(days[days.length - 1], 1)))
+        .load({
+          since: dateToSeconds(days[0]),
+          until: dateToSeconds(addDays(days[days.length - 1], 1)),
+        })
         .catch(error => console.error(error))
         .finally(() => {
           // Paging faster than the relay answers would otherwise clear a newer range's spinner

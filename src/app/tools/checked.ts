@@ -18,7 +18,7 @@ export const checked = withGetter(
 
 export const getChecked = (key: string) => checked.get()[key]
 
-export const setChecked = (key: string) => checked.update(assoc(key, now()))
+export const setChecked = (key: string, timestamp = now()) => checked.update(assoc(key, timestamp))
 
 // A wildcard entry covers every path with its prefix, and any other entry covers its own path and its parents.
 export const isChecked = ($checked: Record<string, number>, path: string, timestamp: number) =>

@@ -9,7 +9,7 @@ import {
   sortBy,
   uniqBy,
 } from "@welshman/lib"
-import {EVENT_RSVP, getAddress} from "@welshman/util"
+import {EVENT_RSVP, getAddress, sortEventsDesc} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, Delete, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
@@ -241,10 +241,7 @@ export const isAttending = (status?: RsvpStatus) => status === "accepted" || sta
 
 // A relay can still hold a replaced RSVP, so the newest per person is the one that counts.
 export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
-  const latest = uniqBy(
-    rsvp => rsvp.pubkey,
-    sortBy(rsvp => -rsvp.created_at, rsvps),
-  )
+  const latest = uniqBy(rsvp => rsvp.pubkey, sortEventsDesc(rsvps))
 
   const byStatus = (status: RsvpStatus) =>
     latest.filter(rsvp => reader(CalendarRsvp)(rsvp).status() === status).map(rsvp => rsvp.pubkey)

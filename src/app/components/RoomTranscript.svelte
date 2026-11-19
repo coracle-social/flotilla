@@ -6,7 +6,7 @@
   import {page} from "$app/stores"
   import {debounce} from "throttle-debounce"
   import cx from "classnames"
-  import {now, spec} from "@welshman/lib"
+  import {WEEK, int, now, spec} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
@@ -287,6 +287,7 @@
     const feed = makeRelayFeed({
       url,
       at: anchor,
+      interval: int(WEEK),
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],

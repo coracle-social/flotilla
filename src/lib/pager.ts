@@ -1,4 +1,4 @@
-import {derived, get, writable} from "svelte/store"
+import {derived, get, readonly, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {ms, sleep} from "@welshman/lib"
 import {createScroller} from "@lib/html"
@@ -63,6 +63,51 @@ export const makePager = (load: () => Promise<PageResult>): Pager => {
   }
 
   return {status, page, settle}
+}
+
+export type Window = {since: number; until: number}
+
+export type WindowResult = {found: number; answered: boolean}
+
+// A direction through time: where it starts, when it's done, the next window, and where an answered window leaves it.
+export type Walk<C, R extends WindowResult> = {
+  start: C
+  isDone: (cursor: C) => boolean
+  getWindow: (cursor: C) => Window
+  advance: (cursor: C, window: Window, result: R) => C
+}
+
+// Asks for one window per load, and moves the cursor once a window is answered.
+export const makeWalkPager = <C, R extends WindowResult>(
+  walk: Walk<C, R>,
+  request: (window: Window) => Promise<R>,
+  isBehind: (cursor: C) => boolean = () => false,
+) => {
+  const cursor = writable(walk.start)
+
+  const load = async (): Promise<PageResult> => {
+    const current = get(cursor)
+
+    if (walk.isDone(current)) {
+      return {found: 0, answered: true, exhausted: true, behind: false}
+    }
+
+    const window = walk.getWindow(current)
+    const result = await request(window)
+
+    if (result.answered) {
+      cursor.set(walk.advance(current, window, result))
+    }
+
+    return {
+      found: result.found,
+      answered: result.answered,
+      exhausted: false,
+      behind: isBehind(get(cursor)),
+    }
+  }
+
+  return {...makePager(load), cursor: readonly(cursor)}
 }
 
 const combineStatuses = (statuses: PagerStatus[]): PagerStatus => {

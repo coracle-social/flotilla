@@ -1,7 +1,7 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {now, removeUndefined, sortBy} from "@welshman/lib"
-import {fromMsats} from "@welshman/util"
+import {fromMsats, sortEventsDesc} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {ZapGoal} from "@welshman/domain"
 import type {Zap} from "@welshman/domain"
@@ -118,7 +118,7 @@ export const sortGoals = (
   activeAt: Map<string, number>,
 ) => {
   if (sort === "new") {
-    return sortBy(event => -event.created_at, goals)
+    return sortEventsDesc(goals)
   }
 
   if (sort === "progress") {
