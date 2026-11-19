@@ -11,6 +11,7 @@
     removeBookmark,
   } from "@app/areas/bookmarks"
   import {pushToast} from "@app/navigation/toast"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url?: string
@@ -23,20 +24,23 @@
 
   const isBookmarked = deriveIsBookmarked(getIdOrAddress(event))
 
-  const toggle = async () => {
-    onClick?.()
-
-    // The repository takes the write at once, so the label flips before the relays answer.
+  const toggle = () => {
+    // Read before the write, which the repository takes at once, so the label flips before the relays answer.
     const bookmarked = $isBookmarked
-    const error = await (bookmarked
-      ? removeBookmark(getIdOrAddress(event))
-      : addBookmark(eventToBookmark(event, url)))
 
-    if (error) {
-      pushToast({theme: "error", message: error})
-    } else {
-      pushToast({message: bookmarked ? "Bookmark removed" : "Bookmark saved!"})
-    }
+    withLogin("save a bookmark", async () => {
+      onClick?.()
+
+      const error = await (bookmarked
+        ? removeBookmark(getIdOrAddress(event))
+        : addBookmark(eventToBookmark(event, url)))
+
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: bookmarked ? "Bookmark removed" : "Bookmark saved!"})
+      }
+    })
   }
 </script>
 

@@ -15,6 +15,7 @@
   import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/areas/spaces/calendar"
   import {setEventReminders} from "@app/areas/spaces/reminders"
   import {pushToast} from "@app/navigation/toast"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -25,29 +26,31 @@
 
   const {url, event, rsvps, onShowPeople}: Props = $props()
 
-  const setStatus = async (status: RsvpStatus) => {
-    if (loading) {
-      return
-    }
+  const setStatus = (status: RsvpStatus) => {
+    const retracted = ownStatus === status ? ownRsvp : undefined
 
-    loading = true
-
-    const retracting = ownRsvp && ownStatus === status
-
-    try {
-      if (retracting) {
-        await retractRsvp(url, ownRsvp)
-      } else {
-        await publishRsvp(url, event, status)
+    withLogin("RSVP", async () => {
+      if (loading) {
+        return
       }
 
-      await setEventReminders(url, event, !retracting && isAttending(status))
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update your RSVP."})
-    } finally {
-      loading = false
-    }
+      loading = true
+
+      try {
+        if (retracted) {
+          await retractRsvp(url, retracted)
+        } else {
+          await publishRsvp(url, event, status)
+        }
+
+        await setEventReminders(url, event, !retracted && isAttending(status))
+      } catch (e) {
+        console.error(e)
+        pushToast({theme: "error", message: "Failed to update your RSVP."})
+      } finally {
+        loading = false
+      }
+    })
   }
 
   const accept = () => setStatus("accepted")

@@ -1,12 +1,11 @@
 import {user} from "@app/core/user"
-import {pushModal} from "@app/navigation/dialogs"
-import LogInPrompt from "@app/components/LogInPrompt.svelte"
+import {loginRequest} from "@app/navigation/login"
 
-// Runs an action that needs an account, asking a visitor to log in first and running it once they have.
+// Runs an action that needs an account, once a visitor has logged in, so a toggle reads its state before calling this rather than in the action.
 export const withLogin = (action: string, run: () => unknown) => {
   if (user.get()) {
     return run()
   }
 
-  pushModal(LogInPrompt, {action, onLogin: run})
+  loginRequest.set({action, onLogin: run})
 }

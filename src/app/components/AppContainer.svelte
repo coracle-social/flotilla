@@ -6,8 +6,10 @@
   import CallBanner from "@app/components/CallBanner.svelte"
   import ReadAloudBanner from "@app/components/ReadAloudBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
+  import LogInPrompt from "@app/components/LogInPrompt.svelte"
   import {app} from "@app/core/app"
-  import {getModal} from "@app/navigation/dialogs"
+  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import {loginRequest} from "@app/navigation/login"
 
   type Props = {
     children: Snippet
@@ -19,6 +21,14 @@
     const modal = getModal()
 
     return Boolean(modal && !modal.options.drawer)
+  })
+
+  // withLogin can't import the login dialogs, since they render components that call it.
+  $effect(() => {
+    if ($loginRequest) {
+      pushModal(LogInPrompt, $loginRequest)
+      loginRequest.set(undefined)
+    }
   })
 </script>
 

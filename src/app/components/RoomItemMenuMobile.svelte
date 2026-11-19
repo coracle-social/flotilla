@@ -42,6 +42,7 @@
   import {readEventAloud} from "@app/components/flows/readAloud"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction} from "@app/areas/spaces"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -62,20 +63,22 @@
 
   const onEmoji = (emoji: string) => {
     history.back()
-    publishReaction(url, event, {content: emoji, tags: []})
+    withLogin("react", () => publishReaction(url, event, {content: emoji, tags: []}))
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
 
   const createThread = () =>
-    pushModal(
-      ThreadCreate,
-      {
-        url,
-        h,
-        initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
-      },
-      {replaceState: true},
+    withLogin("start a thread", () =>
+      pushModal(
+        ThreadCreate,
+        {
+          url,
+          h,
+          initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
+        },
+        {replaceState: true},
+      ),
     )
 
   const sendReply = () => {
@@ -100,9 +103,13 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
 
-  const addToLibrary = () => pushModal(PinboardSelect, {url, event}, {replaceState: true})
+  const addToLibrary = () =>
+    withLogin("add this to a library", () =>
+      pushModal(PinboardSelect, {url, event}, {replaceState: true}),
+    )
 
-  const report = () => pushModal(Report, {url, event}, {replaceState: true})
+  const report = () =>
+    withLogin("report this", () => pushModal(Report, {url, event}, {replaceState: true}))
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 

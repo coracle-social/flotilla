@@ -6,6 +6,7 @@ import {goToEvent} from "@app/navigation/locations"
 import {makeQuoteContent} from "@app/tools/quotes"
 import NoteCreate from "@app/components/NoteCreate.svelte"
 import QuoteLoading from "@app/components/QuoteLoading.svelte"
+import {withLogin} from "@app/components/flows/login"
 
 // A quote names an event that may not have arrived, so a modal loads it before going anywhere.
 export const goToQuote = async (ref: IEventRef, event: TrustedEvent, url?: string) => {
@@ -19,8 +20,9 @@ export const goToQuote = async (ref: IEventRef, event: TrustedEvent, url?: strin
   }
 }
 
-export const quoteEvent = async (event: TrustedEvent) => {
-  const content = await makeQuoteContent(event)
+export const quoteEvent = (event: TrustedEvent) =>
+  withLogin("quote this", async () => {
+    const content = await makeQuoteContent(event)
 
-  pushModal(NoteCreate, {initialValues: {content}})
-}
+    pushModal(NoteCreate, {initialValues: {content}})
+  })
