@@ -16,6 +16,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {command, writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -26,17 +27,16 @@
 
   const back = () => history.back()
 
-  const confirm = async () => {
-    if (!reason) {
-      return pushToast({
-        theme: "error",
-        message: "Please select a reason for your report.",
-      })
-    }
+  const {loading, submit: confirm} = trackSubmit(
+    () => "Failed to send your report.",
+    async () => {
+      if (!reason) {
+        return pushToast({
+          theme: "error",
+          message: "Please select a reason for your report.",
+        })
+      }
 
-    loading = true
-
-    try {
       const eventWriter = writer(Report)
         .setPubkey(event.pubkey)
         .setEventId(event.id)
@@ -53,17 +53,11 @@
       history.back()
 
       pushToast({message: "Your report has been sent!"})
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to send your report."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let reason = $state("")
   let content = $state("")
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(confirm)}>
@@ -109,8 +103,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Send Report</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Send Report</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

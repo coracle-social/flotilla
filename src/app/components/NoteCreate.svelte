@@ -21,6 +21,7 @@
   import {openEventNote} from "@app/navigation/overlays"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     content?: string | object
@@ -43,21 +44,20 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async (scheduleAt?: number) => {
-    if ($uploading || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to post.",
+    async (scheduleAt?: number) => {
+      if ($uploading) {
+        return
+      }
 
-    const ed = await editor
-    const text = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const text = ed.getText({blockSeparator: "\n"}).trim()
 
-    if (!text) {
-      return pushToast({theme: "error", message: "Please write something first."})
-    }
+      if (!text) {
+        return pushToast({theme: "error", message: "Please write something first."})
+      }
 
-    loading = true
-
-    try {
       const eventWriter = writer(Note)
         .setContent(text)
         .addTags(...ed.storage.nostr.getEditorTags())
@@ -77,15 +77,9 @@
           : "Your post has been published!",
         action: {message: "View it", onclick: () => openEventNote(publication.event)},
       })
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to post."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let content = $state(initialValues?.content ?? draft?.content ?? "")
 
   const onChange = (json: object) => {
@@ -120,7 +114,7 @@
         data-tip="Add an image"
         class="tip tip-left absolute bottom-1 right-2"
         onclick={selectFiles}
-        disabled={loading}>
+        disabled={$loading}>
         {#if $uploading}
           <Spinner size="xs" />
         {:else}
@@ -130,12 +124,12 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={$uploading || loading || $empty}>
-      <Spinner {loading}>Post</Spinner>
+    <PublishButton onPublish={submit} disabled={$uploading || $loading || $empty}>
+      <Spinner loading={$loading}>Post</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

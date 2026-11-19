@@ -15,6 +15,7 @@
   import {relayManagement} from "@app/core/plugins"
   import {allowPubkeys} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -25,10 +26,9 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to assign members.",
+    async () => {
       const management = $relayManagement.forUrl(url)
 
       // Members have to be allowed at the relay before a role there means anything
@@ -46,15 +46,9 @@
         pushToast({message: "Members assigned!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to assign members."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let pubkeys: string[] = $state([])
 </script>
 
@@ -81,8 +75,8 @@
     <Button
       class="button button-primary"
       onclick={submit}
-      disabled={loading || pubkeys.length === 0}>
-      <Spinner {loading}>Save changes</Spinner>
+      disabled={$loading || pubkeys.length === 0}>
+      <Spinner loading={$loading}>Save changes</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

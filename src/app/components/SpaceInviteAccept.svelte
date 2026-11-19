@@ -26,6 +26,7 @@
   import * as pages from "@app/navigation/pages"
   import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/areas/spaces/invites"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     invite: string
@@ -65,21 +66,14 @@
     await goToSpace(data.url, {replaceState: true})
   }
 
-  const join = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: join} = trackSubmit(
+    () => "Failed to accept the invite.",
+    async () => {
       await joinRelay()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to accept the invite."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let error = $state(maybe<string>())
-  let loading = $state(false)
   let showScanner = $state(false)
   let notifications = $state(true)
 
@@ -138,8 +132,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={!inviteData || loading}>
-      <Spinner {loading}>{isRoomInvite ? "Join Room" : "Join Space"}</Spinner>
+    <Button type="submit" class="button button-primary" disabled={!inviteData || $loading}>
+      <Spinner loading={$loading}>{isRoomInvite ? "Join Room" : "Join Space"}</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

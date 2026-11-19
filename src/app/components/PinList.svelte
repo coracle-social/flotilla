@@ -25,6 +25,7 @@
   } from "@app/areas/spaces/pinboards"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -63,10 +64,9 @@
 
   const open = (pin: PinReader) => () => pushModal(PinDetail, {url, pin}, {size: "large"})
 
-  const run = async (action: () => Promise<(string | undefined)[]>, message: string) => {
-    loading = true
-
-    try {
+  const {loading, submit: run} = trackSubmit(
+    () => "Some of those links could not be changed.",
+    async (action: () => Promise<(string | undefined)[]>, message: string) => {
       const error = (await action()).find(Boolean)
 
       if (error) {
@@ -75,13 +75,8 @@
         pushToast({message})
         selection = new Set()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Some of those links could not be changed."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const remove = () =>
     run(
@@ -115,7 +110,6 @@
     })
 
   let selection = $state(new Set<string>())
-  let loading = $state(false)
 </script>
 
 <div data-component="PinList" class="flex flex-col bg-surface">
@@ -130,7 +124,7 @@
       <MenuButton
         class="button button-neutral button-sm button-square"
         aria-label="Bulk actions"
-        disabled={loading}
+        disabled={$loading}
         component={PinSelectionMenu}
         componentProps={{
           shelves: destinations,
@@ -138,7 +132,7 @@
           onRemove: canShelve ? remove : explainShelve,
           onDelete: canDelete ? confirmDelete : explainDelete,
         }}>
-        {#if loading}
+        {#if $loading}
           <Spinner size="sm" />
         {:else}
           <Icon icon={MenuDots} size={4} />

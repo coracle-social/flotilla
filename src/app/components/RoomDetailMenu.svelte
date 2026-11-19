@@ -20,6 +20,7 @@
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -34,20 +35,14 @@
 
   const startEdit = () => pushModal(RoomEdit, {url, h})
 
-  const handleLoading = async (action: () => Promise<Maybe<string>>, successMessage: string) => {
-    loading = true
-
-    try {
+  const {loading, submit: handleLoading} = trackSubmit(
+    () => "Failed to update your room membership.",
+    async (action: () => Promise<Maybe<string>>, successMessage: string) => {
       const message = await action()
 
       pushToast(message ? {theme: "error", message} : {message: successMessage})
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update your room membership."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const join = () => handleLoading(() => joinRoom(url, h), "You have joined the room.")
 
@@ -74,8 +69,6 @@
         }
       },
     })
-
-  let loading = $state(false)
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
@@ -98,8 +91,8 @@
     {/if}
   {:else if $membershipStatus === MembershipStatus.Initial}
     <li>
-      <Button disabled={loading} onclick={join}>
-        {#if loading}
+      <Button disabled={$loading} onclick={join}>
+        {#if $loading}
           <Spinner size="sm" />
         {:else}
           <Icon icon={Login3} />
@@ -116,8 +109,8 @@
     </li>
   {:else}
     <li>
-      <Button disabled={loading} onclick={leave}>
-        {#if loading}
+      <Button disabled={$loading} onclick={leave}>
+        {#if $loading}
           <Spinner size="sm" />
         {:else}
           <Icon icon={Login3} />

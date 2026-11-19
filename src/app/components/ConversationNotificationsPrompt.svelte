@@ -15,11 +15,11 @@
   import {enableMessageNotifications} from "@app/tools/push/actions"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
-  const enable = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: enable} = trackSubmit(
+    () => "Failed to enable notifications.",
+    async () => {
       const permission = await enableMessageNotifications()
 
       if (isGranted(permission)) {
@@ -28,15 +28,8 @@
       } else {
         pushToast({theme: "error", message: getPermissionMessage(permission)})
       }
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: "Failed to enable notifications."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(enable)}>
@@ -58,17 +51,17 @@
   </ModalBody>
   <ModalFooter>
     <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
-      <Button class="button button-neutral" onclick={popModal} disabled={loading}>
-        {#if !loading}
+      <Button class="button button-neutral" onclick={popModal} disabled={$loading}>
+        {#if !$loading}
           <Icon icon={CloseCircle} />
         {/if}
-        <Spinner {loading}>Not now</Spinner>
+        <Spinner loading={$loading}>Not now</Spinner>
       </Button>
-      <Button type="submit" class="button button-primary" disabled={loading}>
-        {#if !loading}
+      <Button type="submit" class="button button-primary" disabled={$loading}>
+        {#if !$loading}
           <Icon icon={Bell} />
         {/if}
-        <Spinner {loading}>Enable notifications</Spinner>
+        <Spinner loading={$loading}>Enable notifications</Spinner>
       </Button>
     </div>
   </ModalFooter>

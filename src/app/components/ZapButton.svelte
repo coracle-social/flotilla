@@ -7,7 +7,7 @@
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url?: string
@@ -21,10 +21,9 @@
 
   const {url, event, children, replaceState, ...props}: Props = $props()
 
-  const onClick = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: onClick} = trackSubmit(
+    () => "Failed to load zap details.",
+    async () => {
       // Not on render, since a message can be drawn before its author's profile, and "no lnurl" is final.
       const zapper = await $app.use(Zappers).loadForPubkey(event.pubkey)
 
@@ -33,17 +32,10 @@
       } else {
         pushModal(InfoZapperError, {pubkey: event.pubkey}, {replaceState})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to load zap details."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
-<Button onclick={onClick} disabled={loading} {...props}>
+<Button onclick={onClick} disabled={$loading} {...props}>
   {@render children?.()}
 </Button>

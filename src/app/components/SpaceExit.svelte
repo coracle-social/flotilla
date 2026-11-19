@@ -12,7 +12,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {leaveSpace} from "@app/areas/spaces/membership"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -22,21 +22,13 @@
 
   const back = () => history.back()
 
-  const exit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: exit} = trackSubmit(
+    () => "Failed to leave the space.",
+    async () => {
       await leaveSpace(url)
       await navigate("/home")
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to leave the space."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(exit)}>
@@ -53,8 +45,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Confirm</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Confirm</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

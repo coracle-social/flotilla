@@ -28,6 +28,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {zapAmounts} from "@app/core/settings"
   import {clip, pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url?: string
@@ -101,26 +102,16 @@
     })
   }
 
-  const sendZap = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: sendZap} = trackSubmit(
+    error => `Failed to zap: ${errorMessage(error)}`,
+    async () => {
       if ($wallet) {
         await payWithWallet()
       } else {
         await createInvoice()
       }
-    } catch (e) {
-      console.error(e)
-
-      pushToast({
-        theme: "error",
-        message: `Failed to zap: ${errorMessage(e)}`,
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const connectWallet = () => {
     pushModal(WalletConnect, {}, {nested: true})
@@ -134,7 +125,6 @@
 
   let amount = $state<number>(first($zapAmounts) ?? 21)
   let content = $state("⚡️")
-  let loading = $state(false)
   let invoice = $state<string>()
   let paymentController: AbortController | undefined = $state()
 
@@ -188,10 +178,10 @@
       Go back
     </Button>
     {#if !invoice}
-      <Button class="button button-primary" onclick={sendZap} disabled={loading}>
-        <Spinner {loading}>
+      <Button class="button button-primary" onclick={sendZap} disabled={$loading}>
+        <Spinner loading={$loading}>
           <div class="flex items-center gap-2">
-            {#if !loading}
+            {#if !$loading}
               <Icon icon={Bolt} />
             {/if}
             {$wallet ? "Send Zap" : "Create invoice"}

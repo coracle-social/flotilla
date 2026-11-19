@@ -17,7 +17,7 @@
   import {leaveSpace} from "@app/areas/spaces/membership"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {navigate} from "@app/navigation/navigate"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -30,21 +30,13 @@
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url, callback: clearModals})
 
-  const leave = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: leave} = trackSubmit(
+    () => "Failed to leave the space.",
+    async () => {
       await leaveSpace(url)
       await navigate("/home")
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to leave the space."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(requestAccess)}>
@@ -66,8 +58,8 @@
       Go Home
     </Button>
     <div class="flex gap-2">
-      <Button class="button button-error" onclick={leave} disabled={loading}>Leave Space</Button>
-      <Button type="submit" class="button button-primary" disabled={loading}>
+      <Button class="button button-error" onclick={leave} disabled={$loading}>Leave Space</Button>
+      <Button type="submit" class="button button-primary" disabled={$loading}>
         Request Access
         <Icon icon={AltArrowRight} />
       </Button>

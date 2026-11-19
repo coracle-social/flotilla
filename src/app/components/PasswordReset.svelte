@@ -18,6 +18,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
   import {getPomadeClient} from "@app/core/pomade"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     peersByPrefix: Map<string, string>
@@ -63,22 +64,15 @@
     pushModal(PasswordResetConfirm, {userSecret: result.userSecret})
   }
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to validate email ownership.",
+    async () => {
       await confirmRecovery()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to validate email ownership."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const back = () => history.back()
 
-  let loading = $state(false)
   let otps = $state<string[]>([])
 </script>
 
@@ -100,8 +94,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading || otps.length < 2}>
-      <Spinner {loading}>Continue</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading || otps.length < 2}>
+      <Spinner loading={$loading}>Continue</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

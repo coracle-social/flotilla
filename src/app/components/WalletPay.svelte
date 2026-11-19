@@ -20,6 +20,7 @@
   import {payInvoice} from "@app/tools/wallet"
   import {pushToast} from "@app/navigation/toast"
   import {clearModals} from "@app/navigation/dialogs"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const back = () => history.back()
 
@@ -28,10 +29,9 @@
     sats = invoice.satoshi || 0
   })
 
-  const confirm = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: confirm} = trackSubmit(
+    error => `Failed to send payment: ${errorMessage(error)}`,
+    async () => {
       if (gt(invoice!.satoshi, 0)) {
         await payInvoice(invoice!.paymentRequest)
       } else {
@@ -40,21 +40,9 @@
 
       pushToast({message: `Payment sent!`})
       clearModals()
-    } catch (e) {
-      console.error(e)
+    },
+  )
 
-      const message = errorMessage(e)
-
-      pushToast({
-        theme: "error",
-        message: `Failed to send payment: ${message}`,
-      })
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
   let invoice: Invoice | undefined = $state()
   let sats = $state(0)
 </script>
@@ -104,8 +92,8 @@
     <Button
       class="button button-primary"
       onclick={confirm}
-      disabled={!invoice || sats === 0 || loading}>
-      {#if loading}
+      disabled={!invoice || sats === 0 || $loading}>
+      {#if $loading}
         <Spinner size="sm" />
       {:else}
         <Icon icon={Bolt} />

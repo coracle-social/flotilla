@@ -12,6 +12,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const existingProfile = $profiles.get($user.pubkey)
 
@@ -22,10 +23,9 @@
 
   const back = () => history.back()
 
-  const onsubmit = async ({profile, geohash}: Values) => {
-    loading = true
-
-    try {
+  const {loading, submit: onsubmit} = trackSubmit(
+    () => "Failed to update your profile.",
+    async ({profile, geohash}: Values) => {
       const command = await $profiles.update(writer => {
         writer.update(profile).dropTags(spec(["g"]))
 
@@ -42,15 +42,8 @@
         pushToast({message: "Your profile has been updated!"})
         clearModals()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update your profile."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <ProfileEditForm {initialValues} {onsubmit}>
@@ -59,8 +52,8 @@
       <Icon icon={AltArrowLeft} />
       Go Back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading} />
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading} />
       Save Changes
     </Button>
   {/snippet}

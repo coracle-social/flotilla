@@ -20,6 +20,7 @@
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     email: string
@@ -30,10 +31,9 @@
 
   const back = () => history.back()
 
-  const onSubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => POMADE_NETWORK_ERROR_MESSAGE,
+    async () => {
       const {ok, options, messages, clientSecret} = await Client.loginWithChallenge(
         email,
         peersByPrefix,
@@ -69,20 +69,10 @@
           })
         }
       }
-    } catch (error) {
-      console.error("Login error:", error)
-
-      pushToast({
-        theme: "error",
-        message: POMADE_NETWORK_ERROR_MESSAGE,
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let otps = $state<string[]>([])
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -99,12 +89,12 @@
     <StringMultiInput bind:value={otps} placeholder="Enter your login codes..." />
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading || otps.length < 3}>
-      <Spinner {loading}>Log In</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading || otps.length < 3}>
+      <Spinner loading={$loading}>Log In</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

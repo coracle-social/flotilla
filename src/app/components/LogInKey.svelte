@@ -21,8 +21,8 @@
   import {clearModals} from "@app/navigation/dialogs"
   import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
-  let loading = $state(false)
   let keyInput = $state("")
   let password = $state("")
 
@@ -34,12 +34,12 @@
 
   const isNcryptsec = $derived(keyInput.startsWith("ncryptsec1"))
 
-  const canSubmit = $derived(!loading && (isHex || isNsec || isNcryptsec))
-
-  const onSubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () =>
+      isNcryptsec
+        ? "Failed to decrypt key. Please check your password."
+        : "Invalid key format. Please check your input.",
+    async () => {
       let secret: string
 
       if (isNcryptsec) {
@@ -58,19 +58,10 @@
       await login(toSession(nip01, {secret}))
       setChecked("*")
       clearModals()
-    } catch (e) {
-      console.error(e)
+    },
+  )
 
-      pushToast({
-        theme: "error",
-        message: isNcryptsec
-          ? "Failed to decrypt key. Please check your password."
-          : "Invalid key format. Please check your input.",
-      })
-    } finally {
-      loading = false
-    }
-  }
+  const canSubmit = $derived(!$loading && (isHex || isNsec || isNcryptsec))
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -105,12 +96,12 @@
     {/if}
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="button button-primary" disabled={!canSubmit}>
-      <Spinner {loading}>Log in</Spinner>
+      <Spinner loading={$loading}>Log in</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

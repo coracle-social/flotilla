@@ -15,6 +15,7 @@
   import {loadSendDelay} from "@app/core/settings"
   import {pushToast} from "@app/navigation/toast"
   import {PublishBuilder, publishComment} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     content?: string | object
@@ -52,34 +53,27 @@
     return new PublishBuilder(eventWriter).withDelay(await loadSendDelay()).publish()
   }
 
-  const submit = async () => {
-    if ($uploading || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to send your reply.",
+    async () => {
+      if ($uploading) {
+        return
+      }
 
-    const ed = await editor
-    const content = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const content = ed.getText({blockSeparator: "\n"}).trim()
 
-    if (!content) {
-      return pushToast({theme: "error", message: "Please write something first."})
-    }
+      if (!content) {
+        return pushToast({theme: "error", message: "Please write something first."})
+      }
 
-    loading = true
-
-    try {
       await publishReply(content, ed.storage.nostr.getEditorTags())
 
       draftKey.clear()
       onSubmit()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to send your reply."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let content = $state(initialValues?.content ?? "")
 
   const onChange = (json: object) => {
@@ -118,7 +112,7 @@
       data-tip="Add an image"
       class="tip tip-left absolute bottom-1 right-2"
       onclick={selectFiles}
-      disabled={loading}>
+      disabled={$loading}>
       {#if $uploading}
         <Spinner size="xs" />
       {:else}
@@ -127,10 +121,10 @@
     </Button>
   </div>
   <div class="flex justify-end gap-2">
-    <Button class="button button-link" onclick={onCancel} disabled={loading}>Cancel</Button>
-    <Button type="submit" class="button button-primary button-sm" disabled={$uploading || loading}>
-      <Spinner size="sm" {loading}>
-        {#if !loading}
+    <Button class="button button-link" onclick={onCancel} disabled={$loading}>Cancel</Button>
+    <Button type="submit" class="button button-primary button-sm" disabled={$uploading || $loading}>
+      <Spinner size="sm" loading={$loading}>
+        {#if !$loading}
           <Icon icon={Plane} size={4} />
         {/if}
         {#if parent}

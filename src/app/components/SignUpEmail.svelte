@@ -21,6 +21,7 @@
   import ProgressBar from "@app/components/ProgressBar.svelte"
   import {pushToast, popToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     next: () => void
@@ -32,17 +33,16 @@
 
   const back = () => history.back()
 
-  const onSubmit = async () => {
-    if (password.trim().length < 12) {
-      return pushToast({
-        theme: "error",
-        message: "Password must be at least 12 characters long.",
-      })
-    }
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => "Failed to register! Please try again.",
+    async () => {
+      if (password.trim().length < 12) {
+        return pushToast({
+          theme: "error",
+          message: "Password must be at least 12 characters long.",
+        })
+      }
 
-    loading = true
-
-    try {
       const toastId = pushToast({
         timeout: 60_000,
         message: "Creating your account, please wait...",
@@ -85,21 +85,11 @@
 
       popToast(toastId)
       pushModal(SignUpEmailConfirm, {next, step, totalSteps})
-    } catch (e) {
-      console.error(e)
-
-      pushToast({
-        theme: "error",
-        message: "Failed to register! Please try again.",
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let email = $state("")
   let password = $state("")
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -150,8 +140,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" type="submit" disabled={loading || !email || !password}>
-      <Spinner {loading}>Continue</Spinner>
+    <Button class="button button-primary" type="submit" disabled={$loading || !email || !password}>
+      <Spinner loading={$loading}>Continue</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

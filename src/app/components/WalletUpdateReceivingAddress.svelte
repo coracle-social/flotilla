@@ -16,13 +16,13 @@
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/tools/wallet"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const back = () => history.back()
 
   const walletLud16 = $derived($wallet ? getWalletAddress($wallet) : undefined)
 
   let address = $state($profiles.get($user.pubkey)?.lnurl() || "")
-  let loading = $state(false)
 
   const useWalletAddress = () => {
     if (walletLud16) {
@@ -30,10 +30,9 @@
     }
   }
 
-  const save = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: save} = trackSubmit(
+    () => "Failed to update profile",
+    async () => {
       const command = await $profiles.update(writer =>
         writer.update({lud06: undefined, lud16: address.trim() || undefined}),
       )
@@ -45,13 +44,8 @@
       } else {
         back()
       }
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: "Failed to update profile"})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 </script>
 
 <Modal>
@@ -69,7 +63,7 @@
           placeholder="user@domain.com"
           bind:value={address}
           class="input flex w-full"
-          disabled={loading} />
+          disabled={$loading} />
         <p class="text-xs opacity-75">
           You can enter one manually or use your connected wallet's address (if available). Leave
           empty to remove your lightning address
@@ -89,7 +83,7 @@
             <Button
               class="button button-outline button-sm"
               onclick={useWalletAddress}
-              disabled={loading}>
+              disabled={$loading}>
               Use This
             </Button>
           </div>
@@ -98,9 +92,9 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-neutral" onclick={back} disabled={loading}>Cancel</Button>
-    <Button class="button button-primary" onclick={save} disabled={loading}>
-      {#if loading}
+    <Button class="button button-neutral" onclick={back} disabled={$loading}>Cancel</Button>
+    <Button class="button button-primary" onclick={save} disabled={$loading}>
+      {#if $loading}
         <Spinner size="sm" />
       {:else}
         <Icon icon={CheckCircle} />

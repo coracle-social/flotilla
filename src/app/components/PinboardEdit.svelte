@@ -23,6 +23,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {resolveImageInput} from "@app/tools/uploads"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -48,10 +49,9 @@
     image = ""
   }
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "This space refused to save the shelf.",
+    async () => {
       const eventWriter = writer(Pinboard, board)
         .setTitle(title)
         .setDescription(description)
@@ -74,20 +74,14 @@
         pushToast({message: "Shelf created!"})
         navigate(pages.board.path({url, address: getAddress(publication.event)}))
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "This space refused to save the shelf."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let title = $state(board?.title() ?? "")
   let description = $state(board?.description() ?? "")
   let topics = $state<string[]>(board?.topics() ?? [])
   let image = $state(board?.image() ?? "")
   let imageFile = $state<File>()
-  let loading = $state(false)
 </script>
 
 <Modal>
@@ -152,8 +146,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" onclick={submit} disabled={loading || !title.trim()}>
-      <Spinner {loading}>Save changes</Spinner>
+    <Button class="button button-primary" onclick={submit} disabled={$loading || !title.trim()}>
+      <Spinner loading={$loading}>Save changes</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

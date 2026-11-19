@@ -27,6 +27,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const connect = () => pushModal(WalletConnect)
 
@@ -105,10 +106,9 @@
     $settings.zap_amounts = replaceAt(index, Number(e.currentTarget.value), $settings.zap_amounts)
   }
 
-  const onZapAmountsSubmit = preventDefault(async () => {
-    zapAmountsLoading = true
-
-    try {
+  const {loading: zapAmountsLoading, submit: saveZapAmounts} = trackSubmit(
+    () => "Failed to save your zap amounts.",
+    async () => {
       if ($settings.zap_amounts.length === 0) {
         return pushToast({
           theme: "error",
@@ -131,18 +131,13 @@
       }
 
       pushToast({message: "Your zap amounts have been saved!"})
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your zap amounts."})
-    } finally {
-      zapAmountsLoading = false
-    }
-  })
+    },
+  )
+
+  const onZapAmountsSubmit = preventDefault(saveZapAmounts)
 
   const settings = createSettingsForm()
   const dirty = $derived(!equals($settings.zap_amounts, $userSettingsValues.zap_amounts))
-
-  let zapAmountsLoading = $state(false)
 </script>
 
 <PageContent class="@container">
@@ -305,11 +300,11 @@
         class="button button-neutral"
         type="button"
         onclick={resetZapAmounts}
-        disabled={zapAmountsLoading || !dirty}>
+        disabled={$zapAmountsLoading || !dirty}>
         Discard Changes
       </Button>
-      <Button type="submit" class="button button-primary" disabled={zapAmountsLoading || !dirty}>
-        <Spinner loading={zapAmountsLoading}>Save Changes</Spinner>
+      <Button type="submit" class="button button-primary" disabled={$zapAmountsLoading || !dirty}>
+        <Spinner loading={$zapAmountsLoading}>Save Changes</Spinner>
       </Button>
     </div>
   </form>

@@ -25,6 +25,7 @@
   import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/tools/drafts"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Option = {
     id: string
@@ -68,28 +69,25 @@
     options = newOptions
   }
 
-  const submit = async (scheduleAt?: number) => {
-    if (loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to create your poll.",
+    async (scheduleAt?: number) => {
+      if (!title.trim()) {
+        return pushToast({theme: "error", message: "Please provide a title for your poll."})
+      }
 
-    if (!title.trim()) {
-      return pushToast({theme: "error", message: "Please provide a title for your poll."})
-    }
+      const nonEmptyOptions = removeUndefined(
+        options.map(option => option.value.trim() || undefined),
+      )
 
-    const nonEmptyOptions = removeUndefined(options.map(option => option.value.trim() || undefined))
+      if (nonEmptyOptions.length < 2) {
+        return pushToast({theme: "error", message: "Please provide at least two options."})
+      }
 
-    if (nonEmptyOptions.length < 2) {
-      return pushToast({theme: "error", message: "Please provide at least two options."})
-    }
+      if (endsAt && endsAt <= now()) {
+        return pushToast({theme: "error", message: "End time must be in the future."})
+      }
 
-    if (endsAt && endsAt <= now()) {
-      return pushToast({theme: "error", message: "End time must be in the future."})
-    }
-
-    loading = true
-
-    try {
       const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType)
 
       for (const option of nonEmptyOptions) {
@@ -116,15 +114,8 @@
 
       draftKey.clear()
       history.back()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to create your poll."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 
   let title = $state(initialValues?.title ?? "")
   let pollType = $state<PollType>(initialValues?.pollType ?? "singlechoice")
@@ -227,12 +218,12 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={loading}>
-      <Spinner {loading}>Create Poll</Spinner>
+    <PublishButton onPublish={submit} disabled={$loading}>
+      <Spinner loading={$loading}>Create Poll</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

@@ -16,7 +16,7 @@
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/core/pomade"
   import KeyRecoveryConfirm from "@app/components/KeyRecoveryConfirm.svelte"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const {
     email,
@@ -29,22 +29,14 @@
     pushModal(KeyRecoveryConfirm, {peersByPrefix})
   }
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to request key recovery.",
+    async () => {
       await requestRecovery()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to request key recovery."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const back = () => history.back()
-
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -67,8 +59,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Request recovery</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Request recovery</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

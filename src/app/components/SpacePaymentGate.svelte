@@ -28,6 +28,7 @@
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {goToSpace} from "@app/navigation/history"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -46,26 +47,16 @@
   }
 
   // A foreground event and the poll can land at once, so this guards itself.
-  const reconcile = async () => {
-    if (reconciling) {
-      return
-    }
-
-    reconciling = true
-
-    try {
+  const {loading: reconciling, submit: reconcile} = trackSubmit(
+    () => "Could not check your membership. Please try again.",
+    async () => {
       if (await reconcileSpaceMembership(url)) {
         pushToast({message: "Welcome to the space!"})
         clearModals()
         await goToSpace(url, {replaceState: true})
       }
-    } catch (e) {
-      console.error("Failed to reconcile a space membership:", e)
-      pushToast({theme: "error", message: "Could not check your membership. Please try again."})
-    } finally {
-      reconciling = false
-    }
-  }
+    },
+  )
 
   // Each pass reconnects to the relay, so it is worth it only while a checkout is out.
   const poll = () => {
@@ -86,7 +77,6 @@
   }
 
   let error = $state(maybe<string>())
-  let reconciling = $state(false)
   let polls = 0
   let timer = 0
   let listeners: {remove: () => void}[] = []
@@ -159,8 +149,8 @@
       </Button>
       {#if ENABLE_PAID_SPACES}
         {#if pending}
-          <Button class="button button-neutral" onclick={reconcile} disabled={reconciling}>
-            <Spinner loading={reconciling}>
+          <Button class="button button-neutral" onclick={reconcile} disabled={$reconciling}>
+            <Spinner loading={$reconciling}>
               <Icon icon={Refresh} />
               Waiting for payment…
             </Spinner>

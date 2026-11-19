@@ -21,6 +21,7 @@
   import {deriveSpacePermissions, spaceManagement} from "@app/areas/spaces/management"
   import {deriveMemberModeration} from "@app/areas/spaces/rooms"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -60,10 +61,9 @@
     }
   }
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to update this member.",
+    async () => {
       let error: Maybe<string>
       let message = ""
 
@@ -84,16 +84,10 @@
         pushToast({message})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update this member."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let action: Maybe<"room" | "space" | "ban"> = $state()
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -171,8 +165,8 @@
     <Button
       type="submit"
       class={cx("button", {"button-error": action === "ban", "button-primary": action !== "ban"})}
-      disabled={!action || loading}>
-      <Spinner {loading}>
+      disabled={!action || $loading}>
+      <Spinner loading={$loading}>
         {#if action === "room"}
           Remove from room
         {:else if action === "space"}

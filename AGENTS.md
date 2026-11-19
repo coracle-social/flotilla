@@ -77,7 +77,7 @@ Conventions below.
 - **Positive conditionals** — prefer `if (ready) { ... }` over `if (!ready) return`. Nesting is fine; when it gets deep that's the signal the function is doing too much, so split it. Many early returns belong in validation or pipeline functions, not everywhere else.
 - **Truthiness** — test values directly (`if (invoice.paid_at)`) instead of comparing against `null`/`undefined`, and put the truthy branch first in a ternary.
 - **Standard names** — `loading` for in-flight state, `on*` for handlers bound to an event, a plain verb (`submit`, `save`) for the action itself. Use `{prop}` shorthand when the names match.
-- **Errors** — toast a human-readable message and `console.error` anything unexpected (e.g. a non-`HostingError`). Never swallow an error you didn't anticipate.
+- **Errors** — toast a human-readable message and `console.error` anything unexpected (e.g. a non-`HostingError`). Never swallow an error you didn't anticipate. An async action with a spinner runs through `trackSubmit` from `components/flows/submit.ts`, which returns the `loading` store and the guarded action, and logs and toasts what the action didn't catch.
 
 ## State Management
 
@@ -108,6 +108,7 @@ callbacks and hot paths.
 - Allow cancellation and error handling
 - Immediately publish to local repository for optimistic updates
 - A control shows the state it was asked for from the click, and keeps its spinner until `await publication.written()`, since `publish` returns before the repository holds the event and `settled()` waits on the relays
+- Inline publishing is optimistic: the control updates from the repository and reports a relay failure afterwards. A form that closes when it's done is pessimistic: it awaits `getFatalError()` and stays open with the error when no relay accepted the event
 
 ## Nostr Integration
 

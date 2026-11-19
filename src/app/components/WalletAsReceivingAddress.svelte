@@ -13,13 +13,13 @@
   import {wallet} from "@app/tools/wallet"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const lud16 = getWalletAddress(wallet.get()!)
 
-  const confirm = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: confirm} = trackSubmit(
+    () => "Failed to update profile.",
+    async () => {
       const command = await $profiles.update(writer => writer.update({lud06: undefined, lud16}))
       const error = await command.publish().getFatalError()
 
@@ -28,19 +28,12 @@
       } else {
         clearModals()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update profile."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const cancel = () => {
     clearModals()
   }
-
-  let loading = $state(false)
 </script>
 
 <Modal>
@@ -65,9 +58,10 @@
     {/if}
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-neutral" onclick={cancel} disabled={loading}>No, skip this</Button>
-    <Button class="button button-primary" onclick={confirm} disabled={loading}>
-      <Spinner {loading}>Yes, set as receiving address</Spinner>
+    <Button class="button button-neutral" onclick={cancel} disabled={$loading}
+      >No, skip this</Button>
+    <Button class="button button-primary" onclick={confirm} disabled={$loading}>
+      <Spinner loading={$loading}>Yes, set as receiving address</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

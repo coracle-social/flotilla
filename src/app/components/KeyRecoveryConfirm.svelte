@@ -19,6 +19,7 @@
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/core/pomade"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     peersByPrefix: Map<string, string>
@@ -57,22 +58,15 @@
     pushModal(KeyDownload, {secret: result.userSecret, next: clearModals, submitText: "Done"})
   }
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to recover your key.",
+    async () => {
       await confirmRecovery()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to recover your key."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const back = () => history.back()
 
-  let loading = $state(false)
   let otps = $state<string[]>([])
 </script>
 
@@ -94,8 +88,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading || otps.length < 2}>
-      <Spinner {loading}>Confirm recovery</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading || otps.length < 2}>
+      <Spinner loading={$loading}>Confirm recovery</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

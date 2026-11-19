@@ -7,7 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {compressFileForUpload, uploadFileOrFallback} from "@app/tools/uploads"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     file?: File | undefined
@@ -43,23 +43,17 @@
   const onChange = (e: Event & {currentTarget: HTMLInputElement}) =>
     submit(e.currentTarget.files?.[0])
 
-  const submit = async (newFile?: File) => {
-    if (newFile) {
-      loading = true
-
-      try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to process your profile picture.",
+    async (newFile?: File) => {
+      if (newFile) {
         file = await compressFileForUpload(newFile, compressOptions)
         url = (await uploadFileOrFallback(file)).url
-      } catch (e) {
-        console.error(e)
-        pushToast({theme: "error", message: "Failed to process your profile picture."})
-      } finally {
-        loading = false
+      } else {
+        url = initialUrl
       }
-    } else {
-      url = initialUrl
-    }
-  }
+    },
+  )
 
   const onClear = () => {
     initialUrl = undefined
@@ -68,7 +62,6 @@
   }
 
   let active = $state(false)
-  let loading = $state(false)
   let initialUrl = $state(url)
 </script>
 
@@ -98,7 +91,7 @@
         <Icon icon={AddCircle} class="scale-150 bg-surface-more!" />
       {/if}
     </button>
-    {#if loading}
+    {#if $loading}
       <div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
         <Spinner />
       </div>

@@ -11,7 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     next: () => void
@@ -23,20 +23,12 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to complete sign up.",
+    async () => {
       await next()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to complete sign up."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -58,9 +50,9 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" type="submit" disabled={loading}>
-      {#if loading}
-        <Spinner {loading}>Go to Dashboard</Spinner>
+    <Button class="button button-primary" type="submit" disabled={$loading}>
+      {#if $loading}
+        <Spinner loading={$loading}>Go to Dashboard</Spinner>
       {:else}
         <Icon icon={HomeSmile} />
         Go to Dashboard

@@ -12,6 +12,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {addRoomMembers} from "@app/areas/spaces/rooms"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -27,10 +28,9 @@
 
   const showProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
-  const dismiss = async () => {
-    loading = true
-
-    try {
+  const {loading: dismissing, submit: dismiss} = trackSubmit(
+    () => "Failed to dismiss join request.",
+    async () => {
       const {error} = await $relayManagement
         .forUrl(url)
         .banEvent(event.id, "Join request dismissed")
@@ -42,18 +42,12 @@
         await $app.repository.removeEvent(event.id)
         onResolved?.()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to dismiss join request."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  const accept = async () => {
-    loading = true
-
-    try {
+  const {loading: accepting, submit: accept} = trackSubmit(
+    () => "Failed to add member to the room.",
+    async () => {
       const error = await addRoomMembers(url, {h}, [event.pubkey])
 
       if (error) {
@@ -62,15 +56,10 @@
         pushToast({message: "Member has been added to the room!"})
         onResolved?.()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to add member to the room."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
+  const loading = $derived($dismissing || $accepting)
 </script>
 
 <div class="card card-sm flex flex-col gap-4">

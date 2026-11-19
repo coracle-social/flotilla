@@ -17,7 +17,7 @@
   import {navigate} from "@app/navigation/navigate"
   import {popModal} from "@app/navigation/dialogs"
   import {roomLists} from "@app/core/plugins"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -25,37 +25,25 @@
 
   const {url}: Props = $props()
 
-  const untrustSpace = async () => {
-    loading = true
-
-    try {
+  const {loading: leaving, submit: untrustSpace} = trackSubmit(
+    () => "Failed to leave the space.",
+    async () => {
       await $roomLists.removeRelay(url).then(publishRoomList)
       await removeTrustedRelay(url)
       navigate("/home")
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to leave the space."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  const trustSpace = async () => {
-    loading = true
-
-    try {
+  const {loading: trusting, submit: trustSpace} = trackSubmit(
+    () => "Failed to trust this space.",
+    async () => {
       await addTrustedRelay(url)
 
       popModal()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to trust this space."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
+  const loading = $derived($leaving || $trusting)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(trustSpace)}>

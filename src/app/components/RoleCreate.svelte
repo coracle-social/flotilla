@@ -9,6 +9,7 @@
   import RoleForm, {type Values} from "@app/components/RoleForm.svelte"
   import {relayManagement} from "@app/core/plugins"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -18,12 +19,9 @@
 
   const back = () => history.back()
 
-  let loading = $state(false)
-
-  const onSubmit = async ({label, description, color}: Values) => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => "Failed to create role.",
+    async ({label, description, color}: Values) => {
       const {error} = await $relayManagement
         .forUrl(url)
         .createRole(randomId(), label, description, color, 1)
@@ -34,13 +32,8 @@
         pushToast({message: "Role created!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to create role."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 </script>
 
 <Modal>
@@ -49,6 +42,6 @@
       <ModalTitle>Create Role</ModalTitle>
       <ModalSubtitle>in <RelayName {url} class="text-primary" /></ModalSubtitle>
     </ModalHeader>
-    <RoleForm {loading} {onSubmit} />
+    <RoleForm loading={$loading} {onSubmit} />
   </ModalBody>
 </Modal>

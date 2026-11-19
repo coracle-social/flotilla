@@ -9,6 +9,7 @@
   import {joinRoom, leaveRoom} from "@app/areas/spaces/rooms/membership"
   import {deriveUserRoomMembershipStatus} from "@app/areas/spaces/rooms"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -22,10 +23,9 @@
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
   const inviteCode = $derived($page.url.searchParams.get("code") || "")
 
-  const join = async () => {
-    joining = true
-
-    try {
+  const {loading: joining, submit: join} = trackSubmit(
+    () => "Failed to join the room.",
+    async () => {
       const message = await joinRoom(url, h, inviteCode)
 
       if (message) {
@@ -33,18 +33,12 @@
       } else {
         onJoin()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to join the room."})
-    } finally {
-      joining = false
-    }
-  }
+    },
+  )
 
-  const leave = async () => {
-    leaving = true
-
-    try {
+  const {loading: leaving, submit: leave} = trackSubmit(
+    () => "Failed to leave the room.",
+    async () => {
       const message = await leaveRoom(url, h)
 
       if (message) {
@@ -52,26 +46,18 @@
       } else {
         pushToast({message: "You have left the room."})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to leave the room."})
-    } finally {
-      leaving = false
-    }
-  }
-
-  let joining = $state(false)
-  let leaving = $state(false)
+    },
+  )
 </script>
 
 {#if $membershipStatus === MembershipStatus.Pending}
-  <Button class="button button-neutral button-sm" disabled={leaving} onclick={leave}>
+  <Button class="button button-neutral button-sm" disabled={$leaving} onclick={leave}>
     <Icon icon={ClockCircle} />
     Access Pending
   </Button>
 {:else}
-  <Button class="button button-neutral button-sm" disabled={joining} onclick={join}>
-    {#if joining}
+  <Button class="button button-neutral button-sm" disabled={$joining} onclick={join}>
+    {#if $joining}
       <Spinner size="sm" />
     {:else}
       <Icon icon={Login2} />

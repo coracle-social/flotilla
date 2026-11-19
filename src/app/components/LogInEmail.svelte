@@ -23,6 +23,7 @@
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     email?: string
@@ -34,10 +35,9 @@
 
   const loginWithOTP = () => pushModal(LogInOTP, {email})
 
-  const onSubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => POMADE_NETWORK_ERROR_MESSAGE,
+    async () => {
       const {ok, options, messages, clientSecret} = await Client.loginWithPassword(email, password)
 
       if (!ok || options.length === 0) {
@@ -69,19 +69,9 @@
           })
         }
       }
-    } catch (error) {
-      console.error("Login error:", error)
+    },
+  )
 
-      pushToast({
-        theme: "error",
-        message: POMADE_NETWORK_ERROR_MESSAGE,
-      })
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
   let password = $state("")
 </script>
 
@@ -120,12 +110,12 @@
     </p>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading || !email || !password}>
-      <Spinner {loading}>Log in</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading || !email || !password}>
+      <Spinner loading={$loading}>Log in</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

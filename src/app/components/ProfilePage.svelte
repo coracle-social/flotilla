@@ -31,6 +31,7 @@
   import {user} from "@app/core/user"
   import {profiles, relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     pubkey: string
@@ -48,7 +49,6 @@
       : `https://${website || ""}`,
   )
 
-  let bannerLoading = $state(false)
   let bannerInput: HTMLInputElement | undefined = $state()
 
   const copyNpub = () => clip(nip19.npubEncode(target))
@@ -59,36 +59,37 @@
 
   const openBannerPicker = () => bannerInput?.click()
 
-  const onBannerChange = async (e: Event & {currentTarget: HTMLInputElement}) => {
-    const file = e.currentTarget.files?.[0]
+  const {loading: bannerLoading, submit: onBannerChange} = trackSubmit(
+    () => "Failed to update your banner.",
+    async (e: Event & {currentTarget: HTMLInputElement}) => {
+      const file = e.currentTarget.files?.[0]
 
-    e.currentTarget.value = ""
+      e.currentTarget.value = ""
 
-    if (!file || !$profile) {
-      return
-    }
+      if (!file || !$profile) {
+        return
+      }
 
-    bannerLoading = true
-
-    try {
       const {result} = await uploadFile(await compressFileForUpload(file))
 
       if (result?.url) {
         const command = await $profiles.update(w => w.setBanner(result.url))
+        const publication = command.publish()
 
-        await command.publish().settled()
+        await publication.written()
 
-        pushToast({message: "Banner updated."})
+        publication.getFatalError().then(error => {
+          if (error) {
+            pushToast({theme: "error", message: error})
+          } else {
+            pushToast({message: "Banner updated."})
+          }
+        })
       } else {
         pushToast({theme: "error", message: "Failed to upload your banner."})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update your banner."})
-    } finally {
-      bannerLoading = false
-    }
-  }
+    },
+  )
 </script>
 
 <div class="flex flex-col gap-4">
@@ -104,7 +105,7 @@
         {#if isSelf}
           <Button
             class="button button-neutral button-sm absolute top-2 right-2 sm:top-3 sm:right-3"
-            disabled={bannerLoading}
+            disabled={$bannerLoading}
             onclick={openBannerPicker}>
             <Icon icon={GallerySend} size={4} />
             <span class="hidden sm:inline">Change banner</span>

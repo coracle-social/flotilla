@@ -27,13 +27,13 @@
   import {getWebLn, wallet} from "@app/tools/wallet"
   import {pushToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const back = () => history.back()
 
-  const connectWithWebLn = async () => {
-    loading = true
-
-    try {
+  const {loading: connectingWebLn, submit: connectWithWebLn} = trackSubmit(
+    () => "Wallet failed to connect",
+    async () => {
       await Promise.all([sleep(800), getWebLn().enable()])
       const info = await getWebLn().getInfo()
 
@@ -50,21 +50,12 @@
 
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({
-        theme: "error",
-        message: "Wallet failed to connect",
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  const connectWithNWC = async () => {
-    loading = true
-
-    try {
+  const {loading: connectingNwc, submit: connectWithNWC} = trackSubmit(
+    () => "Wallet failed to connect",
+    async () => {
       const client = new nwc.NWCClient({nostrWalletConnectUrl})
       const [_, info] = await Promise.all([sleep(800), client.getInfo()])
 
@@ -85,16 +76,8 @@
           pushModal(WalletAsReceivingAddress)
         }
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({
-        theme: "error",
-        message: "Wallet failed to connect",
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const toggleScanner = () => {
     showScanner = !showScanner
@@ -108,7 +91,8 @@
 
   let nostrWalletConnectUrl = $state("")
   let showScanner = $state(false)
-  let loading = $state(false)
+
+  const loading = $derived($connectingWebLn || $connectingNwc)
 </script>
 
 <Modal>

@@ -8,6 +8,7 @@
   import LocalSttEnable from "@app/components/LocalSttEnable.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const refresh = async () => {
     try {
@@ -18,21 +19,15 @@
     }
   }
   const download = () => pushModal(LocalSttEnable, {onReady: refresh})
-  const remove = async () => {
-    loading = true
-    try {
+  const {loading, submit: remove} = trackSubmit(
+    error => `Failed to remove the model: ${errorMessage(error)}`,
+    async () => {
       await removeLocalStt()
       ready = false
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: `Failed to remove the model: ${errorMessage(error)}`})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let ready = $state(false)
-  let loading = $state(false)
   onMount(refresh)
 </script>
 
@@ -43,11 +38,11 @@
   {#snippet input()}
     <div class="flex">
       {#if ready}
-        <Button class="button button-neutral" onclick={remove} disabled={loading}>
+        <Button class="button button-neutral" onclick={remove} disabled={$loading}>
           Remove model
         </Button>
       {:else}
-        <Button class="button button-primary" onclick={download} disabled={loading}>
+        <Button class="button button-primary" onclick={download} disabled={$loading}>
           Download model
         </Button>
       {/if}

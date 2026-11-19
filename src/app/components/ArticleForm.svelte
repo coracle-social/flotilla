@@ -39,6 +39,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url?: string
@@ -64,17 +65,16 @@
     image = ""
   }
 
-  const onCoverChange = async (event: Event & {currentTarget: HTMLInputElement}) => {
-    const input = event.currentTarget
-    const file = input.files?.[0]
+  const {loading: uploadingCover, submit: onCoverChange} = trackSubmit(
+    () => "Failed to upload your cover image.",
+    async (event: Event & {currentTarget: HTMLInputElement}) => {
+      const input = event.currentTarget
+      const file = input.files?.[0]
 
-    // Clear the input so picking the same file again after removing the cover still fires
-    input.value = ""
+      // Clear the input so picking the same file again after removing the cover still fires
+      input.value = ""
 
-    if (file) {
-      uploadingCover = true
-
-      try {
+      if (file) {
         const {result, error} = await uploadFile(await compressFileForUpload(file), {url})
 
         if (result?.url) {
@@ -82,41 +82,34 @@
         } else {
           pushToast({theme: "error", message: error ?? "Failed to upload your cover image."})
         }
-      } catch (e) {
-        // compressFileForUpload rejects outside uploadFile's own error handling
-        console.error("Error caught when uploading cover image:", e)
-        pushToast({theme: "error", message: "Failed to upload your cover image."})
-      } finally {
-        uploadingCover = false
       }
-    }
-  }
+    },
+  )
 
-  const submit = async (scheduleAt?: number) => {
-    if ($uploading || uploadingCover || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to publish your article.",
+    async (scheduleAt?: number) => {
+      if ($uploading || $uploadingCover) {
+        return
+      }
 
-    if (!title) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide a title for your article.",
-      })
-    }
+      if (!title) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide a title for your article.",
+        })
+      }
 
-    const ed = await editor
-    const content = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const content = ed.getText({blockSeparator: "\n"}).trim()
 
-    if (!content) {
-      return pushToast({
-        theme: "error",
-        message: "Please write something for your article.",
-      })
-    }
+      if (!content) {
+        return pushToast({
+          theme: "error",
+          message: "Please write something for your article.",
+        })
+      }
 
-    loading = true
-
-    try {
       const eventWriter = writer(Article)
         .setIdentifier(d)
         .setContent(content)
@@ -156,16 +149,9 @@
           action: {message: "View it", onclick: () => openEventNote(publication.event)},
         })
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to publish your article."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
-  let uploadingCover = $state(false)
   let titleInput = $state<HTMLInputElement>()
 
   // The autofocus attribute is ignored while the button that navigated here still holds focus
@@ -211,8 +197,8 @@
     <PublishButton
       onPublish={submit}
       class="button-sm"
-      disabled={$uploading || uploadingCover || loading}>
-      <Spinner {loading}>Publish</Spinner>
+      disabled={$uploading || $uploadingCover || $loading}>
+      <Spinner loading={$loading}>Publish</Spinner>
     </PublishButton>
   {/snippet}
 </SpaceBar>
@@ -241,7 +227,7 @@
       <label
         for={coverInputId}
         class="flex h-28 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-content-muted transition-colors hover:text-content">
-        {#if uploadingCover}
+        {#if $uploadingCover}
           <Spinner loading>Uploading cover image...</Spinner>
         {:else}
           <Icon icon={GallerySend} />
@@ -270,7 +256,7 @@
         data-tip="Add an image"
         class="tip tip-left absolute bottom-1 right-2"
         onclick={selectFiles}
-        disabled={loading}>
+        disabled={$loading}>
         {#if $uploading}
           <Spinner size="xs" />
         {:else}

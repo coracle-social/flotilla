@@ -22,6 +22,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {writer} from "@app/core/domain"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     d: string
@@ -66,38 +67,37 @@
 
   const selectFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
-  const submit = async (scheduleAt?: number) => {
-    if ($uploading || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to save your event.",
+    async (scheduleAt?: number) => {
+      if ($uploading) {
+        return
+      }
 
-    if (!title) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide a title.",
-      })
-    }
+      if (!title) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide a title.",
+        })
+      }
 
-    if (!start || !end) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide start and end times.",
-      })
-    }
+      if (!start || !end) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide start and end times.",
+        })
+      }
 
-    if (start >= end) {
-      return pushToast({
-        theme: "error",
-        message: "End time must be later than start time.",
-      })
-    }
+      if (start >= end) {
+        return pushToast({
+          theme: "error",
+          message: "End time must be later than start time.",
+        })
+      }
 
-    const ed = await editor
-    const content = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const content = ed.getText({blockSeparator: "\n"}).trim()
 
-    loading = true
-
-    try {
       const eventWriter = writer(TimeEvent)
         .setIdentifier(d)
         .setTitle(title)
@@ -124,15 +124,8 @@
       pushToast({message: "Your event has been saved!"})
 
       await setEventReminders(url, publication.event, true)
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your event."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 
   const d = $state(initialValues?.d ?? randomId())
   let title = $state(initialValues?.title ?? "")
@@ -179,7 +172,7 @@
             data-tip="Add an image"
             class="button button-neutral button-input tip"
             onclick={selectFiles}
-            disabled={loading}>
+            disabled={$loading}>
             {#if $uploading}
               <Spinner size="xs" />
             {:else}
@@ -210,12 +203,12 @@
     </Field>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={$uploading || loading}>
-      <Spinner loading={$uploading || loading}>Save Event</Spinner>
+    <PublishButton onPublish={submit} disabled={$uploading || $loading}>
+      <Spinner loading={$uploading || $loading}>Save Event</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

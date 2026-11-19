@@ -17,6 +17,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {attemptRelayAccess} from "@app/areas/spaces/membership"
   import {parseInviteLink} from "@app/areas/spaces/invites"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -27,10 +28,9 @@
 
   const back = () => history.back()
 
-  const join = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: join} = trackSubmit(
+    () => "Failed to request access.",
+    async () => {
       const claim = parseInviteLink(value)?.claim || value
       const message = await attemptRelayAccess(url, claim)
 
@@ -39,16 +39,10 @@
       }
 
       callback()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to request access."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let value = $state("")
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(join)}>
@@ -75,8 +69,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Join Space</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Join Space</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

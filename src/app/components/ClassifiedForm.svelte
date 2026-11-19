@@ -25,6 +25,7 @@
   import {DraftKey} from "@app/tools/drafts"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     d: string
@@ -57,10 +58,9 @@
 
   const back = () => history.back()
 
-  const submit = async (scheduleAt?: number) => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to publish your listing.",
+    async (scheduleAt?: number) => {
       if (!title) {
         return pushToast({
           theme: "error",
@@ -124,15 +124,9 @@
 
       draftKey?.clear()
       history.back()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to publish your listing."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   const d = $state(initialValues?.d ?? randomId())
   let title = $state(initialValues?.title ?? "")
   let status = $state(initialValues?.status ?? "active")
@@ -247,12 +241,12 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button onclick={back} disabled={loading} class="button button-link">
+    <Button onclick={back} disabled={$loading} class="button button-link">
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={loading}>
-      <Spinner {loading}>Save Listing</Spinner>
+    <PublishButton onPublish={submit} disabled={$loading}>
+      <Spinner loading={$loading}>Save Listing</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

@@ -18,6 +18,7 @@
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     email?: string
@@ -27,10 +28,9 @@
 
   const back = () => history.back()
 
-  const onSubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => POMADE_NETWORK_ERROR_MESSAGE,
+    async () => {
       const {ok, peersByPrefix} = await Client.requestChallenge(email)
 
       if (ok) {
@@ -43,19 +43,8 @@
           message: POMADE_NETWORK_ERROR_MESSAGE,
         })
       }
-    } catch (error) {
-      console.error(error)
-
-      pushToast({
-        theme: "error",
-        message: POMADE_NETWORK_ERROR_MESSAGE,
-      })
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -77,12 +66,12 @@
     </FieldInline>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading || !email}>
-      <Spinner {loading}>Log in</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading || !email}>
+      <Spinner loading={$loading}>Log in</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

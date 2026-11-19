@@ -19,6 +19,7 @@
   import type {HealthCheckPlan} from "@app/areas/home/healthChecks"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     plans: HealthCheckPlan[]
@@ -26,8 +27,6 @@
   }
 
   const {plans, next}: Props = $props()
-
-  let loading = $state(false)
 
   const back = () => history.back()
 
@@ -41,21 +40,15 @@
     }
   }
 
-  const confirm = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: confirm} = trackSubmit(
+    () => "Your relays couldn't be saved.",
+    async () => {
       await Promise.all(plans.map(save))
 
       clearModals()
       next?.()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Your relays couldn't be saved."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(confirm)}>
@@ -88,12 +81,12 @@
     {/each}
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      {#if loading}
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      {#if $loading}
         <Spinner size="sm" />
       {:else}
         <Icon icon={Stars} size={4} />

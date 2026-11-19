@@ -17,46 +17,34 @@
   import QRCode from "@app/components/QRCode.svelte"
   import {createInvoice} from "@app/tools/wallet"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const back = () => history.back()
 
-  const create = async () => {
-    const satAmount = Math.floor(Number(sats))
+  const {loading, submit: create} = trackSubmit(
+    error => `Failed to create invoice: ${errorMessage(error)}`,
+    async () => {
+      const satAmount = Math.floor(Number(sats))
 
-    if (!Number.isFinite(satAmount) || satAmount <= 0) {
-      pushToast({theme: "error", message: "Enter an amount greater than 0."})
-      return
-    }
+      if (!Number.isFinite(satAmount) || satAmount <= 0) {
+        pushToast({theme: "error", message: "Enter an amount greater than 0."})
+        return
+      }
 
-    loading = true
-
-    try {
       const paymentRequest = await createInvoice({sats: satAmount})
 
       invoice = new Invoice({pr: paymentRequest})
       sats = invoice.satoshi && invoice.satoshi > 0 ? invoice.satoshi : satAmount
 
       pushToast({message: "Invoice created"})
-    } catch (e) {
-      console.warn(e)
-
-      const message = errorMessage(e)
-
-      pushToast({
-        theme: "error",
-        message: `Failed to create invoice: ${message}`,
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const reset = () => {
     invoice = undefined
     sats = 10
   }
 
-  let loading = $state(false)
   let invoice: Invoice | undefined = $state()
   let sats = $state(10)
 </script>
@@ -99,13 +87,13 @@
       Go back
     </Button>
     {#if invoice}
-      <Button class="button button-neutral" onclick={reset} disabled={loading}>
+      <Button class="button button-neutral" onclick={reset} disabled={$loading}>
         <Icon icon={Refresh} />
         Re-generate
       </Button>
     {:else}
-      <Button class="button button-primary" onclick={create} disabled={loading}>
-        {#if loading}
+      <Button class="button button-primary" onclick={create} disabled={$loading}>
+        {#if $loading}
           <Spinner size="sm" />
         {:else}
           <Icon icon={Bolt} />

@@ -28,6 +28,7 @@
   import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
   import {flTheme, flThemes, theme} from "@app/tools/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const userBlossomServerList = deriveUserItem(BlossomServerLists)
 
@@ -45,10 +46,9 @@
     blossomServers = [...blossomServers, ""]
   }
 
-  const onsubmit = preventDefault(async () => {
-    loading = true
-
-    try {
+  const {loading, submit: save} = trackSubmit(
+    () => "Failed to save your settings.",
+    async () => {
       const publications = [await publishSettings($settings)]
 
       const previous = $userMuteList?.pubkeys() ?? []
@@ -79,16 +79,12 @@
       } else {
         pushToast({message: "Your settings have been saved!"})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your settings."})
-    } finally {
-      loading = false
-    }
-  })
+    },
+  )
+
+  const onsubmit = preventDefault(save)
 
   const settings = createSettingsForm()
-  let loading = $state(false)
   let mutedPubkeys = $state($userMuteList?.pubkeys() ?? [])
   let blossomServers = $state($userBlossomServerList?.urls() ?? [])
   let loadedMutes = Boolean($userMuteList)
@@ -301,6 +297,6 @@
       </Field>
       <LocalSttSettings />
     </div>
-    <SettingsFooter {dirty} {loading} {reset} />
+    <SettingsFooter {dirty} loading={$loading} {reset} />
   </PageContent>
 </form>

@@ -14,6 +14,7 @@
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {allowPubkeys} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -23,10 +24,9 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to add members.",
+    async () => {
       const error = await allowPubkeys(url, pubkeys)
 
       if (error) {
@@ -35,15 +35,9 @@
         pushToast({message: "Members have successfully been added!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to add members."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let pubkeys: string[] = $state([])
 </script>
 
@@ -72,8 +66,8 @@
     <Button
       class="button button-primary"
       onclick={submit}
-      disabled={loading || pubkeys.length === 0}>
-      <Spinner {loading}>Save</Spinner>
+      disabled={$loading || pubkeys.length === 0}>
+      <Spinner loading={$loading}>Save</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

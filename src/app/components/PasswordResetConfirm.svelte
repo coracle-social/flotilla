@@ -19,6 +19,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/core/pomade"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     userSecret: string
@@ -30,17 +31,16 @@
 
   const back = () => history.back()
 
-  const onSubmit = async () => {
-    if (password.trim().length < 12) {
-      return pushToast({
-        theme: "error",
-        message: "Password must be at least 12 characters long.",
-      })
-    }
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => "Failed to register your new password! Please try again.",
+    async () => {
+      if (password.trim().length < 12) {
+        return pushToast({
+          theme: "error",
+          message: "Password must be at least 12 characters long.",
+        })
+      }
 
-    loading = true
-
-    try {
       pushToast({
         timeout: 60_000,
         message: "Registering your new password, please wait...",
@@ -71,20 +71,10 @@
       pushToast({message: "Your password has been updated!"})
       loginWithPomade(clientOptions, email)
       clearModals()
-    } catch (e) {
-      console.error(e)
-
-      pushToast({
-        theme: "error",
-        message: "Failed to register your new password! Please try again.",
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let password = $state("")
-  let loading = $state(false)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
@@ -110,8 +100,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" type="submit" disabled={loading || !password}>
-      <Spinner {loading}>Continue</Spinner>
+    <Button class="button button-primary" type="submit" disabled={$loading || !password}>
+      <Spinner loading={$loading}>Continue</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

@@ -15,7 +15,7 @@
   import {roomLists} from "@app/core/plugins"
   import {publishRoomList} from "@app/tools/publish"
   import {goToMovedSpace} from "@app/navigation/history"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -26,23 +26,15 @@
 
   const back = () => history.back()
 
-  const confirm = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: confirm} = trackSubmit(
+    () => "Failed to move to the new space.",
+    async () => {
       await $roomLists
         .migrateRelay(url, newUrl)
         .then(command => command && publishRoomList(command))
       await goToMovedSpace(url, newUrl)
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to move to the new space."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(confirm)}>
@@ -63,12 +55,12 @@
     </p>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Not now
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Update and go</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Update and go</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

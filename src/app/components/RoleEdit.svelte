@@ -10,6 +10,7 @@
   import RoleForm, {type Values} from "@app/components/RoleForm.svelte"
   import {relayManagement, relayRoles} from "@app/core/plugins"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -28,10 +29,9 @@
 
   const back = () => history.back()
 
-  const onSubmit = async ({label, description, color}: Values) => {
-    loading = true
-
-    try {
+  const {loading, submit: onSubmit} = trackSubmit(
+    () => "Failed to update role.",
+    async ({label, description, color}: Values) => {
       const {error} = await $relayManagement
         .forUrl(url)
         .editRole(id, label, description, color, role.order())
@@ -45,15 +45,8 @@
         pushToast({message: "Role updated!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update role."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal>
@@ -62,6 +55,6 @@
       <ModalTitle>Edit Role</ModalTitle>
       <ModalSubtitle>in <RelayName {url} class="text-primary" /></ModalSubtitle>
     </ModalHeader>
-    <RoleForm {loading} {onSubmit} {initialValues} />
+    <RoleForm loading={$loading} {onSubmit} {initialValues} />
   </ModalBody>
 </Modal>

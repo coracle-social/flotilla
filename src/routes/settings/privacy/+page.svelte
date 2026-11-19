@@ -27,15 +27,15 @@
     publishSettings,
     createSettingsForm,
   } from "@app/core/settings"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const reset = () => {
     settings.set({...$userSettingsValues})
   }
 
-  const send = async () => {
-    sendingLogs = true
-
-    try {
+  const {loading: sendingLogs, submit: send} = trackSubmit(
+    () => "Failed to send your logs.",
+    async () => {
       const publication = await sendLogs()
       const error = await publication.getFatalError()
 
@@ -44,13 +44,8 @@
       } else {
         pushToast({message: "Your logs have been sent. Thank you!"})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to send your logs."})
-    } finally {
-      sendingLogs = false
-    }
-  }
+    },
+  )
 
   const onAuthModeChange = (checked: boolean) => {
     $settings.relay_auth = checked ? RelayAuthMode.Aggressive : RelayAuthMode.Conservative
@@ -65,10 +60,9 @@
       removeRelay: (url: string) => $blockedRelayLists.removeUrl(url).then(publish),
     })
 
-  const onsubmit = preventDefault(async () => {
-    loading = true
-
-    try {
+  const {loading, submit: save} = trackSubmit(
+    () => "Failed to save your settings.",
+    async () => {
       const publication = await publishSettings($settings)
       const error = await publication.getFatalError()
 
@@ -77,21 +71,15 @@
       } else {
         pushToast({message: "Your settings have been saved!"})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your settings."})
-    } finally {
-      loading = false
-    }
-  })
+    },
+  )
+
+  const onsubmit = preventDefault(save)
 
   const settings = createSettingsForm()
 
   const dirty = $derived(!equals($settings, $userSettingsValues))
   const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
-
-  let loading = $state(false)
-  let sendingLogs = $state(false)
 </script>
 
 <form class="contents" {onsubmit}>
@@ -148,8 +136,8 @@
           <p>Something went wrong?</p>
         {/snippet}
         {#snippet input()}
-          <Button class="button button-neutral" onclick={send} disabled={sendingLogs}>
-            <Spinner loading={sendingLogs}>Send Logs</Spinner>
+          <Button class="button button-neutral" onclick={send} disabled={$sendingLogs}>
+            <Spinner loading={$sendingLogs}>Send Logs</Spinner>
           </Button>
         {/snippet}
         {#snippet info()}
@@ -219,6 +207,6 @@
         {/snippet}
       </Field>
     </div>
-    <SettingsFooter {dirty} {loading} {reset} />
+    <SettingsFooter {dirty} loading={$loading} {reset} />
   </PageContent>
 </form>

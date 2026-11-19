@@ -23,6 +23,7 @@
   import PublishButton from "@app/components/PublishButton.svelte"
   import {pushToast} from "@app/navigation/toast"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     content?: string | object
@@ -50,31 +51,30 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async (scheduleAt?: number) => {
-    if ($uploading || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to create your thread.",
+    async (scheduleAt?: number) => {
+      if ($uploading) {
+        return
+      }
 
-    if (!title) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide a title for your thread.",
-      })
-    }
+      if (!title) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide a title for your thread.",
+        })
+      }
 
-    const ed = await editor
-    const content = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const content = ed.getText({blockSeparator: "\n"}).trim()
 
-    if (!content) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide a message for your thread.",
-      })
-    }
+      if (!content) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide a message for your thread.",
+        })
+      }
 
-    loading = true
-
-    try {
       const eventWriter = writer(Thread)
         .setContent(content)
         .setTitle(title)
@@ -94,15 +94,8 @@
 
       draftKey.clear()
       history.back()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to create your thread."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 
   let title = $state(initialValues?.title ?? draft?.title ?? "")
   let content = $state(initialValues?.content ?? draft?.content ?? "")
@@ -165,7 +158,7 @@
         data-tip="Add an image"
         class="tip tip-left absolute bottom-1 right-2"
         onclick={selectFiles}
-        disabled={loading}>
+        disabled={$loading}>
         {#if $uploading}
           <Spinner size="xs" />
         {:else}
@@ -176,12 +169,12 @@
     <ThreadSuggestions {url} query={`${title}\n${$editorText}`} />
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={$uploading || loading}>
-      <Spinner {loading}>Create Thread</Spinner>
+    <PublishButton onPublish={submit} disabled={$uploading || $loading}>
+      <Spinner loading={$loading}>Create Thread</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

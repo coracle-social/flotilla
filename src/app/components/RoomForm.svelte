@@ -19,6 +19,7 @@
   import {deriveHasLivekit} from "@app/areas/spaces/calls"
   import {RoomType} from "@app/areas/spaces/rooms"
   import IconInput from "@app/components/IconInput.svelte"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -82,20 +83,13 @@
     onsubmit(room)
   }
 
-  const trySubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: trySubmit} = trackSubmit(
+    () => "Failed to save the room.",
+    async () => {
       await submit()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save the room."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let imageFile = $state<File | undefined>()
   let imagePreview = $state(initialValues.picture)
   let roomType = $state(initialValues.livekit ? RoomType.Voice : RoomType.Text)
@@ -168,5 +162,5 @@
       <span class="text-sm opacity-75">Membership requires approval</span>
     </div>
   </ModalBody>
-  {@render footer({loading})}
+  {@render footer({loading: $loading})}
 </Modal>

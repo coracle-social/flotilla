@@ -17,6 +17,7 @@
   import {badgesSupported} from "@app/shell/badges"
   import {alertSettings} from "@app/tools/alerts/settings"
   import {saveAlertSettings} from "@app/tools/push/actions"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const showSound = !Capacitor.isNativePlatform()
 
@@ -38,10 +39,9 @@
     settings.reminder_minutes = replaceAt(index, minutes, settings.reminder_minutes)
   }
 
-  const onsubmit = preventDefault(async () => {
-    loading = true
-
-    try {
+  const {loading, submit: save} = trackSubmit(
+    () => "Failed to save your alert settings.",
+    async () => {
       if (settings.events && settings.reminder_minutes.some(minutes => minutes < 1)) {
         return pushToast({
           theme: "error",
@@ -60,15 +60,11 @@
       } else {
         pushToast({message: "Your settings have been saved!"})
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your alert settings."})
-    } finally {
-      loading = false
-    }
-  })
+    },
+  )
 
-  let loading = $state(false)
+  const onsubmit = preventDefault(save)
+
   let settings = $state({...alertSettings.get()})
 
   const dirty = $derived(!equals($state.snapshot(settings), alertSettings.get()))
@@ -178,6 +174,6 @@
         </div>
       {/if}
     </div>
-    <SettingsFooter {dirty} {loading} {reset} />
+    <SettingsFooter {dirty} loading={$loading} {reset} />
   </PageContent>
 </form>

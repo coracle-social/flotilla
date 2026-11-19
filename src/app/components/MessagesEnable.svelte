@@ -14,6 +14,7 @@
   import {messagingRelayLists, relayLists} from "@app/core/plugins"
   import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/core/env"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     next: () => void
@@ -23,10 +24,9 @@
 
   const back = () => history.back()
 
-  const enable = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: enable} = trackSubmit(
+    () => "Failed to enable messaging.",
+    async () => {
       const relayUrls = $userRelayList?.urls() ?? []
 
       if (relayUrls.length === 0) {
@@ -51,15 +51,8 @@
       }
 
       await next()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to enable messaging."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(enable)}>
@@ -74,8 +67,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Enable direct messaging</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Enable direct messaging</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

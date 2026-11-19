@@ -20,6 +20,7 @@
     syncAssignments,
   } from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -48,10 +49,9 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
-    saving = true
-
-    try {
+  const {loading: saving, submit} = trackSubmit(
+    () => "Failed to update permissions.",
+    async () => {
       const management = $relayManagement.forUrl(url)
       const error = await syncAssignments(
         assigned,
@@ -68,18 +68,12 @@
         pushToast({message: "Permissions updated!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update permissions."})
-    } finally {
-      saving = false
-    }
-  }
+    },
+  )
 
   let assigned: string[] = $state([])
   let selected: string[] = $state([])
   let loading = $state(true)
-  let saving = $state(false)
 
   onMount(async () => {
     const error = await $spaceManagement.loadMethodAssignees(url)
@@ -133,8 +127,8 @@
       Go back
     </Button>
     {#if $permissions.editAdmins}
-      <Button class="button button-primary" onclick={submit} disabled={saving}>
-        <Spinner loading={saving}>Save changes</Spinner>
+      <Button class="button button-primary" onclick={submit} disabled={$saving}>
+        <Spinner loading={$saving}>Save changes</Spinner>
       </Button>
     {/if}
   </ModalFooter>

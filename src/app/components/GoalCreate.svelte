@@ -28,6 +28,7 @@
   import {DraftKey} from "@app/tools/drafts"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Values = {
     title: string
@@ -55,38 +56,37 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async (scheduleAt?: number) => {
-    if ($uploading || loading) {
-      return
-    }
+  const {loading, submit} = trackSubmit(
+    () => "Failed to create your funding goal.",
+    async (scheduleAt?: number) => {
+      if ($uploading) {
+        return
+      }
 
-    if (!title) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide a title for your funding goal.",
-      })
-    }
+      if (!title) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide a title for your funding goal.",
+        })
+      }
 
-    const ed = await editor
-    const content = ed.getText({blockSeparator: "\n"}).trim()
+      const ed = await editor
+      const content = ed.getText({blockSeparator: "\n"}).trim()
 
-    if (!content.trim()) {
-      return pushToast({
-        theme: "error",
-        message: "Please provide details about your funding goal.",
-      })
-    }
+      if (!content.trim()) {
+        return pushToast({
+          theme: "error",
+          message: "Please provide details about your funding goal.",
+        })
+      }
 
-    if (closedAt && closedAt < now()) {
-      return pushToast({
-        theme: "error",
-        message: "Please choose a deadline in the future.",
-      })
-    }
+      if (closedAt && closedAt < now()) {
+        return pushToast({
+          theme: "error",
+          message: "Please choose a deadline in the future.",
+        })
+      }
 
-    loading = true
-
-    try {
       const [image] = images
 
       let imageUrl = typeof image === "string" ? image : undefined
@@ -130,15 +130,8 @@
 
       draftKey.clear()
       history.back()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to create your funding goal."})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 
   let title = $state(initialValues?.title ?? "")
   let amount = $state(initialValues?.amount ?? 1000)
@@ -202,7 +195,7 @@
           data-tip="Add an image"
           class="tip tip-left absolute bottom-1 right-2"
           onclick={selectFiles}
-          disabled={loading}>
+          disabled={$loading}>
           {#if $uploading}
             <Spinner size="xs" />
           {:else}
@@ -255,12 +248,12 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={submit} disabled={$uploading || loading}>
-      <Spinner {loading}>Create Goal</Spinner>
+    <PublishButton onPublish={submit} disabled={$uploading || $loading}>
+      <Spinner loading={$loading}>Create Goal</Spinner>
     </PublishButton>
   </ModalFooter>
 </Modal>

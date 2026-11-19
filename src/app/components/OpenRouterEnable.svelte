@@ -21,6 +21,7 @@
   import {popModal} from "@app/navigation/dialogs"
   import {getSetting, publishSettings} from "@app/core/settings"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     feature: string
@@ -33,10 +34,9 @@
 
   const action = `Enable ${feature.toLowerCase()}`
 
-  const save = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: save} = trackSubmit(
+    error => `Failed to save your key: ${errorMessage(error)}`,
+    async () => {
       await publishSettings({openrouter_key: openrouterKey.trim()})
 
       // The settings projection lands after the publish, so the key reads back only once it has.
@@ -51,17 +51,11 @@
       pending = false
       popModal()
       onReady?.()
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: `Failed to save your key: ${errorMessage(error)}`})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let pending = true
   let openrouterKey = $state("")
-  let loading = $state(false)
 
   // Leaving without a key hands the decision back to whoever asked for it.
   onDestroy(() => {
@@ -110,8 +104,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={!openrouterKey || loading}>
-      <Spinner {loading}>{action}</Spinner>
+    <Button type="submit" class="button button-primary" disabled={!openrouterKey || $loading}>
+      <Spinner loading={$loading}>{action}</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

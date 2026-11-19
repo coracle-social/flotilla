@@ -35,6 +35,7 @@
   import {session} from "@app/core/session"
   import {HIDE_NOSTR} from "@app/core/env"
   import {isPomadeSession, requirePomadeSession} from "@app/core/pomade"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   const npub = nip19.npubEncode($user.pubkey)
   const profile = $profiles.one($user.pubkey)
@@ -50,10 +51,9 @@
 
   const startDelete = () => pushModal(ProfileDelete)
 
-  const startPasswordReset = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: startPasswordReset} = trackSubmit(
+    () => POMADE_NETWORK_ERROR_MESSAGE,
+    async () => {
       const {ok, peersByPrefix} = await Client.requestChallenge(
         requirePomadeSession($session).data.email,
       )
@@ -70,17 +70,8 @@
       }
 
       pushModal(PasswordReset, {peersByPrefix})
-    } catch (error) {
-      console.error(error)
-
-      pushToast({
-        theme: "error",
-        message: POMADE_NETWORK_ERROR_MESSAGE,
-      })
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const startRecovery = () => pushModal(InfoKeys)
 
@@ -88,7 +79,6 @@
     showAdvanced = !showAdvanced
   }
 
-  let loading = $state(false)
   let showAdvanced = $state(false)
 </script>
 
@@ -189,8 +179,8 @@
     {/if}
     {#if pomadeEmail}
       <div class="flex flex-col @2xl:flex-row gap-4 @2xl:gap-2 justify-end">
-        <Button class="button button-neutral" onclick={startPasswordReset} disabled={loading}>
-          <Spinner {loading}>Update your password</Spinner>
+        <Button class="button button-neutral" onclick={startPasswordReset} disabled={$loading}>
+          <Spinner loading={$loading}>Update your password</Spinner>
         </Button>
         {#if !HIDE_NOSTR}
           <Button class="button button-primary" onclick={startRecovery}

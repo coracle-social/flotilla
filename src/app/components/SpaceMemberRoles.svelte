@@ -21,6 +21,7 @@
   import {deriveSpaceMemberRoles} from "@app/areas/spaces/roles"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -41,10 +42,9 @@
 
   const manageRoles = () => pushModal(SpaceRoles, {url})
 
-  const submit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to update roles.",
+    async () => {
       const management = $relayManagement.forUrl(url)
       const error = await syncAssignments(
         initial,
@@ -59,16 +59,10 @@
         pushToast({message: "Roles updated!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update roles."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   let selected = $state([...initial])
-  let loading = $state(false)
 </script>
 
 <Modal>
@@ -102,8 +96,8 @@
       Go back
     </Button>
     {#if roles.length > 0}
-      <Button class="button button-primary" onclick={submit} disabled={loading}>
-        <Spinner {loading}>Save changes</Spinner>
+      <Button class="button button-primary" onclick={submit} disabled={$loading}>
+        <Spinner loading={$loading}>Save changes</Spinner>
       </Button>
     {:else if $permissions.manageRoles}
       <Button class="button button-primary" onclick={manageRoles}>

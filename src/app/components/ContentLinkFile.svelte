@@ -8,7 +8,7 @@
   import {downloadBlob, preventDefault, stopPropagation} from "@lib/html"
   import {fetchUrlBlob, getUrlFileName, getUrlTags} from "@lib/media"
   import {formatBytes} from "@lib/util"
-  import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -22,20 +22,12 @@
   const name = getUrlFileName(url, event)
   const size = Number(tagValue(tagSpec("size"), getUrlTags(url, event)))
 
-  const download = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: download} = trackSubmit(
+    () => `${name} could not be downloaded.`,
+    async () => {
       await downloadBlob(name, await fetchUrlBlob(url, event))
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: `${name} could not be downloaded.`})
-    } finally {
-      loading = false
-    }
-  }
-
-  let loading = $state(false)
+    },
+  )
 </script>
 
 <!-- Use a real link so people can copy the href -->
@@ -49,7 +41,7 @@
     href={url}
     onclick={stopPropagation(preventDefault(download))}
     class="border border-solid my-2 flex max-w-xl items-center gap-3 rounded-2xl border-line p-4">
-    {#if loading}
+    {#if $loading}
       <Spinner />
     {:else}
       <Icon icon={FileDownload} size={6} />

@@ -20,6 +20,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
   import {addRoomMembers} from "@app/areas/spaces/rooms"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -32,11 +33,10 @@
 
   const back = () => history.back()
 
-  const addMembers = async () => {
-    loading = true
-
-    try {
-      // Show loading for auto submit callback
+  const {loading, submit: addMembers} = trackSubmit(
+    () => "Failed to add members.",
+    async () => {
+      // Show $loading for auto submit callback
       await sleep(500)
 
       const error = await addRoomMembers(url, {h}, pubkeys)
@@ -47,13 +47,8 @@
         pushToast({message: "Members have successfully been added!"})
         back()
       }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to add members."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
   const onSubmit = () => {
     const members = $spaceMembers
@@ -82,7 +77,6 @@
     }
   }
 
-  let loading = $state(false)
   let pubkeys: string[] = $state(popKey("RoomMembersAdd.pubkeys") || [])
 
   onMount(() => {
@@ -112,8 +106,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" onclick={onSubmit} disabled={loading}>
-      <Spinner {loading}>Save changes</Spinner>
+    <Button class="button button-primary" onclick={onSubmit} disabled={$loading}>
+      <Spinner loading={$loading}>Save changes</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

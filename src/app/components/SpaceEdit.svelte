@@ -19,6 +19,7 @@
   import {relayManagement, relays} from "@app/core/plugins"
   import IconInput from "@app/components/IconInput.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -68,20 +69,13 @@
     clearModals()
   }
 
-  const trySubmit = async () => {
-    loading = true
-
-    try {
+  const {loading, submit: trySubmit} = trackSubmit(
+    () => "Failed to save your changes.",
+    async () => {
       await submit()
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to save your changes."})
-    } finally {
-      loading = false
-    }
-  }
+    },
+  )
 
-  let loading = $state(false)
   let imageFile = $state<File | undefined>()
   let imagePreview = $state(relay?.icon)
 </script>
@@ -130,8 +124,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
-      <Spinner {loading}>Save Changes</Spinner>
+    <Button type="submit" class="button button-primary" disabled={$loading}>
+      <Spinner loading={$loading}>Save Changes</Spinner>
     </Button>
   </ModalFooter>
 </Modal>

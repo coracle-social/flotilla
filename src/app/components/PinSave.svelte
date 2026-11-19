@@ -28,6 +28,7 @@
   import {pushToast} from "@app/navigation/toast"
   import {clearModals} from "@app/navigation/dialogs"
   import {PublishBuilder} from "@app/tools/publish"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     url: string
@@ -67,11 +68,10 @@
     }
   }
 
-  const submit = async () => {
-    if (pinReference) {
-      loading = true
-
-      try {
+  const {loading, submit} = trackSubmit(
+    () => "Failed to save the link.",
+    async () => {
+      if (pinReference) {
         const ed = await editor
         const eventWriter = pin ? writer(Pin, pin) : writer(Pin).setIdentifier()
 
@@ -94,14 +94,9 @@
           pushToast({message: pin ? "Link updated!" : "Link added!"})
           clearModals()
         }
-      } catch (e) {
-        console.error(e)
-        pushToast({theme: "error", message: "Failed to save the link."})
-      } finally {
-        loading = false
       }
-    }
-  }
+    },
+  )
 
   const editor = makeEditor({url, submit, uploading, content: pin?.content() ?? ""})
 
@@ -110,7 +105,6 @@
   let title = $state(pin?.title() ?? "")
   let topics = $state<string[]>(pin?.topics() ?? [])
   let value = $state(pin ? pinToReference(pin) : reference)
-  let loading = $state(false)
   let uploadingLink = $state(false)
 
   const pinReference = $derived(parsePinReference(value))
@@ -151,7 +145,7 @@
           </label>
           <label
             class={cx("button button-neutral button-input", {
-              "button-disabled": loading || uploadingLink,
+              "button-disabled": $loading || uploadingLink,
             })}>
             {#if uploadingLink}
               <Spinner size="xs" />
@@ -162,7 +156,7 @@
             <input
               type="file"
               class="hidden"
-              disabled={loading || uploadingLink}
+              disabled={$loading || uploadingLink}
               onchange={onFileChange} />
           </label>
         </div>
@@ -189,7 +183,7 @@
             data-tip="Add an image"
             class="button button-neutral button-input tip"
             onclick={selectFiles}
-            disabled={loading}>
+            disabled={$loading}>
             {#if $uploading}
               <Spinner size="xs" />
             {:else}
@@ -216,8 +210,8 @@
     <Button
       class="button button-primary"
       onclick={submit}
-      disabled={loading || uploadingLink || $uploading || !pinReference}>
-      <Spinner {loading}>
+      disabled={$loading || uploadingLink || $uploading || !pinReference}>
+      <Spinner loading={$loading}>
         {#if pin}
           Save changes
         {:else}
