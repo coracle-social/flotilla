@@ -13,7 +13,7 @@ export const session = withGetter(writable<Maybe<Session>>(undefined))
 // Set by a tab that logs out, so the others stop showing what it deleted
 const LOGGED_OUT = "flotilla-logged-out"
 
-export const login = async ($session: Session) => {
+const openSession = async ($session: Session) => {
   const $user = await User.fromSession($session)
 
   if (!$user) {
@@ -22,6 +22,18 @@ export const login = async ($session: Session) => {
 
   replaceApp($user, await openRepository($user.pubkey))
   session.set($session)
+}
+
+const loginHandlers: (() => unknown)[] = []
+
+export const registerLoginHandler = (handler: () => unknown) => {
+  loginHandlers.push(handler)
+}
+
+// Restoring a session at startup opens it without these, since they're for a user logging in.
+export const login = async ($session: Session) => {
+  await openSession($session)
+  await Promise.all(loginHandlers.map(call))
 }
 
 const logoutHandlers: (() => Promise<unknown>)[] = []
@@ -35,7 +47,7 @@ export const restoreSession = async () => {
   const testSession = getTestSession()
 
   if (testSession) {
-    await login(testSession)
+    await openSession(testSession)
 
     // Test events stand in for what storage held, so they land once it has loaded.
     await pluginCaches.get()?.ready
@@ -46,7 +58,7 @@ export const restoreSession = async () => {
     // A nip01 secret is the account rather than a credential, and a local signer can't stall startup.
     if ($session) {
       if ($session.method === "nip01" || (await hasCachedIdentity())) {
-        await login($session)
+        await openSession($session)
       } else {
         await ss.set("session", undefined)
       }

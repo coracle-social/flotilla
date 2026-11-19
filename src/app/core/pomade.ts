@@ -1,4 +1,4 @@
-import {Client, type SessionItem, type ClientOptions} from "@pomade/core"
+import {Client, type AccountOption, type SessionItem, type ClientOptions} from "@pomade/core"
 import {ifLet, reject, spec} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {pomade, toSession} from "@welshman/app"
@@ -94,6 +94,21 @@ export const deleteDeactivatedPomadeSessions = async () => {
 
 export const loginWithPomade = (clientOptions: ClientOptions, email: string) =>
   login(toSession(pomade, {clientOptions, email}))
+
+export const selectPomadeLogin = async (
+  clientSecret: string,
+  {client, peers}: AccountOption,
+  email: string,
+) => {
+  const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
+
+  if (res.ok && clientOptions) {
+    await loginWithPomade(clientOptions, email)
+    deleteDeactivatedPomadeSessions()
+  }
+
+  return {ok: Boolean(res.ok && clientOptions), messages: res.messages}
+}
 
 export const POMADE_INVALID_LOGIN_MESSAGE = "Invalid login information"
 export const POMADE_NETWORK_ERROR_MESSAGE = "Network error, please try again"

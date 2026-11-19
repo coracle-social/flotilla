@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {AccountOption} from "@pomade/core"
-  import {Client} from "@pomade/core"
   import {uniqBy} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -13,11 +12,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
-  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
+  import {selectPomadeLogin} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
-  import {setChecked} from "@app/tools/checked"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
+  import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
     email: string
@@ -27,42 +26,27 @@
 
   const {email, options, clientSecret}: Props = $props()
 
-  let loading = $state(false)
-
   const back = () => history.back()
 
-  const selectAccount =
-    ({client, peers}: AccountOption) =>
-    async () => {
-      loading = true
+  const {loading, submit: select} = trackSubmit(
+    () => POMADE_NETWORK_ERROR_MESSAGE,
+    async (option: AccountOption) => {
+      const res = await selectPomadeLogin(clientSecret, option, email)
 
-      try {
-        const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
-
-        if (res.ok && clientOptions) {
-          await loginWithPomade(clientOptions, email)
-          deleteDeactivatedPomadeSessions()
-          setChecked("*")
-          clearModals()
-        } else {
-          console.error(res.messages)
-
-          pushToast({
-            theme: "error",
-            message: getPomadeLoginFailureMessage(res.messages),
-          })
-        }
-      } catch (error) {
-        console.error("Login error:", error)
+      if (res.ok) {
+        clearModals()
+      } else {
+        console.error(res.messages)
 
         pushToast({
           theme: "error",
-          message: POMADE_NETWORK_ERROR_MESSAGE,
+          message: getPomadeLoginFailureMessage(res.messages),
         })
-      } finally {
-        loading = false
       }
-    }
+    },
+  )
+
+  const selectAccount = (option: AccountOption) => () => select(option)
 </script>
 
 <Modal>
@@ -76,7 +60,7 @@
       {#each uniqBy(o => o.pubkey, options) as option (option.pubkey)}
         <Button
           onclick={selectAccount(option)}
-          disabled={loading}
+          disabled={$loading}
           class="card flex w-full items-center p-3 text-left">
           <Profile inert pubkey={option.pubkey} />
         </Button>
@@ -84,10 +68,10 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back} disabled={loading}>
+    <Button class="button button-link" onclick={back} disabled={$loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Spinner {loading} />
+    <Spinner loading={$loading} />
   </ModalFooter>
 </Modal>

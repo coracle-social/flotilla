@@ -6,6 +6,7 @@ import {app} from "@app/core/app"
 import {dufflepud, DUFFLEPUD_URL} from "@app/core/env"
 import {getHttpAuthHeader} from "@app/core/signer"
 import {kv} from "@app/core/storage"
+import {registerLoginHandler} from "@app/core/session"
 
 export const checked = withGetter(
   synced<Record<string, number>>({
@@ -143,4 +144,9 @@ export const syncCheckedRemote = () => {
     unsubscribeUser()
     unsubscribeChecked()
   }
+}
+
+// A device that logs in would otherwise show everything the account ever received as unread.
+export const registerChecked = () => {
+  registerLoginHandler(() => setChecked("*"))
 }

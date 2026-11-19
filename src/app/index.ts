@@ -10,6 +10,7 @@ import {registerMessages} from "@app/areas/messages"
 import {registerHome} from "@app/areas/home"
 import {registerPomade} from "@app/core/pomade"
 import {registerPush} from "@app/tools/push"
+import {registerChecked} from "@app/tools/checked"
 import {registerSpaces} from "@app/areas/spaces"
 import {registerCalls} from "@app/areas/spaces/calls"
 import {registerRoles} from "@app/areas/spaces/roles"
@@ -38,6 +39,7 @@ export const registerAll = () => {
     registerHome()
     registerPomade()
     registerPush()
+    registerChecked()
     registerWallet()
     registerSpaces()
     registerCalls()

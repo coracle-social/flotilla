@@ -23,7 +23,6 @@
   import {login} from "@app/core/session"
   import {Nip46Controller} from "@app/core/nip46"
   import {clearModals} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
   import {NIP46_PERMS} from "@app/core/nip46"
 
@@ -46,7 +45,6 @@
         }),
       )
 
-      setChecked("*")
       clearModals()
     },
     onError: message => pushToast({theme: "error", message}),
@@ -90,7 +88,6 @@
 
         // connect() may have switched relays, so persist the broker's current relays.
         await login(toSession(nip46, {clientSecret, signerPubkey, relays: broker.params.relays}))
-        setChecked("*")
       } else {
         return pushToast({
           theme: "error",

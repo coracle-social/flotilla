@@ -18,10 +18,9 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInOTP from "@app/components/LogInOTP.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
-  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
+  import {selectPomadeLogin} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
 
@@ -52,13 +51,9 @@
       if (uniq(options.map(o => o.pubkey)).length > 1) {
         pushModal(LogInSelect, {email, options, clientSecret})
       } else {
-        const {client, peers} = options[0]
-        const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
+        const res = await selectPomadeLogin(clientSecret, options[0], email)
 
-        if (res.ok && clientOptions) {
-          await loginWithPomade(clientOptions, email)
-          deleteDeactivatedPomadeSessions()
-          setChecked("*")
+        if (res.ok) {
           clearModals()
         } else {
           console.error(res.messages)

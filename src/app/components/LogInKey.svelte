@@ -19,7 +19,6 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {login} from "@app/core/session"
   import {clearModals} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
 
@@ -56,7 +55,6 @@
       }
 
       await login(toSession(nip01, {secret}))
-      setChecked("*")
       clearModals()
     },
   )
