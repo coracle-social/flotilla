@@ -176,7 +176,7 @@ callbacks and hot paths.
 
 - Prefer direct, readable code over layered abstractions.
 - Do not add indirection (extra helpers, wrappers, stores, or derived state) unless it removes real repeated complexity.
-- Abstractions must be either: elegant and self-explanatory (bottom-up design), or used in at least 3 locations (ugly glue code).
+- An abstraction must be elegant and self-explanatory, naming one concept (bottom-up design). Being used in several places is not enough: steps that callers happen to run together stay separate and are composed at the call site, or through a builder with one method per step.
 - Reuse existing Welshman and Flotilla primitives before introducing new utilities or dependencies. See /welshman-* skills for details.
 - Favor linear control flow and explicit naming over clever patterns.
 - Remove defensive checks that do not apply in this runtime model.
@@ -214,7 +214,7 @@ callbacks and hot paths.
 3. Publish it: `command.publish()` or `.publishToRelays(urls)`
 4. Display publication status to user (for cancel/error handling). `getFatalError()` reports an error only when no relay accepted the event, and `getAnyError()` reports any relay's refusal or timeout
 
-Transformers between the steps live in `tools/publish.ts`. `scheduleWriter(writer, at)` dates a writer ahead and forces the scheduler relay. A post in a space is addressed after that with `addressWriterToSpace(writer, url)`, or `addressWriterToRoom(writer, url, h)` for a room, which force the space's relay instead. `publishWithDelay(delay)` publishes a command with a send delay.
+A writer that isn't a plugin mutator's is published through `PublishBuilder` in `tools/publish.ts`, with one method per step: `schedule(at)`, `toSpace(url)`, `toRoom(h)`, `withDelay(ms)`, `modify(fn)` and `shareToChat(share)`. Each does nothing when given `undefined`, and `publish()` applies them in its own order, so the calls can come in any order. A `modify` runs after the relays are chosen, which is how a poll names its vote relays.
 
 Plugin mutators (`app.use(FollowLists).follow(...)`, `app.use(Rooms).joinRoom(...)`, …) already
 return a `Command`, so `.then(publish)` is usually all you need.

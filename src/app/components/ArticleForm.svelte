@@ -17,7 +17,6 @@
   import {now, randomId} from "@welshman/lib"
   import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import DocumentText from "@assets/icons/document-text.svg?dataurl"
@@ -31,20 +30,15 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {command, writer} from "@app/core/domain"
+  import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {scheduleWriter} from "@app/tools/publish"
-  import {
-    addressWriterToRoom,
-    addressWriterToSpace,
-    publishRoomQuote,
-  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
   import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Props = {
     url?: string
@@ -139,25 +133,16 @@
         eventWriter.setImage(image)
       }
 
-      if (scheduleAt) {
-        scheduleWriter(eventWriter, scheduleAt)
-      }
-
-      if (url && h) {
-        await addressWriterToRoom(eventWriter, url, h)
-      } else if (url) {
-        await addressWriterToSpace(eventWriter, url)
-      }
-
-      const publication = await command(eventWriter).then(publish)
+      const publication = await new PublishBuilder(eventWriter)
+        .schedule(scheduleAt)
+        .toSpace(url)
+        .toRoom(h)
+        .shareToChat(shareToChat)
+        .publish()
       const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
-      }
-
-      if (url && shareToChat && !scheduleAt) {
-        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey.clear()

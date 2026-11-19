@@ -6,7 +6,7 @@
   import {ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {Message} from "@welshman/domain"
-  import {MembershipStatus, publish} from "@welshman/app"
+  import {MembershipStatus} from "@welshman/app"
   import Close from "@assets/icons/close.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -19,7 +19,7 @@
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {user} from "@app/core/user"
   import {deletes, events, relays, rooms} from "@app/core/plugins"
-  import {command, reader, writer} from "@app/core/domain"
+  import {reader, writer} from "@app/core/domain"
   import {
     CallState,
     callState,
@@ -27,19 +27,12 @@
     VideoCallLayout,
     videoCallLayout,
   } from "@app/areas/spaces/calls"
-  import {
-    RoomType,
-    deriveUserRoomMembershipStatus,
-    getRoomType,
-    prependParent,
-    addressWriterToRoom,
-    addressWriterToSpace,
-  } from "@app/areas/spaces/rooms"
+  import {RoomType, deriveUserRoomMembershipStatus, getRoomType} from "@app/areas/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
   import {holdChecked, releaseChecked, setChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
-  import {ScheduleError, publishWithDelay, scheduleWriter} from "@app/tools/publish"
+  import {PublishBuilder, ScheduleError, prependParent} from "@app/tools/publish"
 
   type Props = {
     url: string
@@ -131,17 +124,8 @@
       .setContent(content)
       .addTags(...tags)
 
-    // Scheduling forces the scheduler relay, so the space relay has to be forced after it.
-    if (scheduleAt) {
-      scheduleWriter(eventWriter, scheduleAt)
-    } else if (edit) {
+    if (edit) {
       eventWriter.setCreatedAt(edit.created_at)
-    }
-
-    if (h) {
-      await addressWriterToRoom(eventWriter, url, h)
-    } else {
-      await addressWriterToSpace(eventWriter, url)
     }
 
     // The composer builds tags from the content alone, so an edit carries over the parent it replied to.
@@ -153,9 +137,11 @@
       eventWriter.setParent(parentEvent)
     }
 
+    const builder = new PublishBuilder(eventWriter).schedule(scheduleAt).toSpace(url).toRoom(h)
+
     // A scheduled message is held by the space relay until its time.
     if (scheduleAt) {
-      const publication = await command(eventWriter).then(publish)
+      const publication = await builder.publish()
       const error = await publication.getFatalError()
 
       if (error) {
@@ -166,7 +152,7 @@
     }
 
     const delay = await loadSendDelay()
-    const publication = await command(eventWriter).then(publishWithDelay(delay))
+    const publication = await builder.withDelay(delay).publish()
 
     if (delay) {
       pushToast({

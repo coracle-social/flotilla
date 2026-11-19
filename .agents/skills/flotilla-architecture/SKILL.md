@@ -143,8 +143,7 @@ hosting (`areas/hosting/`, with its own auth) and bookmarks (`areas/bookmarks.ts
 - `spaces/sync.ts` (`syncCurrentSpace`, the space-wide relay and content syncs) and
   `spaces/reactions.ts` (reacting inside a space). `spaces/index.ts` registers the syncs and
   retention.
-- `spaces/rooms/`: chat rooms. `room.ts` (one room's type, name and members), `publish.ts`
-  (writing into a space or room), `lists.ts` (reordering the user's spaces, and a space's rooms the user has and hasn't joined), `permissions.ts`,
+- `spaces/rooms/`: chat rooms. `room.ts` (one room's type, name and members), `lists.ts` (reordering the user's spaces, and a space's rooms the user has and hasn't joined), `permissions.ts`,
   `search.ts`, `transcript.ts` (grouping a room's messages into rows), `sync.ts`,
   `membership.ts` (joining and leaving a room, room invite codes), `pins.ts`, `commands.ts`
   (NIP-CD slash commands)
@@ -171,7 +170,7 @@ hosting (`areas/hosting/`, with its own auth) and bookmarks (`areas/bookmarks.ts
   list pages use to sort a kind by latest comment), `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relay.ts` is one relay's timeline, `author.ts` pages a set of authors in groups over their outboxes, `calendar.ts` windows calendar events by day, `network.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `targets.ts` (what an event is about: what a
   reply answers, a reaction reacts to, a zap zaps), and `alerts/` (which events alert, the user's
   alert settings, and `stream.ts`, the in-app stream of alerting messages), `publish.ts`
-  (transformers between welshman's publish steps: `scheduleWriter` dates a writer ahead and forces the scheduler relay, `publishWithDelay(delay)` publishes a command with a send delay, and `publishRoomList` adds the indexers the space browser reads room lists from; `ScheduleError` is what a scheduled chat message throws when the relay refuses it), `quotes.ts`, `share.ts` (the `Share` type,
+  (`PublishBuilder`, which publishes a writer with optional scheduling, space and room addressing, a send delay, modifiers and a chat quote; `prependParent`, `publishComment` and `publishRoomQuote`; `publishRoomList`, which adds the indexers the space browser reads room lists from; and `ScheduleError`, what a scheduled chat message throws when the relay refuses it), `quotes.ts`, `share.ts` (the `Share` type,
   `pendingShare`, and `shareTo`, which hands a share to a room or conversation), and `people/`
   (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
   has `isEventMuted` and `derivePubkeyMuted`, `statuses.ts` has the NIP-38 `Statuses` plugin, and `pins.ts` has a person's pinned notes), and `checked.ts` (what has been read, per path, synced

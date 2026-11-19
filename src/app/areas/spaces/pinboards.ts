@@ -8,15 +8,15 @@ import type {TrustedEvent} from "@welshman/util"
 import {Pin, Pinboard} from "@welshman/domain"
 import type {PinReader, PinReference, PinWriter, PinboardReader} from "@welshman/domain"
 import {isLink, parse} from "@welshman/content"
-import {Events, publish} from "@welshman/app"
+import {Events} from "@welshman/app"
 import {isImageUrl} from "@lib/media"
 import {app, fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
 import {deletes, relayManagement, relays} from "@app/core/plugins"
-import {command, reader, writer} from "@app/core/domain"
+import {reader, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
 import {syncCurrentSpace} from "@app/areas/spaces/sync"
-import {addressWriterToSpace} from "@app/areas/spaces/rooms/publish"
+import {PublishBuilder} from "@app/tools/publish"
 
 // A pin's reference as the user would type it: a nostr link for an event, and the external id otherwise.
 export const pinToReference = (pin: PinReader) => {
@@ -109,9 +109,7 @@ export const shelfCoverImages = (pins: PinReader[]) => {
 
 // A library pin is published to the space rather than to an author outbox, so every write goes there.
 const publishPin = async (url: string, eventWriter: PinWriter) => {
-  await addressWriterToSpace(eventWriter, url)
-
-  const publication = await command(eventWriter).then(publish)
+  const publication = await new PublishBuilder(eventWriter).toSpace(url).publish()
 
   return publication.getFatalError()
 }

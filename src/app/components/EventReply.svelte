@@ -10,10 +10,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {prependParent, publishComment} from "@app/areas/spaces/rooms"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {DraftKey} from "@app/tools/drafts"
   import {pushToast} from "@app/navigation/toast"
+  import {prependParent, publishComment} from "@app/tools/publish"
 
   type Values = {
     content?: string | object

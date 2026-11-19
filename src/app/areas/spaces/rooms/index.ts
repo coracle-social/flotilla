@@ -16,7 +16,6 @@ import {currentSpaceUrls, syncedSpaceUrls} from "@app/navigation/history"
 import {syncCurrentSpaceRooms, syncSpaceRooms} from "@app/areas/spaces/rooms/sync"
 
 export * from "@app/areas/spaces/rooms/room"
-export * from "@app/areas/spaces/rooms/publish"
 export * from "@app/areas/spaces/rooms/lists"
 export * from "@app/areas/spaces/rooms/permissions"
 export * from "@app/areas/spaces/rooms/search"

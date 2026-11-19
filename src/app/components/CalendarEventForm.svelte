@@ -3,7 +3,6 @@
   import {writable} from "svelte/store"
   import {randomId} from "@welshman/lib"
   import {TimeEvent} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -16,18 +15,13 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {
-    addressWriterToRoom,
-    addressWriterToSpace,
-    publishRoomQuote,
-  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {setEventReminders} from "@app/areas/spaces/reminders"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {DraftKey} from "@app/tools/drafts"
   import {pushToast} from "@app/navigation/toast"
-  import {command, writer} from "@app/core/domain"
-  import {scheduleWriter} from "@app/tools/publish"
+  import {writer} from "@app/core/domain"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Values = {
     d: string
@@ -113,25 +107,16 @@
         .setContent(content)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      if (scheduleAt) {
-        scheduleWriter(eventWriter, scheduleAt)
-      }
-
-      if (h) {
-        await addressWriterToRoom(eventWriter, url, h)
-      } else {
-        await addressWriterToSpace(eventWriter, url)
-      }
-
-      const publication = await command(eventWriter).then(publish)
+      const publication = await new PublishBuilder(eventWriter)
+        .schedule(scheduleAt)
+        .toSpace(url)
+        .toRoom(h)
+        .shareToChat(shareToChat)
+        .publish()
       const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
-      }
-
-      if (shareToChat && !scheduleAt) {
-        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey?.clear()

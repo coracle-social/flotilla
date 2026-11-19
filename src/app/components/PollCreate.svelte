@@ -2,7 +2,6 @@
   import {now, randomId, removeUndefined} from "@welshman/lib"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import HamburgerMenu from "@assets/icons/hamburger-menu.svg?dataurl"
@@ -21,16 +20,11 @@
   import Modal from "@lib/components/Modal.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {command, writer} from "@app/core/domain"
+  import {writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
-  import {scheduleWriter} from "@app/tools/publish"
-  import {
-    addressWriterToRoom,
-    addressWriterToSpace,
-    publishRoomQuote,
-  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/tools/drafts"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Option = {
     id: string
@@ -106,28 +100,18 @@
         eventWriter.setEndsAt(endsAt)
       }
 
-      if (scheduleAt) {
-        scheduleWriter(eventWriter, scheduleAt)
-      }
-
-      if (url && h) {
-        await addressWriterToRoom(eventWriter, url, h)
-      } else if (url) {
-        await addressWriterToSpace(eventWriter, url)
-      }
-
-      // A poll names the relays its votes live on, which are the ones it goes out to.
-      eventWriter.setUrls(await eventWriter.relays())
-
-      const publication = await command(eventWriter).then(publish)
+      const publication = await new PublishBuilder(eventWriter)
+        .schedule(scheduleAt)
+        .toSpace(url)
+        .toRoom(h)
+        // A poll names the relays its votes live on, which are the ones it goes out to.
+        .modify(async poll => poll.setUrls(await poll.relays()))
+        .shareToChat(shareToChat)
+        .publish()
       const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
-      }
-
-      if (url && shareToChat && !scheduleAt) {
-        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey.clear()

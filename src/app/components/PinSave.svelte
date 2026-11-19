@@ -3,7 +3,6 @@
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {Pin} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
@@ -22,13 +21,13 @@
   import RelayName from "@app/components/RelayName.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {command, reader, writer} from "@app/core/domain"
+  import {reader, writer} from "@app/core/domain"
   import {HIDE_NOSTR} from "@app/core/env"
   import {parsePinReference, pinToReference} from "@app/areas/spaces/pinboards"
-  import {addressWriterToSpace} from "@app/areas/spaces/rooms"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
   import {pushToast} from "@app/navigation/toast"
   import {clearModals} from "@app/navigation/dialogs"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Props = {
     url: string
@@ -74,10 +73,7 @@
 
       try {
         const ed = await editor
-        const eventWriter = await addressWriterToSpace(
-          pin ? writer(Pin, pin) : writer(Pin).setIdentifier(),
-          url,
-        )
+        const eventWriter = pin ? writer(Pin, pin) : writer(Pin).setIdentifier()
 
         if (address && !pin) {
           eventWriter.addBoard(address)
@@ -89,7 +85,7 @@
           .setTopics(topics)
           .setContent(ed.getText({blockSeparator: "\n"}).trim())
 
-        const publication = await command(eventWriter).then(publish)
+        const publication = await new PublishBuilder(eventWriter).toSpace(url).publish()
         const error = await publication.getFatalError()
 
         if (error) {

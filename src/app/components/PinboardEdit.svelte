@@ -1,6 +1,5 @@
 <script lang="ts">
   import {getAddress} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -18,12 +17,12 @@
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import ImageInputButton from "@app/components/ImageInputButton.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {command, writer} from "@app/core/domain"
+  import {writer} from "@app/core/domain"
   import {navigate} from "@app/navigation/navigate"
-  import {addressWriterToSpace} from "@app/areas/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
   import {resolveImageInput} from "@app/tools/uploads"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Props = {
     url: string
@@ -53,20 +52,17 @@
     loading = true
 
     try {
-      const eventWriter = await addressWriterToSpace(
-        writer(Pinboard, board)
-          .setTitle(title)
-          .setDescription(description)
-          .setImage((await resolveImageInput(imageFile, image, {url})) ?? "")
-          .setTopics(topics),
-        url,
-      )
+      const eventWriter = writer(Pinboard, board)
+        .setTitle(title)
+        .setDescription(description)
+        .setImage((await resolveImageInput(imageFile, image, {url})) ?? "")
+        .setTopics(topics)
 
       if (!board) {
         eventWriter.setIdentifier().setCollaborative(true)
       }
 
-      const publication = await command(eventWriter).then(publish)
+      const publication = await new PublishBuilder(eventWriter).toSpace(url).publish()
       const error = await publication.getFatalError()
 
       if (error) {

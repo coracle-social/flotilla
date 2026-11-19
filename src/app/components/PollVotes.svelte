@@ -8,8 +8,8 @@
   import PollOption from "@app/components/PollOption.svelte"
   import {user} from "@app/core/user"
   import {events} from "@app/core/plugins"
-  import {command, reader, writer} from "@app/core/domain"
-  import {publishWithDelay} from "@app/tools/publish"
+  import {reader, writer} from "@app/core/domain"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Props = {
     urls: string[]
@@ -54,7 +54,7 @@
       // Give the user time to check more boxes before the vote actually goes out.
       const delay = pollType === "multiplechoice" ? 1000 : undefined
 
-      activePublication = await command(eventWriter).then(publishWithDelay(delay))
+      activePublication = await new PublishBuilder(eventWriter).withDelay(delay).publish()
     }
   }
 

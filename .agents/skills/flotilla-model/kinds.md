@@ -8,9 +8,9 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Chat | `MESSAGE` (9) | none | `src/app/areas/spaces/rooms/publish.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
+| Chat | `MESSAGE` (9) | none | `src/app/tools/publish.ts` (`publishRoomQuote`) | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
 | Threads | `THREAD` (11) | `Thread` | none | `spaces/[relay]/threads`, `threads/[id]` (`ThreadCreate`) |
-| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/areas/spaces/rooms/publish.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
+| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/tools/publish.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
 | Articles | `LONG_FORM` (30023) | `Article` | `src/app/areas/spaces/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
 | Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/tools/feeds/calendar.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
 | Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/areas/spaces/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |

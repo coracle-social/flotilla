@@ -1,7 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import {Note} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -15,13 +14,13 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {command, writer} from "@app/core/domain"
+  import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {scheduleWriter} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
   import PublishButton from "@app/components/PublishButton.svelte"
+  import {PublishBuilder} from "@app/tools/publish"
 
   type Values = {
     content?: string | object
@@ -63,11 +62,7 @@
         .setContent(text)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      if (scheduleAt) {
-        scheduleWriter(eventWriter, scheduleAt)
-      }
-
-      const publication = await command(eventWriter).then(publish)
+      const publication = await new PublishBuilder(eventWriter).schedule(scheduleAt).publish()
       const error = await publication.getFatalError()
 
       if (error) {

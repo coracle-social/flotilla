@@ -14,12 +14,12 @@ import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
-import {Events, publish} from "@welshman/app"
+import {Events} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {deletes, relays} from "@app/core/plugins"
-import {command, reader, writer} from "@app/core/domain"
-import {addressWriterToRoom, addressWriterToSpace} from "@app/areas/spaces/rooms/publish"
+import {reader, writer} from "@app/core/domain"
 import {kv} from "@app/core/storage"
+import {PublishBuilder} from "@app/tools/publish"
 
 // Views
 
@@ -264,15 +264,10 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
     .setIdentifier(getAddress(event))
     .setCalendarEventFromEvent(event, url)
     .setStatus(status)
-  const room = reader(TimeEvent)(event).room()
-
-  if (room) {
-    await addressWriterToRoom(eventWriter, url, room)
-  } else {
-    await addressWriterToSpace(eventWriter, url)
-  }
-
-  return command(eventWriter).then(publish)
+  return new PublishBuilder(eventWriter)
+    .toSpace(url)
+    .toRoom(reader(TimeEvent)(event).room())
+    .publish()
 }
 
 export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {
