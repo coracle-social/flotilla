@@ -6,7 +6,7 @@
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
-  import {userFollowList} from "@app/core/user"
+  import {user, userFollowList} from "@app/core/user"
   import {makeNetworkFeed} from "@app/tools/feeds/network"
 
   const feed = makeNetworkFeed()
@@ -31,7 +31,13 @@
   <div class="flex flex-col gap-3 p-4" bind:this={element}>
     {#if isEmpty}
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
-        <p class="font-medium">Follow a few people to fill this out</p>
+        <p class="font-medium">
+          {#if $user}
+            Follow a few people to fill this out
+          {:else}
+            Log in to follow people
+          {/if}
+        </p>
         <p class="max-w-md text-sm opacity-75">
           Posts from the people you follow collect here. Spaces are a good place to find some.
         </p>

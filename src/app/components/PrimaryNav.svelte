@@ -20,11 +20,10 @@
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
   import {unreadDots} from "@app/tools/activity"
-  import {userSpaceUrls} from "@app/core/user"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
   import {lastSpaceUrl} from "@app/navigation/history"
-  import {user, userProfile} from "@app/core/user"
+  import {activeSpaceUrls, user, userProfile, userSpaceUrls} from "@app/core/user"
 
   type Props = {
     children?: Snippet
@@ -41,7 +40,7 @@
   const showSearch = () => pushModal(Search)
 
   // The menu is reachable everywhere, so it opens on the space the user is in, or the last one.
-  const spaceUrl = $derived($lastSpaceUrl ?? PLATFORM_RELAYS[0] ?? $userSpaceUrls[0])
+  const spaceUrl = $derived($lastSpaceUrl ?? $activeSpaceUrls[0])
 
   const spaceMenuIsOpen = $derived(getModal()?.component === SpaceMenuDrawer)
 

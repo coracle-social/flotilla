@@ -334,7 +334,7 @@
     {#if h && locked}
       <div class="py-20">
         <div class="card flex flex-col gap-8 m-auto max-w-md items-center text-center">
-          <p class="opacity-75">You aren't currently a member of this room.</p>
+          <p class="opacity-75">Only members can see this room.</p>
           <RoomMembershipButton {url} {h} label="Join Room" onJoin={restart} />
         </div>
       </div>

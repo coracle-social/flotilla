@@ -8,7 +8,7 @@
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import {activityUnread} from "@app/areas/home/activity/stream"
   import {reorderSpaceUrls} from "@app/areas/spaces/rooms"
-  import {userSpaceUrls} from "@app/core/user"
+  import {activeSpaceUrls, user, userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
 
   const fadeSize = 24
@@ -54,15 +54,23 @@
       class="primary-nav__spaces mb-2"
       style:--fade-top="{Math.min(hiddenAbove, fadeSize)}px"
       style:--fade-bottom="{Math.min(hiddenBelow, fadeSize)}px">
-      <DragList
-        class="flex flex-col items-center"
-        items={$userSpaceUrls}
-        getKey={identity}
-        onReorder={reorderSpaceUrls}>
-        {#snippet item(url)}
-          <PrimaryNavItemSpace {url} />
-        {/snippet}
-      </DragList>
+      {#if $user}
+        <DragList
+          class="flex flex-col items-center"
+          items={$userSpaceUrls}
+          getKey={identity}
+          onReorder={reorderSpaceUrls}>
+          {#snippet item(url)}
+            <PrimaryNavItemSpace {url} />
+          {/snippet}
+        </DragList>
+      {:else}
+        <div class="flex flex-col items-center">
+          {#each $activeSpaceUrls as url (url)}
+            <PrimaryNavItemSpace {url} />
+          {/each}
+        </div>
+      {/if}
     </div>
   {/each}
 </div>

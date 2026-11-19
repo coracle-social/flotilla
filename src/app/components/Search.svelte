@@ -14,16 +14,24 @@
   import SearchBody from "@app/components/SearchBody.svelte"
   import {CONTENT_KINDS} from "@app/tools/content"
   import {app} from "@app/core/app"
-  import {requireUser, userSearchRelayUrls} from "@app/core/user"
+  import {
+    activeSpaceUrls,
+    requireUser,
+    user,
+    userSearchRelayUrls,
+    userSpaceUrls,
+  } from "@app/core/user"
   import {relays, searchRelayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {userSpaceUrls} from "@app/core/user"
 
   const filter = {kinds: [MESSAGE, ...CONTENT_KINDS]}
 
+  // A visitor searches the spaces their nav lists.
+  const spaceUrls = $derived($user ? $userSpaceUrls : $activeSpaceUrls)
+
   const getSpaceUrl = (event: TrustedEvent) =>
-    $userSpaceUrls.find(url => $app.repository.tracker.getRelays(event.id).has(url))
+    spaceUrls.find(url => $app.repository.tracker.getRelays(event.id).has(url))
 
   const showRelays = () =>
     pushModal(RelayList, {
@@ -39,11 +47,17 @@
 <Modal class="flex flex-col gap-2">
   <ModalHeader>
     <ModalTitle>Search</ModalTitle>
-    <ModalSubtitle>across all your spaces</ModalSubtitle>
+    <ModalSubtitle>
+      {#if $user}
+        across all your spaces
+      {:else}
+        across suggested spaces
+      {/if}
+    </ModalSubtitle>
   </ModalHeader>
-  <SearchBody placeholder="Search your spaces..." relays={$userSpaceUrls} {filter}>
+  <SearchBody placeholder="Search spaces..." relays={spaceUrls} {filter}>
     {#snippet empty()}
-      {@const spaces = $userSpaceUrls.length}
+      {@const spaces = spaceUrls.length}
       {@const extras = $userSearchRelayUrls.length}
       <div class="flex flex-col items-center gap-2 py-12 text-center">
         <p class="text-content-muted text-sm">
@@ -51,7 +65,7 @@
           {spaces === 1 ? "space" : "spaces"}{#if extras > 0 && !HIDE_NOSTR}, plus {extras}
             extra {extras === 1 ? "relay" : "relays"} for people{/if}.
         </p>
-        {#if !HIDE_NOSTR}
+        {#if $user && !HIDE_NOSTR}
           <Button class="button button-link button-sm" onclick={showRelays}>
             <Icon size={4} icon={Server} />
             Manage search relays

@@ -13,6 +13,7 @@
     activityUnread,
     readActivity,
   } from "@app/areas/home/activity/stream"
+  import {user} from "@app/core/user"
 
   // Something is waiting and the filters are what is keeping it off the screen.
   const hidden = $derived(
@@ -69,11 +70,19 @@
     </div>
   {:else if $activityItems.length === 0}
     <div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
-      <p class="font-medium">You're all caught up</p>
-      <p class="max-w-md text-sm opacity-75">
-        Your rooms, chats and direct messages collect here, with replies and reactions to your
-        notes.
-      </p>
+      {#if $user}
+        <p class="font-medium">You're all caught up</p>
+        <p class="max-w-md text-sm opacity-75">
+          Your rooms, chats and direct messages collect here, with replies and reactions to your
+          notes.
+        </p>
+      {:else}
+        <p class="font-medium">Nothing new yet</p>
+        <p class="max-w-md text-sm opacity-75">
+          Messages in these spaces collect here. Log in to keep up with your own chats and replies
+          too.
+        </p>
+      {/if}
     </div>
   {/if}
 </div>

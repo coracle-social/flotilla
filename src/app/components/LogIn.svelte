@@ -188,7 +188,7 @@
     {/if}
     <div class="text-sm">
       Need an account?
-      <Button class="link" onclick={signUp}>Register instead</Button>
+      <Button class="link" onclick={signUp}>Create one instead</Button>
     </div>
   </ModalBody>
 </Modal>

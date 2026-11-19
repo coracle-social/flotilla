@@ -38,16 +38,18 @@
   const stroke = $derived(active ? "var(--primary)" : "var(--content)")
 </script>
 
-<div class="relative h-[14px] w-[14px] shrink-0">
-  <svg height="14" width="14" class="absolute">
-    <circle class="wot-background" cx={center} cy={center} r={radius} />
-    <circle
-      cx={center}
-      cy={center}
-      r={radius}
-      class="wot-highlight"
-      stroke-dashoffset={dashOffset}
-      {style}
-      {stroke} />
-  </svg>
-</div>
+{#if $user}
+  <div class="relative h-[14px] w-[14px] shrink-0">
+    <svg height="14" width="14" class="absolute">
+      <circle class="wot-background" cx={center} cy={center} r={radius} />
+      <circle
+        cx={center}
+        cy={center}
+        r={radius}
+        class="wot-highlight"
+        stroke-dashoffset={dashOffset}
+        {style}
+        {stroke} />
+    </svg>
+  </div>
+{/if}
