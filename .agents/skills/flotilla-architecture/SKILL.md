@@ -202,7 +202,7 @@ Lib code takes app state as options only when that makes it reusable. The push a
   (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
   keyboard is up)
 - `pager.ts`: a `Pager` (the load state of one direction of a list, and the `page`/`settle` actions a scroll container drives), a `Walk` (one direction through time as data) and `makeWalkPager`, which pages it, `combinePagers`, and `followScroll`, which binds a pager to a scroll container
-- `order.ts`: the two orders a feed shows its items in. `strictOrder` sorts on every change, for chat rooms, the calendar and the space boards. `appendOnly` keeps each item where it was first shown, adds each new batch after the rest, and adds nothing newer than the feed's start, for the network, profile and activity feeds, so they never reflow above the reader
+- `order.ts`: the two orders a feed shows its items in. `strictOrder` sorts on every change, for chat rooms, the calendar and the space boards. `appendOnly` keeps each item where it was first shown, adds each new batch after the rest, and adds nothing newer than the feed's start, for the network and profile feeds, so they never reflow above the reader
 - `audio/`: `recorder.ts` (recording from the microphone), `devices.ts` (device lists and a live
   input level), `codec.ts` (decoding to mono samples at a model's rate, and WAV encoding),
   `playback.ts` (keeping Android awake while media plays), and `voice.ts` with `providers/` (the

@@ -1,10 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {derived} from "svelte/store"
-  import {now} from "@welshman/lib"
   import Spinner from "@lib/components/Spinner.svelte"
   import {createScroller} from "@lib/html"
-  import {appendOnly} from "@lib/order"
   import HomeActivityFilters from "@app/components/HomeActivityFilters.svelte"
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
@@ -12,27 +9,10 @@
   import {activityLoaded} from "@app/areas/home/activity/sync"
   import {
     activityCounts,
+    activityItems,
     activityUnread,
-    deriveActivityItems,
-    includedActivityFacets,
     readActivity,
   } from "@app/areas/home/activity/stream"
-  import type {ActivityItem} from "@app/areas/home/activity/model"
-
-  const start = now()
-
-  // Each filter is a list of its own, so changing it sorts the rows again; within one, a row keeps its place.
-  const activityItems = derived(
-    includedActivityFacets,
-    ($facets, set) =>
-      appendOnly(
-        deriveActivityItems($facets),
-        item => item.key,
-        item => item.timestamp,
-        start,
-      ).subscribe(set),
-    [] as ActivityItem[],
-  )
 
   // Something is waiting and the filters are what is keeping it off the screen.
   const hidden = $derived(
@@ -44,10 +24,10 @@
   // A month of notes can run to hundreds of rows, so they render a page at a time as the reader nears the end.
   let limit = $state(30)
 
-  // What the stream shows is read once it's drawn, and anything newer waits for the next time it opens.
+  // Anything that lands while the stream is showing has been read by the time it is drawn.
   $effect(() => {
     if ($activityUnread) {
-      readActivity(start)
+      readActivity()
     }
   })
 
