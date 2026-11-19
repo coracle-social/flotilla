@@ -224,13 +224,7 @@ off on iOS (`ENABLE_HOSTING`).
   `policy_strip_signatures` flag). The ingest policy (`core/ingest.ts`) holds back unsigned events
   unless the relay is in the `trusted_relays` setting, `deriveRelayAccess` reports the relay as
   `RelayAccessStatus.Untrusted`, and `SpaceTrustRelay` asks the user. Trusting the relay ingests what was held.
-- **NIP-70.** Space content is protected exactly when the relay advertises NIP-70, so every space
-  publish loads the relay (`const relay = await relays.get().load(url)`) and passes
-  `setProtected(relay?.hasNip(70))`. Per NIP-70 (a protocol claim not
-  verified in this repo) a relay then accepts the event only from its author, which keeps space
-  content from being copied elsewhere. The `RelayJoin`, `RelayLeave` and `RelayMembers` writers
-  protect themselves, and the space `publishReaction` and `retractReaction` in
-  `src/app/areas/spaces` check the relay for their callers.
+- **NIP-70.** Space content is protected exactly when the relay advertises NIP-70. Every write to a space goes through `PublishBuilder.toSpace(url)` in `src/app/tools/publish.ts`, which loads the relay and calls `setProtected(relay?.hasNip(70))`; deletes in a space build their writer with `writer(Delete).addEvent(event, url)` to reach it. Per NIP-70 (a protocol claim not verified in this repo) a relay then accepts the event only from its author, which keeps space content from being copied elsewhere. The `RelayJoin`, `RelayLeave` and `RelayMembers` writers protect themselves.
 
 ## Which relays an event goes to
 
@@ -271,8 +265,7 @@ The space sections are the kinds in `CONTENT_KINDS` (`src/app/tools/content.ts`)
 
 1. Add the constant to `@welshman/util` and a factory to `@welshman/domain` upstream (see
    welshman-domain, "Adding a new kind").
-2. Publish through `writer(Factory)` and `command(...)`, with `setRoom` or `forceRoutes` and
-   `setProtected(relay?.hasNip(70))` on the loaded relay for space content.
+2. Publish through `writer(Factory)` and `PublishBuilder`, with `toSpace(url)` and `toRoom(h)` for space content.
 3. For a new space section, add the kind to `CONTENT_KINDS` (which feeds sync, notifications, push,
    search and `SpaceMenuNavItems`), the noun switch in `HomeActivity` and `makeContentPath`, add their route objects to
    `src/app/navigation/pages.ts`, and add routes under

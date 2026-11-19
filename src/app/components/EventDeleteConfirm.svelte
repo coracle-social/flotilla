@@ -1,8 +1,12 @@
 <script lang="ts">
   import {seen} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import {Delete} from "@welshman/domain"
+  import {publishToRelays} from "@welshman/app"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {deletes, relays, router} from "@app/core/plugins"
+  import {deletes, router} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
+  import {PublishBuilder} from "@app/tools/publish"
   import {HIDE_NOSTR} from "@app/core/env"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
@@ -15,15 +19,20 @@
   const {url, event}: Props = $props()
 
   // A deletion goes where its subject lives: the space's own relay, or wherever the event was seen.
-  const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
+  // Outside a space it isn't protected, since NIP-70 would keep it on the one relay that accepts it.
+  const publishDeletion = async () => {
+    if (url) {
+      return new PublishBuilder(writer(Delete).addEvent(event, url)).toSpace(url).publish()
+    }
+
+    const relays = await $router.resolver.relays([seen(event)])
+
+    return $deletes.deleteEvent(event).then(publishToRelays(relays))
+  }
 
   const confirm = async () => {
-    // NIP-70 keeps a deletion on the one relay that accepts it, which is wrong for a note on several.
-    const relay = url ? await $relays.load(url) : undefined
-    const command = await $deletes.deleteEvent(event, writer =>
-      writer.setProtected(relay?.hasNip(70)),
-    )
-    const error = await command.publishToRelays(await getRelays()).getFatalError()
+    const publication = await publishDeletion()
+    const error = await publication.getFatalError()
 
     if (error) {
       return pushToast({theme: "error", message: error})

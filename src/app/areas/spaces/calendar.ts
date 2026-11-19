@@ -11,12 +11,11 @@ import {
 } from "@welshman/lib"
 import {EVENT_RSVP, getAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {CalendarRsvp, TimeEvent} from "@welshman/domain"
+import {CalendarRsvp, Delete, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
 import {Events} from "@welshman/app"
 import {fromApp} from "@app/core/app"
-import {deletes, relays} from "@app/core/plugins"
 import {reader, writer} from "@app/core/domain"
 import {kv} from "@app/core/storage"
 import {PublishBuilder} from "@app/tools/publish"
@@ -270,11 +269,5 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
     .publish()
 }
 
-export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {
-  const relay = await relays.get().load(url)
-  const deletion = await deletes
-    .get()
-    .deleteEvent(rsvp, writer => writer.setProtected(relay?.hasNip(70)))
-
-  return deletion.publishToRelays([url])
-}
+export const retractRsvp = (url: string, rsvp: TrustedEvent) =>
+  new PublishBuilder(writer(Delete).addEvent(rsvp, url)).toSpace(url).publish()

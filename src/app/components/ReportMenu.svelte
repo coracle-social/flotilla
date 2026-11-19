@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {Report} from "@welshman/domain"
+  import {Delete, Report} from "@welshman/domain"
   import InboxOut from "@assets/icons/inbox-out.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
@@ -10,8 +10,9 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
-  import {deletes, profiles, relayManagement, relays} from "@app/core/plugins"
-  import {reader} from "@app/core/domain"
+  import {profiles, relayManagement} from "@app/core/plugins"
+  import {reader, writer} from "@app/core/domain"
+  import {PublishBuilder} from "@app/tools/publish"
   import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
   import {popModal, pushModal} from "@app/navigation/dialogs"
@@ -32,10 +33,7 @@
   const reason = report.reason() ?? ""
 
   const deleteReport = async () => {
-    const relay = await $relays.load(url)
-    const command = await $deletes.deleteEvent(event, w => w.setProtected(relay?.hasNip(70)))
-
-    command.publishToRelays([url])
+    await new PublishBuilder(writer(Delete).addEvent(event, url)).toSpace(url).publish()
     onResolved?.()
   }
 

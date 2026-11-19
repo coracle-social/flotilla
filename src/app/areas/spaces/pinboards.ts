@@ -5,14 +5,14 @@ import {sortBy, tryCatch} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {Address, EventRef, PIN, PINBOARD, fromNostrURI, isReplaceable} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {Pin, Pinboard} from "@welshman/domain"
+import {Delete, Pin, Pinboard} from "@welshman/domain"
 import type {PinReader, PinReference, PinWriter, PinboardReader} from "@welshman/domain"
 import {isLink, parse} from "@welshman/content"
 import {Events} from "@welshman/app"
 import {isImageUrl} from "@lib/media"
 import {app, fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
-import {deletes, relayManagement, relays} from "@app/core/plugins"
+import {relayManagement} from "@app/core/plugins"
 import {reader, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
 import {syncCurrentSpace} from "@app/areas/spaces/sync"
@@ -124,12 +124,11 @@ export const removePinsFromShelf = (url: string, pins: PinReader[], address: str
 // Your own goes as a kind 5; anyone else's is a NIP-86 ban, which the repository never hears about.
 export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
   if (event.pubkey === user.get().pubkey) {
-    const relay = await relays.get().load(url)
-    const request = await deletes
-      .get()
-      .deleteEvent(event, deleteWriter => deleteWriter.setProtected(relay?.hasNip(70)))
+    const publication = await new PublishBuilder(writer(Delete).addEvent(event, url))
+      .toSpace(url)
+      .publish()
 
-    return request.publishToRelays([url]).getFatalError()
+    return publication.getFatalError()
   }
 
   const {error} = await relayManagement.get().forUrl(url).banEvent(event.id)

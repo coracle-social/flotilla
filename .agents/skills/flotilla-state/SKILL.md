@@ -432,21 +432,20 @@ components; see flotilla-views.
 
 ## Mutations
 
-The prevailing path runs from a domain writer to a command to a publication, adapted from
-`ThreadCreate.svelte`:
+A writer you build yourself is published through `PublishBuilder` (`src/app/tools/publish.ts`), as in `ThreadCreate.svelte`:
 
 ```typescript
 const eventWriter = writer(Thread)
   .setContent(content)
   .setTitle(title)
-  .setProtected(protect)
-  .forceRoutes(relay(url))
+  .addTags(...ed.storage.nostr.getEditorTags())
 
-if (room) {
-  eventWriter.setRoom(url, room)
-}
-
-const publication = await command(eventWriter).then(publish)
+const publication = await new PublishBuilder(eventWriter)
+  .schedule(scheduleAt)
+  .toSpace(url)
+  .toRoom(room)
+  .shareToChat(shareToChat)
+  .publish()
 const error = await publication.getFatalError()
 
 if (error) {
@@ -454,13 +453,11 @@ if (error) {
 }
 ```
 
-`publish` sends to the writer's own routes, which is why the excerpt forces them with
-`forceRoutes`. `publishToRelays(urls)` overrides those routes instead.
-flotilla-model's "Which relays an event goes to" says which one each kind needs.
+Without `toSpace`, the event goes to the writer's own routes. `toSpace(url)` sends it to the space and marks it protected when the space supports NIP-70, and `toRoom(h)` adds the room. flotilla-model's "Which relays an event goes to" says which one each kind needs.
 
 Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(publish)`,
 `rooms.get().addMember(url, room, pubkey)`, `reactions.get().react(event, content, ...)`,
-`deletes.get().deleteEvent(event, w => w.setProtected(protect))`. Their `update`-style methods
+`deletes.get().deleteEvent(event)`. Their `update`-style methods
 `forceLoad` before writing. A replaceable event you build yourself needs the same, as in
 `publishSettings`.
 

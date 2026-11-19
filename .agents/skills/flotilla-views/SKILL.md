@@ -434,8 +434,7 @@ const submit = async () => {
 ```
 
 Bind the flag to the button with `disabled={loading}` and `<Spinner {loading}>`. Plugin mutators
-return a `Command` as well: `$deletes.deleteEvent(event, w => w.setProtected(protect))` then
-`.publishToRelays([url])` in `EventDeleteConfirm`, or `$rooms.createRoom(url, room)` then
+return a `Command` as well: `$deletes.deleteEvent(event)` then `.publishToRelays(relays)` for an event outside a space in `EventDeleteConfirm`, or `$rooms.createRoom(url, room)` then
 `.publish()` in `RoomForm`. NIP-86 calls resolve to `{error}` instead of a publication:
 `$relayManagement.forUrl(url).createRole(...)` in `RoleCreate`.
 

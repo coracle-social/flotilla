@@ -5,7 +5,7 @@
   import cx from "classnames"
   import {ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {Message} from "@welshman/domain"
+  import {Delete, Message} from "@welshman/domain"
   import {MembershipStatus} from "@welshman/app"
   import Close from "@assets/icons/close.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -18,7 +18,7 @@
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {user} from "@app/core/user"
-  import {deletes, events, relays, rooms} from "@app/core/plugins"
+  import {events, rooms} from "@app/core/plugins"
   import {reader, writer} from "@app/core/domain"
   import {
     CallState,
@@ -105,14 +105,10 @@
 
   const onSubmit = async ({content, tags, scheduleAt, parent, share, edit}: ComposeValues) => {
     if (edit) {
-      const relay = await $relays.load(url)
-
       // Delete the previous message, to be republished below with the same timestamp
-      const deletion = await $deletes.deleteEvent($state.snapshot(edit), w =>
-        w.setProtected(relay?.hasNip(70)),
-      )
-
-      deletion.publishToRelays([url])
+      await new PublishBuilder(writer(Delete).addEvent($state.snapshot(edit), url))
+        .toSpace(url)
+        .publish()
     }
 
     // A share is a quote rather than a reply, so setParent tags the reply's own parent ahead of it.
