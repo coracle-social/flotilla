@@ -28,6 +28,8 @@
   import {userSpaceUrls} from "@app/core/user"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
+  import {goToMovedSpace} from "@app/navigation/history"
+  import {promptLogin} from "@app/components/flows/login"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()
@@ -45,6 +47,8 @@
   const showPaymentGate = once(() => pushModal(SpacePaymentGate, {url}, {noEscape: true}))
 
   const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
+
+  const showLoginPrompt = once(() => promptLogin("see this space"))
 
   // Detect a moved custom domain — the relay's nip-11 document answered with a redirect
   const checkRedirect = once(() => {
@@ -87,16 +91,24 @@
 
     if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
       redirectPrompted.add(url)
-      pushModal(SpaceRedirect, {url, newUrl: redirectUrl})
+
+      // A visitor has no spaces list to update, so they just follow the space.
+      if ($user) {
+        pushModal(SpaceRedirect, {url, newUrl: redirectUrl})
+      } else {
+        goToMovedSpace(url, redirectUrl)
+      }
     } else if ($paidGated) {
       showPaymentGate()
-    } else if (!$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
+    } else if ($user && !$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
       if (spacesLoaded) {
         joinPrompted.add(url)
         pushModal(SpaceJoin, {url})
       } else {
         loadSpaces()
       }
+    } else if ($access.status === RelayAccessStatus.LoginRequired) {
+      showLoginPrompt()
     } else if ($access.status === RelayAccessStatus.Denied) {
       showAuthError(stripPrefix($access.reason))
     } else if ($access.status === RelayAccessStatus.Untrusted) {

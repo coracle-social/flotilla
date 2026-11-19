@@ -12,8 +12,9 @@
   import Link from "@app/components/Link.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import {pushModal} from "@app/navigation/dialogs"
+  import {withLogin} from "@app/components/flows/login"
 
-  const startJoin = () => pushModal(SpaceInviteAccept)
+  const startJoin = () => withLogin("join a space", () => pushModal(SpaceInviteAccept))
 </script>
 
 <Modal>

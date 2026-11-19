@@ -73,6 +73,9 @@
     &:checked::after {
       left: calc(100% - 1.25rem);
     }
+    &:disabled {
+      @apply cursor-default opacity-50;
+    }
   }
 
   input.range {

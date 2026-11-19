@@ -72,6 +72,8 @@
           <Link class="link" href={pages.settingsProfile.path()}>Check your signer</Link>
         {:else if $access.status === RelayAccessStatus.Denied}
           Your requests to this space are being refused: {$access.reason}
+        {:else if $access.status === RelayAccessStatus.LoginRequired}
+          This space is only open to people who log in.
         {:else if $access.status === RelayAccessStatus.Untrusted}
           This space sends events without signatures, which are held until you choose to trust it.
         {:else}

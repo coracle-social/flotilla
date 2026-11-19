@@ -35,6 +35,7 @@
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -57,7 +58,9 @@
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
   const joinSpace = () =>
-    pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
+    withLogin("join this space", () =>
+      pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet}),
+    )
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
@@ -140,7 +143,9 @@
 {#if !HIDE_NOSTR}
   {@render actionButton(showConnectionStatus, Pulse, "Connection status")}
 {/if}
-{@render actionButton(createInvite, LinkRound, "Invite Members")}
+{#if $user}
+  {@render actionButton(createInvite, LinkRound, "Invite Members")}
+{/if}
 {#if $permissions.review}
   {@render actionButton(
     showActionItems,

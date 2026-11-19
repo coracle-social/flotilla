@@ -27,6 +27,8 @@
   import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/areas/spaces/invites"
   import {trackSubmit} from "@app/components/flows/submit"
+  import {user} from "@app/core/user"
+  import {promptLogin} from "@app/components/flows/login"
 
   type Props = {
     invite: string
@@ -73,6 +75,15 @@
     },
   )
 
+  // A visitor only gets here through /join, whose dialog remounts after the login, so they join from there.
+  const onSubmit = () => {
+    if ($user) {
+      join()
+    } else {
+      promptLogin("join this space")
+    }
+  }
+
   let error = $state(maybe<string>())
   let showScanner = $state(false)
   let notifications = $state(true)
@@ -81,7 +92,7 @@
   const isRoomInvite = $derived(Boolean(inviteData?.h))
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(join)}>
+<Modal tag="form" onsubmit={preventDefault(onSubmit)}>
   <ModalBody>
     {#if !hideHeader}
       <ModalHeader>
