@@ -24,10 +24,12 @@
       goToSpace(url)
     } else if (invite) {
       withLogin("join this space", () => pushModal(SpaceInviteAccept, {invite}))
-    } else if ($user && $relay?.isPaid()) {
-      pushModal(SpacePaymentGate, {url})
     } else if ($user) {
-      pushModal(SpaceJoin, {url})
+      if ($relay?.isPaid()) {
+        pushModal(SpacePaymentGate, {url})
+      } else {
+        pushModal(SpaceJoin, {url})
+      }
     } else {
       // A visitor looks around before joining.
       goToSpace(url)

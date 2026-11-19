@@ -3,22 +3,17 @@
   import ArticleForm from "@app/components/ArticleForm.svelte"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
-  import {user} from "@app/core/user"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
+  import LogInGate from "@app/components/LogInGate.svelte"
 
   const {params}: PageProps = $props()
 
   const {url, h, shareToChat} = pages.articleCreate.decode(params, page.url.searchParams)
 </script>
 
-{#if $user}
+<LogInGate title="Log in to write an article" message="Articles are published under your name.">
   <ArticleForm {url} {h} {shareToChat}>
     {#snippet header()}
       <strong>Write an Article</strong>
     {/snippet}
   </ArticleForm>
-{:else}
-  <LogInPanel
-    title="Log in to write an article"
-    message="Articles are published under your name." />
-{/if}
+</LogInGate>

@@ -1,20 +1,15 @@
 <script lang="ts">
   import Page from "@lib/components/Page.svelte"
   import ArticleForm from "@app/components/ArticleForm.svelte"
-  import {user} from "@app/core/user"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
+  import LogInGate from "@app/components/LogInGate.svelte"
 </script>
 
 <Page>
-  {#if $user}
+  <LogInGate title="Log in to write an article" message="Articles are published under your name.">
     <ArticleForm>
       {#snippet header()}
         <strong>Write an Article</strong>
       {/snippet}
     </ArticleForm>
-  {:else}
-    <LogInPanel
-      title="Log in to write an article"
-      message="Articles are published under your name." />
-  {/if}
+  </LogInGate>
 </Page>

@@ -12,8 +12,7 @@
   import {deriveHostedRelay, deriveRelayActivity} from "@app/areas/hosting"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
-  import {user} from "@app/core/user"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
+  import LogInGate from "@app/components/LogInGate.svelte"
 
   const {params}: PageProps = $props()
 
@@ -22,7 +21,9 @@
   const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.value?.id))
 </script>
 
-{#if $user}
+<LogInGate
+  title="Log in to manage this space"
+  message="Hosting settings are for the people who run this space.">
   <SpaceBar>
     {#snippet leading()}
       <Icon icon={Server} />
@@ -54,8 +55,4 @@
       </div>
     {/if}
   </PageContent>
-{:else}
-  <LogInPanel
-    title="Log in to manage this space"
-    message="Hosting settings are for the people who run this space." />
-{/if}
+</LogInGate>

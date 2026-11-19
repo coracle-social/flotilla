@@ -19,7 +19,7 @@
   import InvoiceListItem from "@app/components/hosting/InvoiceListItem.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {
@@ -109,8 +109,7 @@
 
   // This page is Stripe's portal and checkout return target, so landing on it settles a checkout.
   const reconcile = async () => {
-    const pk = user.get()?.pubkey
-    if (!pk || reconciling) {
+    if (reconciling) {
       return
     }
 
@@ -119,7 +118,7 @@
 
     try {
       await ensureSessionTenant()
-      await reconcileTenant(pk)
+      await reconcileTenant(requireUser().pubkey)
     } catch (e) {
       const message = hostingErrorMessage(e, "Failed to update billing")
 

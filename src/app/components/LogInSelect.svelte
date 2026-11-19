@@ -14,9 +14,9 @@
   import Profile from "@app/components/Profile.svelte"
   import {selectPomadeLogin} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
-  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
+  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     email: string
@@ -35,8 +35,7 @@
       const res = await selectPomadeLogin(clientSecret, option, email)
 
       if (res.ok) {
-        await clearModals()
-        onLogin?.()
+        await finishLogin(onLogin)
       } else {
         console.error(res.messages)
 

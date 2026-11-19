@@ -22,9 +22,9 @@
   import BunkerUrl from "@app/components/BunkerUrl.svelte"
   import {login} from "@app/core/session"
   import {Nip46Controller} from "@app/core/nip46"
-  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {NIP46_PERMS} from "@app/core/nip46"
+  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     onLogin?: () => unknown
@@ -51,8 +51,7 @@
         }),
       )
 
-      await clearModals()
-      onLogin?.()
+      await finishLogin(onLogin)
     },
     onError: message => pushToast({theme: "error", message}),
   })
@@ -112,8 +111,7 @@
       controller.loading.set(false)
     }
 
-    await clearModals()
-    onLogin?.()
+    await finishLogin(onLogin)
   }
 
   const selectConnect = () => {

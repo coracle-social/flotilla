@@ -11,8 +11,7 @@
   import BookmarkFolderSection from "@app/components/BookmarkFolderSection.svelte"
   import {userBookmarkedEvents, userBookmarkFolders, userBookmarkSearch} from "@app/areas/bookmarks"
   import {pushModal} from "@app/navigation/dialogs"
-  import {user} from "@app/core/user"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
+  import LogInGate from "@app/components/LogInGate.svelte"
 
   const createFolder = () => pushModal(BookmarkFolderEdit)
 
@@ -38,7 +37,7 @@
 </script>
 
 <Page>
-  {#if $user}
+  <LogInGate title="Log in to see your bookmarks" message="Posts and links you save collect here.">
     <PageBar>
       <div class="flex items-center justify-between gap-4">
         <div class="truncate min-w-0 flex items-center gap-2 whitespace-nowrap">
@@ -70,9 +69,5 @@
         {/if}
       {/if}
     </PageContent>
-  {:else}
-    <LogInPanel
-      title="Log in to see your bookmarks"
-      message="Posts and links you save collect here." />
-  {/if}
+  </LogInGate>
 </Page>

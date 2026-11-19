@@ -30,10 +30,11 @@
   import {forceHealthChecks} from "@app/areas/home/healthChecks"
   import {loginWithPomade} from "@app/core/pomade"
   import {publishRoomList} from "@app/tools/publish"
-  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
   import {domain, roomLists} from "@app/core/plugins"
   import {login} from "@app/core/session"
+  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     onLogin?: () => unknown
@@ -82,9 +83,7 @@
     // Wait for all the publications to settle
     await Promise.all(publications.map(publication => publication.settled()))
 
-    // Go to the dashboard
-    await clearModals()
-    onLogin?.()
+    await finishLogin(onLogin)
   }
 
   const flows = {

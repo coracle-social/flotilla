@@ -18,9 +18,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {login} from "@app/core/session"
-  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
+  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     onLogin?: () => unknown
@@ -61,8 +61,7 @@
       }
 
       await login(toSession(nip01, {secret}))
-      await clearModals()
-      onLogin?.()
+      await finishLogin(onLogin)
     },
   )
 
