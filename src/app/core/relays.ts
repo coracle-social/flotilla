@@ -18,11 +18,12 @@ import {
 } from "@welshman/net"
 import {throttled} from "@welshman/store"
 import {BlockedRelayLists} from "@welshman/app"
-import type {IApp} from "@welshman/app"
+import type {IApp, User} from "@welshman/app"
 import {appPolicies, fromApp} from "@app/core/app"
 import {isStaleAuth} from "@app/core/auth"
 import {BLOCKED_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
 import {relaysPendingTrust} from "@app/core/ingest"
+import {user} from "@app/core/user"
 
 export enum RelayAccessStatus {
   Connecting = "connecting",
@@ -33,6 +34,7 @@ export enum RelayAccessStatus {
   SignerFailed = "signer-failed",
   Denied = "denied",
   Untrusted = "untrusted",
+  LoginRequired = "login-required",
   Connected = "connected",
 }
 
@@ -48,6 +50,7 @@ const getRelayAccess = (
   socket: Socket,
   denial: Maybe<string>,
   pendingTrust: string[],
+  $user: Maybe<User>,
 ): RelayAccess => {
   if (socket.status === SocketStatus.Opening) {
     return {status: RelayAccessStatus.Connecting}
@@ -65,11 +68,12 @@ const getRelayAccess = (
     return {status: RelayAccessStatus.AwaitingSignature}
   }
 
-  // A refusal of a stale auth event is answered with a fresh one, so the handshake is still running.
+  // A refusal of a stale auth event is answered with a fresh one, so the handshake is still running. A visitor never answers.
   if (
-    socket.auth.status === AuthStatus.Requested ||
-    socket.auth.status === AuthStatus.PendingResponse ||
-    isStaleAuth(socket)
+    $user &&
+    (socket.auth.status === AuthStatus.Requested ||
+      socket.auth.status === AuthStatus.PendingResponse ||
+      isStaleAuth(socket))
   ) {
     return {status: RelayAccessStatus.Authenticating}
   }
@@ -83,7 +87,14 @@ const getRelayAccess = (
     return {status: RelayAccessStatus.Denied, reason: socket.auth.details || "access denied"}
   }
 
-  if (denial) {
+  // A relay asking a visitor to identify is answered by logging in, so it doesn't deny a user.
+  const asksToLogIn = Boolean(denial && matchReason(RelayReasonPrefix.AuthRequired, denial))
+
+  if (asksToLogIn && !$user) {
+    return {status: RelayAccessStatus.LoginRequired}
+  }
+
+  if (denial && !asksToLogIn) {
     return {status: RelayAccessStatus.Denied, reason: denial}
   }
 
@@ -112,9 +123,9 @@ export const deriveRelayAccess = (url: string) =>
   throttled(
     800,
     derived(
-      [deriveSocket(url), deniedRelays, relaysPendingTrust],
-      ([$socket, $deniedRelays, $relaysPendingTrust]) =>
-        getRelayAccess($socket, $deniedRelays[url], $relaysPendingTrust),
+      [deriveSocket(url), deniedRelays, relaysPendingTrust, user],
+      ([$socket, $deniedRelays, $relaysPendingTrust, $user]) =>
+        getRelayAccess($socket, $deniedRelays[url], $relaysPendingTrust, $user),
     ),
   )
 
@@ -159,7 +170,8 @@ const isServed = (message: RelayMessage) =>
 const isAccessRefusal = (message: RelayMessage) =>
   (isRelayClosed(message) || isRelayNegErr(message)) &&
   (matchReason(RelayReasonPrefix.Restricted, message[2]) ||
-    matchReason(RelayReasonPrefix.Blocked, message[2]))
+    matchReason(RelayReasonPrefix.Blocked, message[2]) ||
+    matchReason(RelayReasonPrefix.AuthRequired, message[2]))
 
 // A relay refusing reads and serving nothing has turned the session away, not the request.
 const denialPolicy = (socket: Socket) => {

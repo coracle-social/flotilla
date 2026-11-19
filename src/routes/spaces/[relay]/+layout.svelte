@@ -106,7 +106,9 @@
 
   // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
   onMount(() => {
-    authenticate(url)
+    if ($user) {
+      authenticate(url)
+    }
   })
 </script>
 

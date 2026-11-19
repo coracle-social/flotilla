@@ -1,8 +1,8 @@
 import {get} from "svelte/store"
-import {ms, on} from "@welshman/lib"
+import {ms, on, remove} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {AuthStateEvent, AuthStatus} from "@welshman/net"
+import {AuthStateEvent, AuthStatus, socketPolicyAuthBuffer} from "@welshman/net"
 import {
   MessagingRelayLists,
   Publisher,
@@ -85,7 +85,12 @@ const staleAuthPolicy = (socket: Socket) => {
 }
 
 export const registerAuth = () => {
-  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), $app =>
-    $app.pool.addSocketPolicy(staleAuthPolicy),
-  )
+  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), $app => {
+    // A visitor never answers a challenge, so reads don't wait on an answer and a relay's auth refusals reach the app.
+    if (!$app.user) {
+      $app.pool.socketPolicies = remove(socketPolicyAuthBuffer, $app.pool.socketPolicies)
+    }
+
+    return $app.pool.addSocketPolicy(staleAuthPolicy)
+  })
 }
