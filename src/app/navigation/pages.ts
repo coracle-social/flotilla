@@ -342,17 +342,17 @@ export const makeContentPath = (url: string, kind: number, idOrAddress?: string)
 
 export const settingsAbout = defineStaticRoute("/settings/about", "About")
 
-export const settingsProfile = defineStaticRoute("/settings/profile", "Profile Settings")
+export const settingsProfile = defineStaticRoute("/settings/(account)/profile", "Profile Settings")
 
-export const settingsContent = defineStaticRoute("/settings/content", "Content Settings")
+export const settingsContent = defineStaticRoute("/settings/(account)/content", "Content Settings")
 
-export const settingsPrivacy = defineStaticRoute("/settings/privacy", "Privacy Settings")
+export const settingsPrivacy = defineStaticRoute("/settings/(account)/privacy", "Privacy Settings")
 
-export const settingsHosting = defineStaticRoute("/settings/hosting", "Hosting")
+export const settingsHosting = defineStaticRoute("/settings/(account)/hosting", "Hosting")
 
-export const settingsAlerts = defineStaticRoute("/settings/alerts", "Alert Settings")
+export const settingsAlerts = defineStaticRoute("/settings/(account)/alerts", "Alert Settings")
 
-export const settingsWallet = defineStaticRoute("/settings/wallet", "Wallet Settings")
+export const settingsWallet = defineStaticRoute("/settings/(account)/wallet", "Wallet Settings")
 
 // A page's title is read off its route, which lets the browser tab follow the page.
 

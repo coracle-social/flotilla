@@ -2,6 +2,7 @@
 
 import {page} from "$app/stores"
 import {getSetting} from "@app/core/settings"
+import {getRoutePath} from "@app/navigation/define"
 
 export const analyticsAvailable = true
 
@@ -21,7 +22,7 @@ export const setupAnalytics = () => {
     if ($page.route && getSetting("report_usage") && $page.url.href !== prevHref) {
       prevHref = $page.url.href
 
-      w.plausible("pageview", {u: $page.route.id})
+      w.plausible("pageview", {u: $page.route.id && getRoutePath($page.route.id)})
     }
   })
 }

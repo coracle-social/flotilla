@@ -2,7 +2,13 @@ import type {RouteId, RouteParams} from "$app/types"
 import type {Maybe, MaybeAsync} from "@welshman/lib"
 
 // SvelteKit names these after directories and layouts, but nothing is served at them.
-export type PageId = Exclude<RouteId, "/articles" | "/notes" | "/people" | "/settings">
+export type PageId = Exclude<
+  RouteId,
+  "/articles" | "/notes" | "/people" | "/settings" | "/settings/(account)"
+>
+
+// A route group, a directory in parentheses, organizes routes on disk and isn't part of the url.
+export const getRoutePath = (id: string) => id.replace(/\/\([^)]+\)/g, "")
 
 export type Route<Id extends RouteId, P> = {
   id: Id
@@ -30,7 +36,7 @@ export const defineRoute = <Id extends RouteId, P>(
   pageTitle: (params, query) => title(decode(params, query)),
   path: params => {
     const segments: Record<string, string> = encode(params)
-    const pathname = id.replace(/\[(\w+)\]/g, (_, name: string) => segments[name])
+    const pathname = getRoutePath(id).replace(/\[(\w+)\]/g, (_, name: string) => segments[name])
     const query = new URLSearchParams()
 
     for (const [key, value] of Object.entries(search?.(params) ?? {})) {
@@ -48,5 +54,5 @@ export const defineStaticRoute = <Id extends RouteId>(id: Id, title: string): Ro
   decode: () => undefined,
   title: () => title,
   pageTitle: () => title,
-  path: () => id,
+  path: () => getRoutePath(id),
 })

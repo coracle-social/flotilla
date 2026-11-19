@@ -16,6 +16,7 @@
   import LogOut from "@app/components/LogOut.svelte"
   import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
+  import {user} from "@app/core/user"
 
   type Props = {
     children?: Snippet
@@ -56,9 +57,11 @@
     <SecondaryNavItem href="/settings/about">
       <Icon icon={Code2} /> About
     </SecondaryNavItem>
-    <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
-      <Icon icon={Exit} /> Log Out
-    </SecondaryNavItem>
+    {#if $user}
+      <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
+        <Icon icon={Exit} /> Log Out
+      </SecondaryNavItem>
+    {/if}
   </SecondaryNavSection>
 </SecondaryNav>
 

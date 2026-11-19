@@ -11,6 +11,8 @@
   import BookmarkFolderSection from "@app/components/BookmarkFolderSection.svelte"
   import {userBookmarkedEvents, userBookmarkFolders, userBookmarkSearch} from "@app/areas/bookmarks"
   import {pushModal} from "@app/navigation/dialogs"
+  import {user} from "@app/core/user"
+  import LogInPanel from "@app/components/LogInPanel.svelte"
 
   const createFolder = () => pushModal(BookmarkFolderEdit)
 
@@ -36,35 +38,41 @@
 </script>
 
 <Page>
-  <PageBar>
-    <div class="flex items-center justify-between gap-4">
-      <div class="truncate min-w-0 flex items-center gap-2 whitespace-nowrap">
-        <Icon icon={Bookmark} size={6} />
-        <strong>Bookmarks</strong>
+  {#if $user}
+    <PageBar>
+      <div class="flex items-center justify-between gap-4">
+        <div class="truncate min-w-0 flex items-center gap-2 whitespace-nowrap">
+          <Icon icon={Bookmark} size={6} />
+          <strong>Bookmarks</strong>
+        </div>
+        <Button class="button button-primary button-sm" onclick={createFolder}>
+          <Icon icon={AddCircle} size={4} />
+          New folder
+        </Button>
       </div>
-      <Button class="button button-primary button-sm" onclick={createFolder}>
-        <Icon icon={AddCircle} size={4} />
-        New folder
-      </Button>
-    </div>
-  </PageBar>
-  <PageContent>
-    {#if isEmpty}
-      <p class="py-24 text-center text-content-muted">
-        Nothing bookmarked yet. Bookmark a message, note or thread from its menu and it shows up
-        here.
-      </p>
-    {:else}
-      <label class="input flex items-center gap-2">
-        <Icon icon={Magnifier} class="shrink-0 text-content-muted" />
-        <input bind:value={query} class="grow" type="text" placeholder="Search bookmarks..." />
-      </label>
-      {#each folders as folder (folder.address || "")}
-        <BookmarkFolderSection {folder} eventsByValue={$userBookmarkedEvents} />
-      {/each}
-      {#if folders.length === 0}
-        <p class="py-24 text-center text-content-muted">No bookmarks match your search.</p>
+    </PageBar>
+    <PageContent>
+      {#if isEmpty}
+        <p class="py-24 text-center text-content-muted">
+          Nothing bookmarked yet. Bookmark a message, note or thread from its menu and it shows up
+          here.
+        </p>
+      {:else}
+        <label class="input flex items-center gap-2">
+          <Icon icon={Magnifier} class="shrink-0 text-content-muted" />
+          <input bind:value={query} class="grow" type="text" placeholder="Search bookmarks..." />
+        </label>
+        {#each folders as folder (folder.address || "")}
+          <BookmarkFolderSection {folder} eventsByValue={$userBookmarkedEvents} />
+        {/each}
+        {#if folders.length === 0}
+          <p class="py-24 text-center text-content-muted">No bookmarks match your search.</p>
+        {/if}
       {/if}
-    {/if}
-  </PageContent>
+    </PageContent>
+  {:else}
+    <LogInPanel
+      title="Log in to see your bookmarks"
+      message="Posts and links you save collect here." />
+  {/if}
 </Page>

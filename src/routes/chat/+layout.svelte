@@ -21,6 +21,8 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {shouldUnwrap} from "@app/areas/messages"
   import type {LayoutProps} from "./$types"
+  import {user} from "@app/core/user"
+  import LogInPanel from "@app/components/LogInPanel.svelte"
 
   const {children, params}: LayoutProps = $props()
 
@@ -34,35 +36,46 @@
 
   const promise = sleep(10000)
 
+  // Opening messages is consent to decrypt them, which only a user can give.
   onMount(() => {
-    shouldUnwrap.set(true)
+    if ($user) {
+      shouldUnwrap.set(true)
+    }
   })
 </script>
 
-<SecondaryNav class="relative w-72 lg:w-80">
-  <SecondaryNavSection>
-    <MessagesHeader bind:term bind:tab {conversationsByTab} />
-  </SecondaryNavSection>
-  <div class="overflow-auto">
-    {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
-      <ConversationItem {id} {pubkeys} {messages} />
-    {/each}
-    {#await promise}
-      <div class="divider"></div>
-      <div class="px-6 py-4 text-xs">
-        <Spinner loading>Loading conversations...</Spinner>
-      </div>
-    {/await}
-  </div>
-</SecondaryNav>
-<Page>
-  {#key $page.url.pathname}
-    {@render children?.()}
-  {/key}
-</Page>
+{#if $user}
+  <SecondaryNav class="relative w-72 lg:w-80">
+    <SecondaryNavSection>
+      <MessagesHeader bind:term bind:tab {conversationsByTab} />
+    </SecondaryNavSection>
+    <div class="overflow-auto">
+      {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
+        <ConversationItem {id} {pubkeys} {messages} />
+      {/each}
+      {#await promise}
+        <div class="divider"></div>
+        <div class="px-6 py-4 text-xs">
+          <Spinner loading>Loading conversations...</Spinner>
+        </div>
+      {/await}
+    </div>
+  </SecondaryNav>
+  <Page>
+    {#key $page.url.pathname}
+      {@render children?.()}
+    {/key}
+  </Page>
 
-{#if !params.chat}
-  <FAB onclick={startConversation}>
-    <Icon icon={ChatSquarePlus} size={7} />
-  </FAB>
+  {#if !params.chat}
+    <FAB onclick={startConversation}>
+      <Icon icon={ChatSquarePlus} size={7} />
+    </FAB>
+  {/if}
+{:else}
+  <Page>
+    <LogInPanel
+      title="Log in to see your messages"
+      message="Conversations, group chats and message requests live here." />
+  </Page>
 {/if}

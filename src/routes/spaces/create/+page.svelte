@@ -11,8 +11,10 @@
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
   import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
+  import {withLogin} from "@app/components/flows/login"
 
-  const openCreate = () => pushModal(RelayCreate, {}, {size: "large"})
+  const openCreate = () =>
+    withLogin("create a space", () => pushModal(RelayCreate, {}, {size: "large"}))
 </script>
 
 <Page>
