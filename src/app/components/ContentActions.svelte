@@ -68,7 +68,7 @@
     {/if}
     <EventMenuButton {url} {event} {noun} class="rounded-full">
       {#snippet customActions()}
-        {#if editForm && event.pubkey === $user.pubkey}
+        {#if editForm && event.pubkey === $user?.pubkey}
           <li>
             <Button onclick={edit(editForm)}>
               <Icon size={4} icon={Pen2} />

@@ -24,9 +24,11 @@
 <Modal label="Settings">
   <ModalBody>
     <div class="flex flex-col gap-8 items-center py-12 max-w-[16rem] m-auto w-full">
-      <Link href={pages.profile.path({pubkey: $user.pubkey})}>
-        <Profile inert pubkey={$user.pubkey} />
-      </Link>
+      {#if $user}
+        <Link href={pages.profile.path({pubkey: $user.pubkey})}>
+          <Profile inert pubkey={$user.pubkey} />
+        </Link>
+      {/if}
       <div class="grid grid-cols-3 gap-3 w-full">
         <Link
           href="/bookmarks"

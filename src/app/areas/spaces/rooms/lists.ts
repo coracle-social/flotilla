@@ -1,6 +1,6 @@
-import {derived, get} from "svelte/store"
+import {derived, get, readable} from "svelte/store"
 import {sortBy, uniq} from "@welshman/lib"
-import {RoomLists, Rooms, User} from "@welshman/app"
+import {RoomLists, Rooms} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
 import {userSpaceUrls} from "@app/core/user"
@@ -20,7 +20,9 @@ export const reorderSpaceUrls = (urls: string[]) => {
 export const deriveUserRooms = (url: string) =>
   derived(
     [
-      fromApp($app => $app.use(RoomLists).roomsForUrl(User.require($app).pubkey, url).$),
+      fromApp($app =>
+        $app.user ? $app.use(RoomLists).roomsForUrl($app.user.pubkey, url).$ : readable([]),
+      ),
       fromApp($app => $app.use(Rooms).forUrl(url).$),
     ],
     ([$rooms, $spaceRooms]) => {

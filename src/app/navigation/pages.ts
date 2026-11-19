@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Page} from "@sveltejs/kit"
-import {append, remove, sort, tryCatch, uniq} from "@welshman/lib"
+import {append, sort, tryCatch, uniq} from "@welshman/lib"
 import type {Maybe, MaybeAsync} from "@welshman/lib"
 import {
   CLASSIFIED,
@@ -60,13 +60,16 @@ const readTitle = async (
 
 // Conversations are named by everyone in them but the user, or the user alone for notes to self.
 
-export const getConversationPubkeys = (pubkeys: string[]) =>
-  sort(uniq(append(user.get().pubkey, pubkeys)))
+export const getConversationPubkeys = (pubkeys: string[]) => {
+  const $user = user.get()
+
+  return sort(uniq($user ? append($user.pubkey, pubkeys) : pubkeys))
+}
 
 export const makeConversationId = (pubkeys: string[]) => {
-  const userPubkey = user.get().pubkey
-  const otherPubkeys = remove(userPubkey, uniq(pubkeys))
-  const visiblePubkeys = otherPubkeys.length === 0 ? [userPubkey] : otherPubkeys
+  const userPubkey = user.get()?.pubkey
+  const otherPubkeys = uniq(pubkeys).filter(pubkey => pubkey !== userPubkey)
+  const visiblePubkeys = otherPubkeys.length === 0 && userPubkey ? [userPubkey] : otherPubkeys
 
   return sort(visiblePubkeys).join(",")
 }

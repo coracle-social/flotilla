@@ -15,7 +15,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import {pushToast} from "@app/navigation/toast"
   import {getNwcClient, wallet} from "@app/tools/wallet"
   import {hosting, updateTenant, createPortalSession} from "@app/areas/hosting"
@@ -60,7 +60,7 @@
         return
       }
 
-      await updateTenant($user.pubkey, {nwc_url: url})
+      await updateTenant(requireUser().pubkey, {nwc_url: url})
       saved = true
       void $hosting.refresh()
     },
@@ -77,7 +77,7 @@
         return
       }
 
-      await updateTenant($user.pubkey, {nwc_url: ""})
+      await updateTenant(requireUser().pubkey, {nwc_url: ""})
       void $hosting.refresh()
       pushToast({message: "Lightning wallet disconnected."})
       back()
@@ -87,7 +87,7 @@
   const {loading: redirecting, submit: openPortal} = trackSubmit(
     () => "Failed to open billing portal",
     async () => {
-      const {url} = await createPortalSession($user.pubkey)
+      const {url} = await createPortalSession(requireUser().pubkey)
 
       window.location.href = url
     },

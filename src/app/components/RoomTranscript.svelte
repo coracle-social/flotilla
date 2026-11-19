@@ -184,7 +184,7 @@
   const onActiveChange = (active: boolean) => {
     if (!active) {
       lastVisibleAt = now()
-    } else if ($events.some(e => e.pubkey !== $user.pubkey && e.created_at > lastVisibleAt)) {
+    } else if ($events.some(e => e.pubkey !== $user?.pubkey && e.created_at > lastVisibleAt)) {
       newMessagesAfter = lastVisibleAt
       newMessagesBefore = now()
       newMessagesSeen = false
@@ -229,7 +229,7 @@
   const elements = $derived(
     groupRoomMessages({
       events: $events,
-      pubkey: $user.pubkey,
+      pubkey: $user?.pubkey,
       addMemberKind,
       unreadAfter: newMessagesAfter,
       unreadBefore: newMessagesBefore,

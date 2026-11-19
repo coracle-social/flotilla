@@ -28,7 +28,7 @@
 
   const profile = $profiles.one(pubkey)
 
-  const isSelf = $derived($user.pubkey === pubkey)
+  const isSelf = $derived($user?.pubkey === pubkey)
 
   const isMuted = derivePubkeyMuted(pubkey)
 

@@ -14,7 +14,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayList from "@app/components/RelayList.svelte"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import {blockedRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
@@ -79,7 +79,7 @@
   const settings = createSettingsForm()
 
   const dirty = $derived(!equals($settings, $userSettingsValues))
-  const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
+  const blockedRelayUrls = $blockedRelayLists.urls(requireUser().pubkey).$
 </script>
 
 <form class="contents" {onsubmit}>

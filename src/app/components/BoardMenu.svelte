@@ -31,7 +31,7 @@
   const {url, board, onClick}: Props = $props()
 
   const permissions = deriveSpacePermissions(url)
-  const isAuthor = $derived(board.event.pubkey === $user.pubkey)
+  const isAuthor = $derived(board.event.pubkey === $user?.pubkey)
   const canDelete = $derived(isAuthor || $permissions.deleteContent)
 
   const showInfo = () => pushModal(EventInfo, {url, event: board.event})

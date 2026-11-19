@@ -1,6 +1,6 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {append, identity, noop, partition, remove, sortBy, uniqBy} from "@welshman/lib"
+import {append, identity, noop, partition, sortBy, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
@@ -48,9 +48,15 @@ export const getConversationPubkeysFromEvent = (event: TrustedEvent) =>
 
 // Anything else decrypted out of a wrap addressed to the user is a rumor about other people.
 export const isUserMessage = (event: TrustedEvent) => {
-  const pubkey = user.get().pubkey
+  const $user = user.get()
 
-  return event.pubkey === pubkey || tagValues(hexTags("p"), event.tags).includes(pubkey)
+  if ($user) {
+    return (
+      event.pubkey === $user.pubkey || tagValues(hexTags("p"), event.tags).includes($user.pubkey)
+    )
+  }
+
+  return false
 }
 
 export class Messages {
@@ -103,7 +109,10 @@ export class Messages {
 
     return conversation.pubkeys.length === 1
       ? display(conversation.pubkeys[0]) + " note to self"
-      : remove(user.get().pubkey, conversation.pubkeys).map(display).join(" ")
+      : conversation.pubkeys
+          .filter(pubkey => pubkey !== this.app.user?.pubkey)
+          .map(display)
+          .join(" ")
   }
 
   private addEvents = (events: TrustedEvent[]) => {
@@ -169,7 +178,7 @@ export const MESSAGES_TABS = [
 
 // Both thresholds are at least one, since a zero would wave the whole list through.
 export type MessagesContext = {
-  pubkey: string
+  pubkey: Maybe<string>
   follows: Set<string>
   members: Set<string>
   scores: Map<string, number>
@@ -190,7 +199,7 @@ const isKnown = (pubkey: string, ctx: MessagesContext) =>
 
 // Every other participant has to be known, so a stranger can't get in by adding the user to a group.
 export const isAccepted = (conversation: Conversation, ctx: MessagesContext) => {
-  const others = remove(ctx.pubkey, conversation.pubkeys)
+  const others = conversation.pubkeys.filter(pubkey => pubkey !== ctx.pubkey)
 
   return (
     others.length === 0 ||
@@ -221,7 +230,7 @@ const relayMembersByUrl = fromApp($app => $app.use(RelayMemberLists).index.$)
 export const messagesContext = derived(
   [user, userFollowList, wotScores, relayMembersByUrl, userRoomList, userSettingsValues],
   ([$user, $followList, $scores, $membersByUrl, $roomList, $settings]): MessagesContext => ({
-    pubkey: $user.pubkey,
+    pubkey: $user?.pubkey,
     follows: new Set($followList?.pubkeys() ?? []),
     members: new Set(
       ($roomList?.urls() ?? []).flatMap(url => $membersByUrl.get(url)?.pubkeys() ?? []),

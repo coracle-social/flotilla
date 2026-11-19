@@ -109,7 +109,7 @@
 
   // This page is Stripe's portal and checkout return target, so landing on it settles a checkout.
   const reconcile = async () => {
-    const pk = user.get().pubkey
+    const pk = user.get()?.pubkey
     if (!pk || reconciling) {
       return
     }

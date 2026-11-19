@@ -138,7 +138,7 @@
       </Button>
     </li>
   {/if}
-  {#if event.pubkey === $user.pubkey}
+  {#if event.pubkey === $user?.pubkey}
     <li>
       <Button onclick={showDelete} class="text-error">
         <Icon size={4} icon={TrashBin2} />

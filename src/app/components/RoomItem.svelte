@@ -165,7 +165,7 @@
     {/each}
     {#if path && $innerComments.length > 0}
       {@const pubkeys = $innerComments.map(e => e.pubkey)}
-      {@const isOwn = pubkeys.includes($user.pubkey)}
+      {@const isOwn = Boolean($user && pubkeys.includes($user.pubkey))}
       {@const info = displayList(pubkeys.map(pubkey => $commenterDisplays.get(pubkey) ?? ""))}
       {@const tooltip = `${info} commented`}
       <Tooltip content={isMobile ? "" : tooltip} placement="right" class="flex">

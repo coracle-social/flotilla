@@ -58,7 +58,7 @@
   })
 
   const loadSpaces = async () => {
-    const currentPubkey = user.get().pubkey
+    const currentPubkey = user.get()?.pubkey
 
     if (currentPubkey) {
       // forceLoad skips the hour-stale cache and, unlike load, rethrows fetch errors.

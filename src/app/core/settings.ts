@@ -6,11 +6,13 @@ import {projectFrom, withGetter} from "@welshman/store"
 import type {Projection} from "@welshman/store"
 import {AppData} from "@welshman/domain"
 import type {AppDataReader} from "@welshman/domain"
-import {DerivedPlugin, Domain, Network, User} from "@welshman/app"
+import {DerivedPlugin, Domain, Network} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
 import {registerRetention} from "@app/core/database"
+import {registerSync} from "@app/core/sync"
+import {requireUser, syncUserList} from "@app/core/user"
 
 export const SETTINGS = "flotilla/settings"
 
@@ -117,7 +119,7 @@ export const createSettingsForm = (): Writable<SettingsValues> => {
 // A send reads the delay when it is clicked, and the settings event is readable only once it decrypts.
 export const loadSendDelay = async () => {
   const $app = app.get()
-  const {pubkey} = User.require($app)
+  const {pubkey} = requireUser()
   const decrypted = () => Boolean($app.use(Settings).get(pubkey))
 
   if (!decrypted()) {
@@ -172,7 +174,8 @@ export const deriveShouldNotify = (url: string, h?: string) =>
 
 export const publishSettings = async (params: Partial<SettingsValues>) => {
   const $app = app.get()
-  const reader = await settings.get().forceLoad(User.require($app).pubkey)
+  const {pubkey} = requireUser()
+  const reader = await settings.get().forceLoad(pubkey)
   const writer = $app
     .use(Domain)
     .writer(AppData, reader)
@@ -215,4 +218,5 @@ export const toggleRoomMuted = (url: string, h: string) =>
 
 export const registerSettings = () => {
   registerRetention({match: event => matchFilter(settingsFilter, event), ttl: int(1, MONTH)})
+  registerSync(() => syncUserList(pubkey => settings.get().load(pubkey)))
 }

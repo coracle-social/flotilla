@@ -162,7 +162,7 @@
   }
 
   const canEditEvent = (event: TrustedEvent) =>
-    event.pubkey === $user.pubkey && event.created_at >= ago(5, MINUTE)
+    event.pubkey === $user?.pubkey && event.created_at >= ago(5, MINUTE)
 
   const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 

@@ -32,7 +32,10 @@
   $effect(() => {
     if (!isSelf) {
       $followLists.load(target)
-      $followLists.load($user.pubkey)
+
+      if ($user) {
+        $followLists.load($user.pubkey)
+      }
     }
   })
 </script>

@@ -1,8 +1,7 @@
 import {fromPairs, tryCatch} from "@welshman/lib"
 import {displayRelayUrl, isRelayUrl, normalizeRelayUrl} from "@welshman/util"
-import {User} from "@welshman/app"
-import {app} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
+import {requireUser} from "@app/core/user"
 import {PLATFORM_URL} from "@app/core/env"
 import {attemptRelayAccess, completeSpaceJoin} from "@app/areas/spaces/membership"
 import {joinRoom} from "@app/areas/spaces/rooms/membership"
@@ -57,7 +56,8 @@ export const makeInviteLink = (data: InviteData) => {
 }
 
 export const acceptInvite = async (data: InviteData, notifications: boolean) => {
-  const spaceUrls = roomLists.get().urls(User.require(app.get()).pubkey).get()
+  const {pubkey} = requireUser()
+  const spaceUrls = roomLists.get().urls(pubkey).get()
 
   if (!spaceUrls.includes(data.url)) {
     const error = await attemptRelayAccess(data.url, data.claim)

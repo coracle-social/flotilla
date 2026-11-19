@@ -14,7 +14,7 @@
   import SearchBody from "@app/components/SearchBody.svelte"
   import {CONTENT_KINDS} from "@app/tools/content"
   import {app} from "@app/core/app"
-  import {user, userSearchRelayUrls} from "@app/core/user"
+  import {requireUser, userSearchRelayUrls} from "@app/core/user"
   import {relays, searchRelayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
@@ -29,7 +29,7 @@
     pushModal(RelayList, {
       title: "Search Relays",
       subtitle: "Relays that support searching for profiles and public notes.",
-      relays: $searchRelayLists.urls($user.pubkey).$,
+      relays: $searchRelayLists.urls(requireUser().pubkey).$,
       addRelay: (url: string) => $searchRelayLists.addUrl(url).then(publish),
       removeRelay: (url: string) => $searchRelayLists.removeUrl(url).then(publish),
       matchRelay: (url: string) => Boolean($relays.get(url)?.hasNip(50)),

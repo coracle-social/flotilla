@@ -36,7 +36,7 @@
       await $profiles.forceLoad(pubkey)
       await $relayLists.load(pubkey)
 
-      const viewer = user.get().pubkey
+      const viewer = user.get()?.pubkey
 
       await Promise.all([
         $followLists.load(pubkey),

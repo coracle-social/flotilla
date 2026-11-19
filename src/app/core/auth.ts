@@ -16,6 +16,7 @@ import {merged} from "@welshman/store"
 import {app, appPolicies} from "@app/core/app"
 import {PLATFORM_RELAYS} from "@app/core/env"
 import {RelayAuthMode, Settings} from "@app/core/settings"
+import {requireUser} from "@app/core/user"
 
 // Aggressive mode answers every challenge, and otherwise only platform relays, which may hold the user's only lists, and relays the user has a relationship with.
 const shouldAuth = (socket: Socket, $app: IApp) => {
@@ -46,7 +47,7 @@ const authInputs = ($app: IApp) => {
 
 // Authenticates to a relay now rather than when a request first needs it, returning why it failed.
 export const authenticate = async (url: string) => {
-  const {sign} = User.require(app.get())
+  const {sign} = requireUser()
   const socket = app.get().pool.get(url)
   const result = await socket.auth.authenticate(sign, AbortSignal.timeout(ms(30)))
 

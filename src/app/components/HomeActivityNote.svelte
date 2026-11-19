@@ -43,7 +43,7 @@
     ),
   )
 
-  const target = $derived(note.pubkey === $user.pubkey ? "your note" : "a thread you are in")
+  const target = $derived(note.pubkey === $user?.pubkey ? "your note" : "a thread you are in")
 
   // Whoever did the same things shares a clause, so nobody is named twice.
   const clauses = $derived(

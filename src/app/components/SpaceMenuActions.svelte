@@ -72,7 +72,7 @@
 
   // The owner is a member by construction and has nothing to manage.
   const canManageMembership = $derived(
-    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user.pubkey && $isMember,
+    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user?.pubkey && $isMember,
   )
 
   const toggleSpaceNotifications = () => {
@@ -150,7 +150,7 @@
     $actionItems.length > 0,
   )}
 {/if}
-{#if $relay?.pubkey && $relay.pubkey !== $user.pubkey}
+{#if $relay?.pubkey && $relay.pubkey !== $user?.pubkey}
   {@render actionButton(contactOwner, Letter, "Contact Owner")}
 {/if}
 {#if $alertSettings.push}

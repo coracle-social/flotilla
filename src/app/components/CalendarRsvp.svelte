@@ -62,7 +62,7 @@
   let loading = $state(false)
 
   const people = $derived(getRsvpsByStatus(rsvps))
-  const ownRsvp = $derived(people.latest.find(rsvp => rsvp.pubkey === $user.pubkey))
+  const ownRsvp = $derived(people.latest.find(rsvp => rsvp.pubkey === $user?.pubkey))
   const ownStatus = $derived(ownRsvp ? reader(CalendarRsvp)(ownRsvp).status() : undefined)
   const attending = $derived([...people.accepted, ...people.tentative])
 </script>

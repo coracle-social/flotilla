@@ -12,13 +12,14 @@ import {
   RELAYS,
 } from "@welshman/util"
 import {RelayJoin, RelayLeave} from "@welshman/domain"
-import {RelayMemberLists, Sync, User, publish} from "@welshman/app"
+import {RelayMemberLists, Sync, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
 import {authenticate} from "@app/core/auth"
 import {roomLists} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {removeTrustedRelay} from "@app/core/settings"
+import {requireUser} from "@app/core/user"
 import {registerRetention} from "@app/core/database"
 import {pullAndListen, registerSync, syncApplicationData, syncEach} from "@app/core/sync"
 import {optInSpaceNotifications} from "@app/tools/push/actions"
@@ -65,6 +66,8 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 }
 
 export const completeSpaceJoin = async (url: string, notifications: boolean) => {
+  const {pubkey} = requireUser()
+
   await optInSpaceNotifications(url, notifications)
   await roomLists.get().addRelay(url).then(publishRoomList)
   syncApplicationData()
@@ -76,7 +79,7 @@ export const completeSpaceJoin = async (url: string, notifications: boolean) => 
       filters: [
         {
           kinds: [RELAYS, MESSAGING_RELAYS, FOLLOWS],
-          authors: [User.require(app.get()).pubkey],
+          authors: [pubkey],
         },
       ],
     })

@@ -36,7 +36,7 @@
 
   const onError = once(async () => {
     // If the image failed to load, try authenticating
-    if (hash) {
+    if (hash && $user) {
       const server = new URL(url).origin
       const template = makeBlossomAuthEvent({action: "get", server, hashes: [hash]})
       const authEvent = await $user.signer.sign(template)

@@ -188,7 +188,7 @@
               Message Info
             </Button>
           {/if}
-          {#if event.pubkey === $user.pubkey}
+          {#if event.pubkey === $user?.pubkey}
             <Button class="button button-neutral w-full text-error" onclick={showDelete}>
               <Icon size={4} icon={TrashBin2} />
               Delete Message

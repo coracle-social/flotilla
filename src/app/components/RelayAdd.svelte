@@ -19,7 +19,7 @@
   import RelayItem from "@app/components/RelayItem.svelte"
   import {pushToast} from "@app/navigation/toast"
   import {app} from "@app/core/app"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import {blockedRelayLists, relayLists, relayStats} from "@app/core/plugins"
 
   type Props = {
@@ -61,7 +61,7 @@
 
   const loading = new SvelteSet<string>()
   const relaySearch = $app.use(Relays).relaySearch
-  const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
+  const blockedRelayUrls = $blockedRelayLists.urls(requireUser().pubkey).$
 
   const searchResults = $derived(
     $relaySearch

@@ -6,7 +6,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import type {ActivityItem} from "@app/areas/home/activity/model"
 
   type Props = {
@@ -17,7 +17,8 @@
 
   const {path, url, h, pubkeys = [], event} = $derived(item.activity)
 
-  const others = $derived(uniq(remove($user.pubkey, pubkeys)))
+  const userPubkey = requireUser().pubkey
+  const others = $derived(uniq(remove(userPubkey, pubkeys)))
 </script>
 
 {#if url}
@@ -39,7 +40,7 @@
 {:else}
   <HomeActivityItemRow {path} {event}>
     {#snippet icon()}
-      <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
+      <ProfileCircle pubkey={others[0] || userPubkey} size={9} class="shrink-0" />
     {/snippet}
     {#snippet title()}
       <ConversationTitle {pubkeys} />

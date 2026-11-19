@@ -2,9 +2,8 @@ import {derived, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import type {Maybe} from "@welshman/lib"
 import {sortBy, spec} from "@welshman/lib"
-import {User} from "@welshman/app"
-import type {IApp} from "@welshman/app"
 import {roomLists, usePlugin} from "@app/core/plugins"
+import {requireUser} from "@app/core/user"
 import {goToMovedSpace} from "@app/navigation/history"
 import {publishRoomList} from "@app/tools/publish"
 import type {Activity, HostedRelay, Invoice, Plan, Tenant} from "@app/areas/hosting/model"
@@ -37,8 +36,6 @@ export class Hosting {
 
   billing = writable<TenantBilling>({tenant: undefined, invoices: [], draftInvoice: undefined})
 
-  constructor(private readonly app: IApp) {}
-
   loadPlans = () => {
     this.plansRequest ??= listPlans().catch((e): Plan[] => {
       this.plansRequest = undefined
@@ -57,7 +54,7 @@ export class Hosting {
     this.relayState.update($state => ({...$state, loading: true}))
 
     try {
-      const relays = await listTenantRelays(User.require(this.app).pubkey)
+      const relays = await listTenantRelays(requireUser().pubkey)
 
       this.relayState.set({loading: false, value: relays})
     } catch (e) {
@@ -84,7 +81,7 @@ export class Hosting {
 
   // Each request lands on its own, so one failure doesn't blank what the others loaded.
   refresh = async () => {
-    const {pubkey} = User.require(this.app)
+    const {pubkey} = requireUser()
     const results = await Promise.allSettled([
       getTenant(pubkey),
       listTenantInvoices(pubkey),
@@ -115,7 +112,7 @@ export class Hosting {
 
   // Settles the balance, then says what a tenant without autopay still owes: an open invoice, or a method.
   findPaymentDue = async (): Promise<Maybe<{invoice: Maybe<Invoice>}>> => {
-    const {pubkey} = User.require(this.app)
+    const {pubkey} = requireUser()
 
     await reconcileTenant(pubkey)
 

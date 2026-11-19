@@ -1,10 +1,9 @@
 import {equals, throttle} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import {merged} from "@welshman/store"
-import {User} from "@welshman/app"
-import {app} from "@app/core/app"
 import {messagingRelayLists, roomLists} from "@app/core/plugins"
 import {userSettingsValues} from "@app/core/settings"
+import {requireUser} from "@app/core/user"
 import {alertSettings} from "@app/tools/alerts/settings"
 import {getMessageAlertFilters, getSpaceAlertFilters} from "@app/tools/alerts/policy"
 
@@ -46,7 +45,7 @@ export const syncRelaySubscriptions = (
     removed: RelaySubscription[]
   }) => void,
 ) => {
-  const $pubkey = User.require(app.get()).pubkey
+  const $pubkey = requireUser().pubkey
   let subscriptions = new Map<string, RelaySubscription>()
 
   const unsubscribe = merged([

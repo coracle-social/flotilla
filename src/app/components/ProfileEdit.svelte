@@ -10,11 +10,11 @@
   import type {Values} from "@app/components/ProfileEditForm.svelte"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
-  import {user} from "@app/core/user"
+  import {requireUser} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {trackSubmit} from "@app/components/flows/submit"
 
-  const existingProfile = $profiles.get($user.pubkey)
+  const existingProfile = $profiles.get(requireUser().pubkey)
 
   const initialValues = {
     profile: {...existingProfile?.values},

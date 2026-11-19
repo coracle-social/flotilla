@@ -25,7 +25,7 @@
 
     for (const response of responses) {
       if (
-        response.pubkey === $user.pubkey &&
+        response.pubkey === $user?.pubkey &&
         (!latest || response.created_at > latest.created_at)
       ) {
         latest = response

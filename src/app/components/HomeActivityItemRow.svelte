@@ -32,7 +32,7 @@
     <div class="flex min-w-0 items-center gap-1 text-sm opacity-75">
       <div class="flex max-w-1/2 shrink-0 items-center">
         <span class="truncate">
-          {#if event.pubkey === $user.pubkey}
+          {#if event.pubkey === $user?.pubkey}
             You
           {:else}
             <ProfileName pubkey={event.pubkey} />

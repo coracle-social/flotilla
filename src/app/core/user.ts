@@ -11,9 +11,9 @@ import {
   RelayLists,
   RoomLists,
   SearchRelayLists,
-  User,
 } from "@welshman/app"
 import type {DerivedPlugin, Plugin} from "@welshman/app"
+import {UserError} from "@lib/util"
 import {app} from "@app/core/app"
 import {
   blockedRelayLists,
@@ -28,11 +28,26 @@ import {
   searchRelayLists,
 } from "@app/core/plugins"
 import {DEFAULT_SEARCH_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
-import {Settings} from "@app/core/settings"
 import {registerSync} from "@app/core/sync"
 
-// Throws while signed out, so use `$app.user` where absence is a legitimate state.
-export const user = withGetter(derived(app, $app => User.require($app)))
+export const user = withGetter(derived(app, $app => $app.user))
+
+export class LoginRequired extends UserError {
+  constructor() {
+    super("Log in to continue.")
+  }
+}
+
+// For code that can't go on without a user, which components turn into a login prompt.
+export const requireUser = () => {
+  const $user = app.get().user
+
+  if ($user) {
+    return $user
+  }
+
+  throw new LoginRequired()
+}
 
 // The signed-in user's entry in a keyed collection, e.g. deriveUserItem(Profiles).
 export const deriveUserItem = <T>(Ctor: Plugin<DerivedPlugin<T>>) =>
@@ -107,7 +122,6 @@ const syncUserLists = () => {
     muteLists.get().load(pubkey)
     profiles.get().load(pubkey)
     searchRelayLists.get().load(pubkey)
-    app.get().use(Settings).load(pubkey)
   })
 }
 

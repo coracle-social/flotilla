@@ -9,6 +9,7 @@ import type {Command} from "@welshman/app"
 import {UserError} from "@lib/util"
 import {publisher, relays, router} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
+import {requireUser} from "@app/core/user"
 import {loadSendDelay} from "@app/core/settings"
 import {INDEXER_RELAYS, SCHEDULER_RELAY} from "@app/core/env"
 
@@ -64,6 +65,9 @@ export class PublishBuilder<W extends EventWriter<BaseEventReader>> {
 
   async publish() {
     const {eventWriter, scheduleAt, url, h, delay} = this
+
+    // Checked before the writer changes, so a publish retried after logging in starts clean.
+    requireUser()
 
     // The scheduler relay holds a post dated ahead of now, and forwards it to the author's relays when it's due.
     if (scheduleAt) {
