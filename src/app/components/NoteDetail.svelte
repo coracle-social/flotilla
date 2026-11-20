@@ -94,7 +94,7 @@
   <ModalBody>
     {#if event}
       {@const note = event}
-      {@const replyToNote = () => withLogin("reply", () => setReplyTo(note))}
+      {@const replyToNote = () => withLogin(() => setReplyTo(note))}
       {#if loading}
         <Spinner class="justify-center py-4" />
       {/if}

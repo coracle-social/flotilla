@@ -1,5 +1,4 @@
 <script lang="ts">
-  import cx from "classnames"
   import {assoc} from "@welshman/lib"
   import type {ClientOptions} from "@pomade/core"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
@@ -7,19 +6,26 @@
   import {Publisher, nip01, toSession} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
+  import Login from "@assets/icons/login-3.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Divider from "@lib/components/Divider.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import LogIn from "@app/components/LogIn.svelte"
+  import InfoNostr from "@app/components/InfoNostr.svelte"
+  import SignUpMenu from "@app/components/SignUpMenu.svelte"
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
   import {attemptRelayAccess} from "@app/areas/spaces/membership"
   import {
+    PLATFORM_NAME,
     POMADE_SIGNERS,
     INDEXER_RELAYS,
     DEFAULT_RELAYS,
@@ -50,7 +56,9 @@
 
   const hasPomade = POMADE_SIGNERS.length >= 3
 
-  const showLogIn = () => pushModal(LogIn, {onLogin})
+  const showLogIn = () => pushModal(LogIn, {onLogin}, {replaceState: true})
+
+  const showInfoNostr = () => pushModal(InfoNostr)
 
   const completeSignup = async () => {
     // Join default spaces so the relay is warmed up before we publish below
@@ -117,25 +125,42 @@
 
 <Modal>
   <ModalBody>
-    <ModalTitle>Create an Account</ModalTitle>
-    <p class="m-auto max-w-sm text-center">
-      Get started in just a few clicks by picking one of the options below.
-    </p>
+    {#if HIDE_NOSTR}
+      <ModalTitle>Sign up</ModalTitle>
+    {:else}
+      <ModalTitle>Sign up with Nostr</ModalTitle>
+      <p class="m-auto max-w-sm text-center">
+        {PLATFORM_NAME} is built using the
+        <Button class="link" onclick={showInfoNostr}>nostr protocol</Button>, which allows you to
+        own your social identity.
+      </p>
+    {/if}
     {#if hasPomade}
-      <Button onclick={flows.email.start} class="button button-primary">
-        <Icon icon={Letter} />
-        Sign up with email
+      <div class="join">
+        <Button
+          onclick={flows.email.start}
+          class="button button-primary join-item grow rounded-l-2xl">
+          <Icon icon={Letter} />
+          Sign up with email
+        </Button>
+        <MenuButton
+          aria-label="More ways to sign up"
+          component={SignUpMenu}
+          componentProps={{signUpWithKey: flows.nostr.start}}
+          class="button button-primary join-item rounded-r-2xl">
+          <Icon icon={AltArrowDown} size={4} />
+        </MenuButton>
+      </div>
+    {:else}
+      <Button onclick={flows.nostr.start} class="button button-primary">
+        <Icon icon={Key} />
+        {HIDE_NOSTR ? "Sign up" : "Generate a key"}
       </Button>
     {/if}
-    <Button
-      onclick={flows.nostr.start}
-      class={cx(`button button-${hasPomade ? "neutral" : "primary"}`)}>
-      <Icon icon={Key} />
-      {HIDE_NOSTR ? "Sign up" : "Generate a key"}
+    <Divider>Or</Divider>
+    <Button onclick={showLogIn} class="button button-neutral">
+      <Icon icon={Login} />
+      Log in instead
     </Button>
-    <div class="text-sm">
-      Already have an account?
-      <Button class="link" onclick={showLogIn}>Log in instead</Button>
-    </div>
   </ModalBody>
 </Modal>

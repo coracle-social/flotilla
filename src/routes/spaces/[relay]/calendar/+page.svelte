@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {dateToSeconds} from "@welshman/lib"
+  import {dateToSeconds, includes} from "@welshman/lib"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -43,7 +43,7 @@
   const {events} = feed
   const olderStatus = feed.older.status
 
-  const makeEvent = () => withLogin("create an event", () => pushModal(CalendarEventCreate, {url}))
+  const makeEvent = () => withLogin(() => pushModal(CalendarEventCreate, {url}))
 
   const showToday = () => {
     cursor = new Date()
@@ -65,10 +65,7 @@
       return
     }
 
-    if (
-      target?.isContentEditable ||
-      ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "")
-    ) {
+    if (target?.isContentEditable || includes(target?.tagName, ["INPUT", "TEXTAREA", "SELECT"])) {
       return
     }
 

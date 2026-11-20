@@ -47,12 +47,12 @@
 
   const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
 
-  const showLoginPrompt = once(() => promptLogin("see this space"))
+  const showLogIn = once(() => promptLogin())
 
   // Settling a refusal or trusting a relay takes an account, so a visitor is asked to log in instead.
   const turnAway = () => {
     turnedAway = true
-    showLoginPrompt()
+    showLogIn()
   }
 
   // Detect a moved custom domain — the relay's nip-11 document answered with a redirect

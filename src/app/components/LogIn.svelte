@@ -9,16 +9,19 @@
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
-  import Compass from "@assets/icons/compass-big.svg?dataurl"
+  import UserPlusRounded from "@assets/icons/user-plus-rounded.svg?dataurl"
   import Key from "@assets/icons/key.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Divider from "@lib/components/Divider.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import Link from "@app/components/Link.svelte"
   import SignUp from "@app/components/SignUp.svelte"
+  import LogInMenu from "@app/components/LogInMenu.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInEmail from "@app/components/LogInEmail.svelte"
@@ -42,7 +45,7 @@
 
   const disabled = $derived(loading ? true : undefined)
 
-  const signUp = () => pushModal(SignUp, {onLogin})
+  const signUp = () => pushModal(SignUp, {onLogin}, {replaceState: true})
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
@@ -104,6 +107,26 @@
 
   const hasSigner = $derived(getNip07() || signers.length > 0)
 
+  // The first method that applies gets the button, and the rest go in its menu.
+  const menu = $derived({
+    signers: getNip07() ? signers : signers.slice(1),
+    loginWithNip55,
+    loginWithBunker: !HIDE_NOSTR && (hasSigner || hasPomade) ? loginWithBunker : undefined,
+    loginWithEmail: hasSigner && hasPomade ? loginWithEmail : undefined,
+    loginWithKey: !hasSigner && (hasPomade || !HIDE_NOSTR) ? loginWithKey : undefined,
+  })
+
+  const hasMenu = $derived(
+    Boolean(
+      menu.signers.length > 0 || menu.loginWithBunker || menu.loginWithEmail || menu.loginWithKey,
+    ),
+  )
+
+  // A lone button is rounded on both sides, and one joined to its menu only on the left.
+  const primaryClass = $derived(
+    cx("button button-primary grow", {"join-item rounded-l-2xl": hasMenu}),
+  )
+
   onMount(async () => {
     if (Capacitor.getPlatform() === "android") {
       signers = await getNip55()
@@ -123,72 +146,56 @@
         own your social identity.
       </p>
     {/if}
-    {#if getNip07()}
-      <Button {disabled} onclick={loginWithNip07} class="button button-primary">
-        {#if loading === "nip07"}
-          <Spinner size="sm" class="mr-3" />
-        {:else}
-          <Icon icon={Widget} />
-        {/if}
-        Log in with Extension
-      </Button>
-    {/if}
-    {#each signers as signerApp (signerApp.name)}
-      <Button {disabled} class="button button-primary" onclick={loginWithNip55(signerApp)}>
-        {#if loading === "nip55"}
-          <Spinner size="sm" class="mr-3" />
-        {:else}
-          <img src={signerApp.iconUrl} alt={signerApp.name} width="20" height="20" />
-        {/if}
-        Log in with {signerApp.name}
-      </Button>
-    {/each}
-    {#if hasPomade && !hasSigner}
-      <Button {disabled} onclick={loginWithEmail} class="button button-primary">
-        <Icon icon={Letter} />
-        Log in with Email
-      </Button>
-    {/if}
-    {#if !HIDE_NOSTR}
-      <Button
-        onclick={loginWithBunker}
-        {disabled}
-        class={cx(`button button-${hasSigner || hasPomade ? "neutral" : "primary"}`)}>
-        <Icon icon={Cpu} />
-        Log in with Remote Signer
-      </Button>
-    {/if}
-    {#if hasPomade && hasSigner}
-      <Button {disabled} onclick={loginWithEmail} class="button button-neutral">
-        <Icon icon={Letter} />
-        Log in with Email
-      </Button>
-    {/if}
-    {#if !hasSigner}
-      <Button
-        {disabled}
-        onclick={loginWithKey}
-        class={cx("button", {
-          "button-primary": HIDE_NOSTR && !hasPomade,
-          "button-neutral": !HIDE_NOSTR || hasPomade,
-        })}>
-        <Icon icon={Key} />
-        Log in with Key
-      </Button>
-    {/if}
-    {#if !HIDE_NOSTR && (!hasSigner || !hasPomade)}
-      <Link
-        external
-        {disabled}
-        href="https://nostrapps.com#signers"
-        class="button {hasSigner || hasPomade ? '' : 'button-neutral'}">
-        <Icon icon={Compass} />
-        Browse Signer Apps
-      </Link>
-    {/if}
-    <div class="text-sm">
-      Need an account?
-      <Button class="link" onclick={signUp}>Create one instead</Button>
+    <div class="join">
+      {#if getNip07()}
+        <Button {disabled} onclick={loginWithNip07} class={primaryClass}>
+          {#if loading === "nip07"}
+            <Spinner size="sm" class="mr-3" />
+          {:else}
+            <Icon icon={Widget} />
+          {/if}
+          Log in with Extension
+        </Button>
+      {:else if signers.length > 0}
+        <Button {disabled} onclick={loginWithNip55(signers[0])} class={primaryClass}>
+          {#if loading === "nip55"}
+            <Spinner size="sm" class="mr-3" />
+          {:else}
+            <img src={signers[0].iconUrl} alt={signers[0].name} width="20" height="20" />
+          {/if}
+          Log in with {signers[0].name}
+        </Button>
+      {:else if hasPomade}
+        <Button {disabled} onclick={loginWithEmail} class={primaryClass}>
+          <Icon icon={Letter} />
+          Log in with Email
+        </Button>
+      {:else if !HIDE_NOSTR}
+        <Button {disabled} onclick={loginWithBunker} class={primaryClass}>
+          <Icon icon={Cpu} />
+          Log in with Remote Signer
+        </Button>
+      {:else}
+        <Button {disabled} onclick={loginWithKey} class={primaryClass}>
+          <Icon icon={Key} />
+          Log in with Key
+        </Button>
+      {/if}
+      {#if hasMenu}
+        <MenuButton
+          {disabled}
+          aria-label="More ways to log in"
+          component={LogInMenu}
+          componentProps={menu}
+          class="button button-primary join-item rounded-r-2xl">
+          <Icon icon={AltArrowDown} size={4} />
+        </MenuButton>
+      {/if}
     </div>
+    <Divider>Or</Divider>
+    <Button {disabled} onclick={signUp} class="button button-neutral">
+      <Icon icon={UserPlusRounded} />
+      Create an account
+    </Button>
   </ModalBody>
 </Modal>

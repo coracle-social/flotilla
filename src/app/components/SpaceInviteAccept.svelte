@@ -80,7 +80,7 @@
     if ($user) {
       join()
     } else {
-      promptLogin("join this space")
+      promptLogin()
     }
   }
 

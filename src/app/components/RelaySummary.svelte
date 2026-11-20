@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {remove} from "@welshman/lib"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
@@ -15,7 +16,7 @@
 
   const {url}: Props = $props()
   const favorited = spacePubkeysForUrl(url)
-  const favoritedPubkeys = $derived($favorited.filter(pubkey => pubkey !== $user?.pubkey))
+  const favoritedPubkeys = $derived(remove($user?.pubkey, $favorited))
 </script>
 
 <div class="flex flex-col gap-4 text-left">

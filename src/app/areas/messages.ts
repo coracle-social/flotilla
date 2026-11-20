@@ -1,6 +1,6 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {append, identity, noop, partition, sortBy, uniqBy} from "@welshman/lib"
+import {append, identity, noop, partition, remove, sortBy, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
@@ -109,10 +109,7 @@ export class Messages {
 
     return conversation.pubkeys.length === 1
       ? display(conversation.pubkeys[0]) + " note to self"
-      : conversation.pubkeys
-          .filter(pubkey => pubkey !== this.app.user?.pubkey)
-          .map(display)
-          .join(" ")
+      : remove(this.app.user?.pubkey, conversation.pubkeys).map(display).join(" ")
   }
 
   private addEvents = (events: TrustedEvent[]) => {
@@ -199,7 +196,7 @@ const isKnown = (pubkey: string, ctx: MessagesContext) =>
 
 // Every other participant has to be known, so a stranger can't get in by adding the user to a group.
 export const isAccepted = (conversation: Conversation, ctx: MessagesContext) => {
-  const others = conversation.pubkeys.filter(pubkey => pubkey !== ctx.pubkey)
+  const others = remove(ctx.pubkey, conversation.pubkeys)
 
   return (
     others.length === 0 ||

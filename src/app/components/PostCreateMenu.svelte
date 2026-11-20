@@ -18,12 +18,11 @@
 
   const {includePost = true, onClick}: Props = $props()
 
-  const createPost = () => withLogin("write a post", () => pushModal(NoteCreate))
+  const createPost = () => withLogin(() => pushModal(NoteCreate))
 
-  const createPoll = () => withLogin("create a poll", () => pushModal(PollCreate))
+  const createPoll = () => withLogin(() => pushModal(PollCreate))
 
-  const createArticle = () =>
-    withLogin("write an article", () => navigate(pages.networkArticleCreate.path()))
+  const createArticle = () => withLogin(() => navigate(pages.networkArticleCreate.path()))
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>

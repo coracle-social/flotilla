@@ -14,7 +14,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {withLogin} from "@app/components/flows/login"
 
-  const startJoin = () => withLogin("join a space", () => pushModal(SpaceInviteAccept))
+  const startJoin = () => withLogin(() => pushModal(SpaceInviteAccept))
 </script>
 
 <Modal>

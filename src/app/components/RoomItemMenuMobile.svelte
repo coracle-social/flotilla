@@ -42,7 +42,7 @@
   import {readEventAloud} from "@app/components/flows/readAloud"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction} from "@app/areas/spaces"
-  import {withLogin} from "@app/components/flows/login"
+  import {promptLogin, withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -66,10 +66,16 @@
     publishReaction(url, event, {content: emoji, tags: []})
   }
 
-  const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
+  const showEmojiPicker = () => {
+    if ($user) {
+      pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
+    } else {
+      promptLogin()
+    }
+  }
 
   const createThread = () =>
-    withLogin("start a thread", () =>
+    withLogin(() =>
       pushModal(
         ThreadCreate,
         {
@@ -104,12 +110,9 @@
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
 
   const addToLibrary = () =>
-    withLogin("add this to a library", () =>
-      pushModal(PinboardSelect, {url, event}, {replaceState: true}),
-    )
+    withLogin(() => pushModal(PinboardSelect, {url, event}, {replaceState: true}))
 
-  const report = () =>
-    withLogin("report this", () => pushModal(Report, {url, event}, {replaceState: true}))
+  const report = () => withLogin(() => pushModal(Report, {url, event}, {replaceState: true}))
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
@@ -136,10 +139,7 @@
           Zap
         </ZapButton>
       {/if}
-      <Button
-        class="{tile} button-outline button-primary"
-        disabled={!$user}
-        onclick={showEmojiPicker}>
+      <Button class="{tile} button-outline button-primary" onclick={showEmojiPicker}>
         <Icon size={6} icon={SmileCircle} />
         React
       </Button>

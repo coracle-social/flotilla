@@ -46,9 +46,7 @@
   )
 
   const join = () =>
-    withLogin("join this room", () =>
-      handleLoading(() => joinRoom(url, h), "You have joined the room."),
-    )
+    withLogin(() => handleLoading(() => joinRoom(url, h), "You have joined the room."))
 
   const leave = () => handleLoading(() => leaveRoom(url, h), "You have left the room.")
 

@@ -13,12 +13,11 @@ import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
 import {withLogin} from "@app/components/flows/login"
 
-const openShareDialog = (share: Share) =>
-  withLogin("share this", () => pushModal(ShareDialog, {share}))
+const openShareDialog = (share: Share) => withLogin(() => pushModal(ShareDialog, {share}))
 
 export const shareEvent = (url: Maybe<string>, noun: string, event: TrustedEvent) => {
   if (url) {
-    withLogin("share this", () => {
+    withLogin(() => {
       if (relays.get().get(url)?.hasNip(29)) {
         pushModal(ShareEvent, {url, noun, event})
       } else {

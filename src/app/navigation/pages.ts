@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Page} from "@sveltejs/kit"
-import {append, sort, tryCatch, uniq} from "@welshman/lib"
+import {append, remove, sort, tryCatch, uniq} from "@welshman/lib"
 import type {Maybe, MaybeAsync} from "@welshman/lib"
 import {
   CLASSIFIED,
@@ -68,14 +68,14 @@ export const getConversationPubkeys = (pubkeys: string[]) => {
 
 export const makeConversationId = (pubkeys: string[]) => {
   const userPubkey = user.get()?.pubkey
-  const otherPubkeys = uniq(pubkeys).filter(pubkey => pubkey !== userPubkey)
+  const otherPubkeys = remove(userPubkey, uniq(pubkeys))
   const visiblePubkeys = otherPubkeys.length === 0 && userPubkey ? [userPubkey] : otherPubkeys
 
   return sort(visiblePubkeys).join(",")
 }
 
 const getConversationTitle = (pubkeys: string[]) => {
-  const others = pubkeys.filter(pubkey => pubkey !== app.get().user?.pubkey)
+  const others = remove(app.get().user?.pubkey, pubkeys)
 
   if (others.length === 1) {
     return `Chat with ${displayPubkey(others[0])}`
@@ -342,17 +342,17 @@ export const makeContentPath = (url: string, kind: number, idOrAddress?: string)
 
 export const settingsAbout = defineStaticRoute("/settings/about", "About")
 
-export const settingsProfile = defineStaticRoute("/settings/(account)/profile", "Profile Settings")
+export const settingsProfile = defineStaticRoute("/settings/profile", "Profile Settings")
 
-export const settingsContent = defineStaticRoute("/settings/(account)/content", "Content Settings")
+export const settingsContent = defineStaticRoute("/settings/content", "Content Settings")
 
-export const settingsPrivacy = defineStaticRoute("/settings/(account)/privacy", "Privacy Settings")
+export const settingsPrivacy = defineStaticRoute("/settings/privacy", "Privacy Settings")
 
-export const settingsHosting = defineStaticRoute("/settings/(account)/hosting", "Hosting")
+export const settingsHosting = defineStaticRoute("/settings/hosting", "Hosting")
 
-export const settingsAlerts = defineStaticRoute("/settings/(account)/alerts", "Alert Settings")
+export const settingsAlerts = defineStaticRoute("/settings/alerts", "Alert Settings")
 
-export const settingsWallet = defineStaticRoute("/settings/(account)/wallet", "Wallet Settings")
+export const settingsWallet = defineStaticRoute("/settings/wallet", "Wallet Settings")
 
 // A page's title is read off its route, which lets the browser tab follow the page.
 

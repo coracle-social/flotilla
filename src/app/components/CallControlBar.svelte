@@ -55,8 +55,7 @@
   // callTargetRoom isn't cleared on cancel or leave, so it can still point at this room.
   const showJoin = $derived(isVoiceRoom && !joiningHere && !connectedHere)
 
-  const openJoinDialog = () =>
-    withLogin("join the call", () => pushModal(VoiceRoomJoinDialog, {url, h}))
+  const openJoinDialog = () => withLogin(() => pushModal(VoiceRoomJoinDialog, {url, h}))
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
 
   const pickScreenShareSource: PickSource = sources =>

@@ -30,7 +30,7 @@
   const back = () => history.back()
 
   const makeEvent = () =>
-    withLogin("create an event", () => pushModal(CalendarEventCreate, {url, date}, {nested: true}))
+    withLogin(() => pushModal(CalendarEventCreate, {url, date}, {nested: true}))
 </script>
 
 <Modal>

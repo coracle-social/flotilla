@@ -13,13 +13,15 @@
   import Link from "@app/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import LogInOptions from "@app/components/LogInOptions.svelte"
+  import LogIn from "@app/components/LogIn.svelte"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
 
   const logout = () => pushModal(LogOut)
+
+  const logIn = () => pushModal(LogIn)
 </script>
 
 <Modal label="Settings">
@@ -30,9 +32,7 @@
           <Profile inert pubkey={$user.pubkey} />
         </Link>
       {:else}
-        <div class="flex w-full flex-col gap-3">
-          <LogInOptions />
-        </div>
+        <Button class="button button-primary w-full" onclick={logIn}>Log in</Button>
       {/if}
       <div class="grid grid-cols-3 gap-3 w-full">
         <Link

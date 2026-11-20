@@ -5,7 +5,6 @@
   import Letter from "@assets/icons/nav/letter.png"
   import Magnifier from "@assets/icons/nav/magnifier.png"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
-  import Login from "@assets/icons/login-3.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
   import Sidebar from "@assets/icons/sidebar-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -70,7 +69,7 @@
       </PrimaryNavItem>
     {:else}
       <PrimaryNavItem title="Log in" aria-label="Log in" onclick={logIn}>
-        <Icon icon={Login} size={8} />
+        <ImageIcon alt="Log in" src={UserRounded} class="rounded-full" size={8} />
       </PrimaryNavItem>
     {/if}
     {#if PLATFORM_RELAYS.length === 0}

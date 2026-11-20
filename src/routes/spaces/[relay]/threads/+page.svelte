@@ -49,8 +49,7 @@
   const board = $derived($page.url.searchParams.get("board") ?? undefined)
   const inBoard = $derived(board !== undefined)
   const back = () => history.back()
-  const startTopic = () =>
-    withLogin("start a topic", () => pushModal(ThreadCreate, {url, h: board ?? undefined}))
+  const startTopic = () => withLogin(() => pushModal(ThreadCreate, {url, h: board ?? undefined}))
   const boardName = $derived(board === "" ? "General" : board ? displayRoom(url, board) : "")
   const boardItems = $derived(
     inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],

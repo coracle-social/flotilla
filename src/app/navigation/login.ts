@@ -1,9 +1,8 @@
 import {writable} from "svelte/store"
 import type {Maybe} from "@welshman/lib"
 
-// An action waiting on a login, which the app container answers by opening the login prompt.
+// A request to log in, which the app container answers by opening the login dialog.
 export type LoginRequest = {
-  action: string
   onLogin?: () => unknown
 }
 

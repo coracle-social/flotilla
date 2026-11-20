@@ -4,7 +4,6 @@
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {user} from "@app/core/user"
   import {
     addBookmark,
     deriveIsBookmarked,
@@ -12,6 +11,7 @@
     removeBookmark,
   } from "@app/areas/bookmarks"
   import {pushToast} from "@app/navigation/toast"
+  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url?: string
@@ -24,9 +24,7 @@
 
   const isBookmarked = deriveIsBookmarked(getIdOrAddress(event))
 
-  const toggle = async () => {
-    onClick?.()
-
+  const submit = async () => {
     // The repository takes the write at once, so the label flips before the relays answer.
     const bookmarked = $isBookmarked
     const error = await (bookmarked
@@ -39,9 +37,14 @@
       pushToast({message: bookmarked ? "Bookmark removed" : "Bookmark saved!"})
     }
   }
+
+  const toggle = () => {
+    onClick?.()
+    withLogin(submit)
+  }
 </script>
 
-<Button onclick={toggle} class={className} disabled={!$user}>
+<Button onclick={toggle} class={className}>
   <Icon size={4} icon={Bookmark} />
   {$isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
 </Button>

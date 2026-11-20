@@ -13,8 +13,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {withLogin} from "@app/components/flows/login"
 
-  const openCreate = () =>
-    withLogin("create a space", () => pushModal(RelayCreate, {}, {size: "large"}))
+  const openCreate = () => withLogin(() => pushModal(RelayCreate, {}, {size: "large"}))
 </script>
 
 <Page>

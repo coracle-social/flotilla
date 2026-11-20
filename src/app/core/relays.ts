@@ -68,12 +68,11 @@ const getRelayAccess = (
     return {status: RelayAccessStatus.AwaitingSignature}
   }
 
-  // A refusal of a stale auth event is answered with a fresh one, so the handshake is still running. A visitor never answers.
+  // A refusal of a stale auth event is answered with a fresh one, so the handshake is still running.
   if (
-    $user &&
-    (socket.auth.status === AuthStatus.Requested ||
-      socket.auth.status === AuthStatus.PendingResponse ||
-      isStaleAuth(socket))
+    socket.auth.status === AuthStatus.Requested ||
+    socket.auth.status === AuthStatus.PendingResponse ||
+    isStaleAuth(socket)
   ) {
     return {status: RelayAccessStatus.Authenticating}
   }

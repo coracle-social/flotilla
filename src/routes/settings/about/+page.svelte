@@ -19,7 +19,7 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey})
 
-  const zap = () => withLogin("send a zap", () => pushModal(Zap, {pubkey}))
+  const zap = () => withLogin(() => pushModal(Zap, {pubkey}))
 </script>
 
 <div class="flex flex-col gap-6 p-8 max-w-2xl h-screen justify-center m-auto">

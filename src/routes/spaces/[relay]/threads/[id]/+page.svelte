@@ -76,7 +76,7 @@
   }
 
   const openReply = (post: TrustedEvent) =>
-    withLogin("reply", () => {
+    withLogin(() => {
       replyTo = post
       showReply = true
     })

@@ -36,7 +36,7 @@
     },
   )
 
-  const zap = () => withLogin("send a zap", loadZapper)
+  const zap = () => withLogin(loadZapper)
 </script>
 
 <Button onclick={zap} disabled={$loading} {...props}>

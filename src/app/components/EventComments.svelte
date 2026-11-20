@@ -32,7 +32,7 @@
     replyTo = comment
   }
 
-  const commentOnRoot = () => withLogin("comment", () => setReplyTo(event))
+  const commentOnRoot = () => withLogin(() => setReplyTo(event))
 
   const clearReplyTo = () => setReplyTo(undefined)
 

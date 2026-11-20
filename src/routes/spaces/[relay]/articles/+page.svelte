@@ -32,8 +32,7 @@
   const loading = $derived($status === "loading")
   const exhausted = $derived($status === "exhausted")
 
-  const createArticle = () =>
-    withLogin("write an article", () => navigate(pages.articleCreate.path({url})))
+  const createArticle = () => withLogin(() => navigate(pages.articleCreate.path({url})))
 
   let author: string | undefined = $state()
   let topic: string | undefined = $state()

@@ -50,7 +50,7 @@
 
   const addToLibrary = () => {
     onClick()
-    withLogin("add this to a library", () => pushModal(PinboardSelect, {url, event}))
+    withLogin(() => pushModal(PinboardSelect, {url, event}))
   }
 
   const read = () => {
@@ -60,7 +60,7 @@
 
   const createThread = () => {
     onClick()
-    withLogin("start a thread", () =>
+    withLogin(() =>
       pushModal(ThreadCreate, {
         url,
         h,
@@ -71,7 +71,7 @@
 
   const report = () => {
     onClick()
-    withLogin("report this", () => pushModal(Report, {url, event}))
+    withLogin(() => pushModal(Report, {url, event}))
   }
 
   const showInfo = () => {

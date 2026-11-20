@@ -7,6 +7,7 @@
     displayList,
     filter,
     groupBy,
+    includes,
     map,
     removeUndefined,
     spec,
@@ -41,7 +42,7 @@
   import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/tools/people/people"
-  import {withLogin} from "@app/components/flows/login"
+  import {promptLogin, withLogin} from "@app/components/flows/login"
 
   type Props = {
     event: TrustedEvent
@@ -106,7 +107,7 @@
 
   const zapTotal = $derived(fromMsats(sum($zaps.map(zap => zap.invoiceAmount))))
 
-  const includesUser = (pubkeys: string[]) => Boolean($user && pubkeys.includes($user.pubkey))
+  const includesUser = (pubkeys: string[]) => includes($user?.pubkey, pubkeys)
 
   const toggleReaction = (events: TrustedEvent[]) => {
     const reaction = events.find(spec({pubkey: $user?.pubkey}))
@@ -133,8 +134,10 @@
   const onReactionClick = (events: TrustedEvent[], pubkeys: string[], title: string) => {
     if (isMobile && !includesUser(pubkeys)) {
       showReactors(pubkeys, title, "Reacted to this message")
-    } else {
+    } else if ($user) {
       toggleReaction(events)
+    } else {
+      promptLogin()
     }
   }
 
@@ -142,7 +145,7 @@
     if (isMobile) {
       showReactors(pubkeys, title, "Zapped this message")
     } else {
-      withLogin("send a zap", () => pushModal(ZapModal, {url, pubkey: event.pubkey, event}))
+      withLogin(() => pushModal(ZapModal, {url, pubkey: event.pubkey, event}))
     }
   }
 
@@ -256,10 +259,7 @@
         {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
         {@const onClick = () => onReactionClick(events, pubkeys, info)}
         <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
-          <Button
-            class={summaryClass(includesUser(pubkeys))}
-            disabled={!$user}
-            onclick={stopPropagation(onClick)}>
+          <Button class={summaryClass(includesUser(pubkeys))} onclick={stopPropagation(onClick)}>
             <Reaction event={events[0]} />
             {#if events.length > 1}
               <span>{events.length}</span>
@@ -288,20 +288,22 @@
         content={tooltipContent(reactInfo ? `${reactInfo} reacted` : "React")}
         {placement}
         class="flex">
-        {#if emojiMenu}
-          <EmojiButton
-            {onEmoji}
-            aria-label="Add a reaction"
-            class={summaryClass(isOwn)}
-            disabled={!$user}>
+        {#if emojiMenu && $user}
+          <EmojiButton {onEmoji} aria-label="Add a reaction" class={summaryClass(isOwn)}>
             {@render reactLabel()}
           </EmojiButton>
-        {:else}
+        {:else if $user}
           <Button
             aria-label="Likes"
             class={summaryClass(isOwn)}
-            disabled={!$user}
             onclick={stopPropagation(toggleLike)}>
+            {@render reactLabel()}
+          </Button>
+        {:else}
+          <Button
+            aria-label="React"
+            class={summaryClass(isOwn)}
+            onclick={stopPropagation(promptLogin)}>
             {@render reactLabel()}
           </Button>
         {/if}

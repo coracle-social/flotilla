@@ -17,6 +17,7 @@
   import SpaceMemberMap, {type MemberPin} from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
+  import {user} from "@app/core/user"
   import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/areas/spaces/roles"
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
@@ -121,10 +122,12 @@
         <span class="font-normal text-content-muted">{$memberList.length}</span>
       </h2>
       <div class="flex items-center gap-2">
-        <Button class="button button-primary button-sm" onclick={inviteMembers}>
-          <Icon icon={AddCircle} />
-          Invite people
-        </Button>
+        {#if $user}
+          <Button class="button button-primary button-sm" onclick={inviteMembers}>
+            <Icon icon={AddCircle} />
+            Invite people
+          </Button>
+        {/if}
         {#if $permissions.directoryMenu}
           <MenuButton
             class="button button-neutral button-sm button-square"

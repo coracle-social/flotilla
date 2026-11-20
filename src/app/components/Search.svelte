@@ -47,13 +47,7 @@
 <Modal class="flex flex-col gap-2">
   <ModalHeader>
     <ModalTitle>Search</ModalTitle>
-    <ModalSubtitle>
-      {#if $user}
-        across all your spaces
-      {:else}
-        across suggested spaces
-      {/if}
-    </ModalSubtitle>
+    <ModalSubtitle>across all your spaces</ModalSubtitle>
   </ModalHeader>
   <SearchBody placeholder="Search spaces..." relays={spaceUrls} {filter}>
     {#snippet empty()}

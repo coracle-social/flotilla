@@ -47,7 +47,7 @@
     {value: "ended", label: "Ended"},
   ]
 
-  const createGoal = () => withLogin("create a goal", () => pushModal(GoalCreate, {url}))
+  const createGoal = () => withLogin(() => pushModal(GoalCreate, {url}))
 
   let element: HTMLElement | undefined = $state()
   let tab: GoalFilter = $state("all")

@@ -23,7 +23,7 @@
 
   const relays = $derived($tenantRelays.value)
 
-  const openCreate = () => withLogin("create a space", () => pushModal(RelayCreate))
+  const openCreate = () => withLogin(() => pushModal(RelayCreate))
 </script>
 
 <HomeSection title="Hosting" icon={Server} class={className}>

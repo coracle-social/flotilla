@@ -44,10 +44,10 @@
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
   const report = (spaceUrl: string) => () =>
-    withLogin("report this", () => pushModal(Report, {url: spaceUrl, event}))
+    withLogin(() => pushModal(Report, {url: spaceUrl, event}))
 
   const addToLibrary = (spaceUrl: string) => () =>
-    withLogin("add this to a library", () => pushModal(PinboardSelect, {url: spaceUrl, event}))
+    withLogin(() => pushModal(PinboardSelect, {url: spaceUrl, event}))
 
   const share = () => shareEvent(url, noun, event)
 

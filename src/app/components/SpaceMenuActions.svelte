@@ -58,7 +58,7 @@
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
   const joinSpace = () =>
-    withLogin("join this space", () =>
+    withLogin(() =>
       pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet}),
     )
 

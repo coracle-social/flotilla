@@ -52,10 +52,10 @@
     </Button>
     <Button class="button button-primary" type="submit" disabled={$loading}>
       {#if $loading}
-        <Spinner loading={$loading}>Go to Dashboard</Spinner>
+        <Spinner loading={$loading}>Complete Setup</Spinner>
       {:else}
         <Icon icon={HomeSmile} />
-        Go to Dashboard
+        Complete Setup
       {/if}
     </Button>
   </ModalFooter>

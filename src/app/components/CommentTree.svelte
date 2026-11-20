@@ -46,7 +46,7 @@
 
   const composing = $derived(replyTo?.id === node.comment.id)
 
-  const reply = () => withLogin("reply", () => setReplyTo?.(node.comment))
+  const reply = () => withLogin(() => setReplyTo?.(node.comment))
 
   const clearReplyTo = () => setReplyTo?.(undefined)
 </script>

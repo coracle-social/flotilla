@@ -1,8 +1,9 @@
 import {get} from "svelte/store"
-import {ms, on, remove} from "@welshman/lib"
+import {ms, noop, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {AuthStateEvent, AuthStatus, socketPolicyAuthBuffer} from "@welshman/net"
+import {AuthStateEvent, AuthStatus, makeSocketPolicyAuth} from "@welshman/net"
+import {Nip01Signer} from "@welshman/signer"
 import {
   MessagingRelayLists,
   Publisher,
@@ -16,7 +17,6 @@ import {merged} from "@welshman/store"
 import {app, appPolicies} from "@app/core/app"
 import {PLATFORM_RELAYS} from "@app/core/env"
 import {RelayAuthMode, Settings} from "@app/core/settings"
-import {requireUser} from "@app/core/user"
 
 // Aggressive mode answers every challenge, and otherwise only platform relays, which may hold the user's only lists, and relays the user has a relationship with.
 const shouldAuth = (socket: Socket, $app: IApp) => {
@@ -45,9 +45,15 @@ const authInputs = ($app: IApp) => {
   ])
 }
 
+// A visitor identifies to relays with a key made for this visit, so a relay that only asks a client to identify serves them.
+const guest = Nip01Signer.ephemeral()
+
+const guestAuthPolicy = ($app: IApp) =>
+  $app.user ? noop : $app.pool.addSocketPolicy(makeSocketPolicyAuth({sign: guest.sign}))
+
 // Authenticates to a relay now rather than when a request first needs it, returning why it failed.
 export const authenticate = async (url: string) => {
-  const {sign} = requireUser()
+  const {sign} = app.get().user ?? guest
   const socket = app.get().pool.get(url)
   const result = await socket.auth.authenticate(sign, AbortSignal.timeout(ms(30)))
 
@@ -85,12 +91,7 @@ const staleAuthPolicy = (socket: Socket) => {
 }
 
 export const registerAuth = () => {
-  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), $app => {
-    // A visitor never answers a challenge, so reads don't wait on an answer and a relay's auth refusals reach the app.
-    if (!$app.user) {
-      $app.pool.socketPolicies = remove(socketPolicyAuthBuffer, $app.pool.socketPolicies)
-    }
-
-    return $app.pool.addSocketPolicy(staleAuthPolicy)
-  })
+  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), guestAuthPolicy, $app =>
+    $app.pool.addSocketPolicy(staleAuthPolicy),
+  )
 }

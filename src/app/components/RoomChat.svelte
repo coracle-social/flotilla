@@ -102,9 +102,9 @@
   // Restart the feed now that we're a member
   const onJoin = () => transcript?.restart()
 
-  const replyTo = (event: TrustedEvent) => withLogin("reply", () => composeArea?.reply(event))
+  const replyTo = (event: TrustedEvent) => withLogin(() => composeArea?.reply(event))
 
-  const logIn = () => promptLogin("send a message")
+  const logIn = () => promptLogin()
 
   const onSubmit = async ({content, tags, scheduleAt, parent, share, edit}: ComposeValues) => {
     if (edit) {

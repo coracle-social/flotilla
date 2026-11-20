@@ -19,7 +19,7 @@ export const trackSubmit = <Args extends unknown[]>(
         await submit(...args)
       } catch (error) {
         if (error instanceof LoginRequired) {
-          promptLogin("continue")
+          promptLogin()
         } else if (error instanceof UserError) {
           pushToast({theme: "error", message: error.message})
         } else {

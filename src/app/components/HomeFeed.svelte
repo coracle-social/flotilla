@@ -90,10 +90,7 @@
   {/if}
   {#if networkOpened}
     <div class={cx({hidden: tab !== "network"})}>
-      <!-- The feed follows the people it's built for, so a login on this page builds it again. -->
-      {#key $user?.pubkey}
-        <HomeNetworkRecent />
-      {/key}
+      <HomeNetworkRecent />
     </div>
   {/if}
 </HomeSection>

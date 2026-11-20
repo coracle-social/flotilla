@@ -23,7 +23,7 @@
     if ($userSpaceUrls.includes(url)) {
       goToSpace(url)
     } else if (invite) {
-      withLogin("join this space", () => pushModal(SpaceInviteAccept, {invite}))
+      withLogin(() => pushModal(SpaceInviteAccept, {invite}))
     } else if ($user) {
       if ($relay?.isPaid()) {
         pushModal(SpacePaymentGate, {url})

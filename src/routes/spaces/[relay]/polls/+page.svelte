@@ -26,7 +26,7 @@
   const {events} = feed
   const status = feed.older.status
 
-  const createPoll = () => withLogin("create a poll", () => pushModal(PollCreate, {url}))
+  const createPoll = () => withLogin(() => pushModal(PollCreate, {url}))
 
   const {items} = $derived(partitionByActivity(POLL, $events))
 

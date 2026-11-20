@@ -37,7 +37,7 @@
     },
   )
 
-  const join = () => withLogin("join this room", submitJoin)
+  const join = () => withLogin(submitJoin)
 
   const {loading: leaving, submit: leave} = trackSubmit(
     () => "Failed to leave the room.",

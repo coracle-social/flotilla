@@ -4,7 +4,7 @@
   import CallBanner from "@app/components/CallBanner.svelte"
   import ReadAloudBanner from "@app/components/ReadAloudBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
-  import LogInPrompt from "@app/components/LogInPrompt.svelte"
+  import LogIn from "@app/components/LogIn.svelte"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import {loginRequest} from "@app/navigation/login"
 
@@ -23,7 +23,7 @@
   // withLogin can't import the login dialogs, since they render components that call it.
   $effect(() => {
     if ($loginRequest) {
-      pushModal(LogInPrompt, $loginRequest)
+      pushModal(LogIn, $loginRequest)
       loginRequest.set(undefined)
     }
   })

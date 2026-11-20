@@ -38,7 +38,7 @@ export class LoginRequired extends UserError {
   }
 }
 
-// For code that can't go on without a user, which trackSubmit turns into a login prompt.
+// For code that can't go on without a user, which trackSubmit answers by opening the login dialog.
 export const requireUser = () => {
   const $user = app.get().user
 

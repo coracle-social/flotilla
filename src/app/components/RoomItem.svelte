@@ -1,7 +1,14 @@
 <script lang="ts">
   import cx from "classnames"
   import {derived, readable} from "svelte/store"
-  import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
+  import {
+    now,
+    uniq,
+    includes,
+    displayList,
+    formatTimestampAsTime,
+    formatTimestampAsDate,
+  } from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
     EventRef,
@@ -74,7 +81,7 @@
   const innerEvent =
     quoteRef && quoted
       ? derived($events.one(quoted, uniq([...quoteRef.relays, url])).$, e =>
-          e && CONTENT_KINDS.includes(e.kind) ? e : undefined,
+          includes(e?.kind, CONTENT_KINDS) ? e : undefined,
         )
       : readable(undefined)
   const innerComments = $derived(
@@ -165,7 +172,7 @@
     {/each}
     {#if path && $innerComments.length > 0}
       {@const pubkeys = $innerComments.map(e => e.pubkey)}
-      {@const isOwn = Boolean($user && pubkeys.includes($user.pubkey))}
+      {@const isOwn = includes($user?.pubkey, pubkeys)}
       {@const info = displayList(pubkeys.map(pubkey => $commenterDisplays.get(pubkey) ?? ""))}
       {@const tooltip = `${info} commented`}
       <Tooltip content={isMobile ? "" : tooltip} placement="right" class="flex">

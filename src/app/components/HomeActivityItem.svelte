@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {uniq} from "@welshman/lib"
+  import {remove, uniq} from "@welshman/lib"
   import HomeActivityItemRow from "@app/components/HomeActivityItemRow.svelte"
   import ConversationTitle from "@app/components/ConversationTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -17,7 +17,7 @@
 
   const {path, url, h, pubkeys = [], event} = $derived(item.activity)
 
-  const others = $derived(uniq(pubkeys.filter(pubkey => pubkey !== $user?.pubkey)))
+  const others = $derived(uniq(remove($user?.pubkey, pubkeys)))
 </script>
 
 {#if url}

@@ -41,8 +41,7 @@
   const {events} = feed
   const status = feed.older.status
 
-  const createClassified = () =>
-    withLogin("post a listing", () => pushModal(ClassifiedCreate, {url}))
+  const createClassified = () => withLogin(() => pushModal(ClassifiedCreate, {url}))
 
   const setTopic = (value?: string) => () => {
     const path = pages.classifieds.path({url, topic: value || undefined})

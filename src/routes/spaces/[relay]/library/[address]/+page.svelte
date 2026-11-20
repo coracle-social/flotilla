@@ -52,7 +52,7 @@
 
   const back = () => history.back()
 
-  const addLink = () => withLogin("add a link", () => pushModal(PinSave, {url, address}))
+  const addLink = () => withLogin(() => pushModal(PinSave, {url, address}))
 
   const showContributors = () =>
     pushModal(ProfileList, {

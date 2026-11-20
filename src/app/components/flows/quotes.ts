@@ -21,7 +21,7 @@ export const goToQuote = async (ref: IEventRef, event: TrustedEvent, url?: strin
 }
 
 export const quoteEvent = (event: TrustedEvent) =>
-  withLogin("quote this", async () => {
+  withLogin(async () => {
     const content = await makeQuoteContent(event)
 
     pushModal(NoteCreate, {initialValues: {content}})

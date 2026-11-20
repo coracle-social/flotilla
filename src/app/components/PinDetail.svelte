@@ -46,7 +46,7 @@
 
   const clearReplyTo = () => setReplyTo(undefined)
 
-  const replyToPin = () => withLogin("comment", () => setReplyTo(pin.event))
+  const replyToPin = () => withLogin(() => setReplyTo(pin.event))
 
   let replyTo: TrustedEvent | undefined = $state(initialReplyTo)
   let mounted = true

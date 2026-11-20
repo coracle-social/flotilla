@@ -69,7 +69,7 @@
     term ? $pins.filter(pin => pin.boards().length > 0 && pinMatchesTerm(pin, term)) : [],
   )
 
-  const createShelf = () => withLogin("create a shelf", () => pushModal(PinboardEdit, {url}))
+  const createShelf = () => withLogin(() => pushModal(PinboardEdit, {url}))
 
   onMount(() => {
     const controller = new AbortController()

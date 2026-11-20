@@ -6,7 +6,6 @@
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
   import HomeActivityNote from "@app/components/HomeActivityNote.svelte"
-  import {user} from "@app/core/user"
   import {activityLoaded} from "@app/areas/home/activity/sync"
   import {
     activityCounts,
@@ -70,19 +69,11 @@
     </div>
   {:else if $activityItems.length === 0}
     <div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
-      {#if $user}
-        <p class="font-medium">You're all caught up</p>
-        <p class="max-w-md text-sm opacity-75">
-          Your rooms, chats and direct messages collect here, with replies and reactions to your
-          notes.
-        </p>
-      {:else}
-        <p class="font-medium">Nothing new yet</p>
-        <p class="max-w-md text-sm opacity-75">
-          Messages in these spaces collect here. Log in to keep up with your own chats and replies
-          too.
-        </p>
-      {/if}
+      <p class="font-medium">You're all caught up</p>
+      <p class="max-w-md text-sm opacity-75">
+        This is where you can find recent activity in your rooms, chats, and direct messages, as
+        well as replies to your public notes.
+      </p>
     </div>
   {/if}
 </div>
