@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {goto} from "$app/navigation"
   import {spec} from "@welshman/lib"
   import {LONG_FORM, getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
@@ -16,11 +15,12 @@
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
+  import {navigate} from "@app/navigation/navigate"
   import {sortArticles} from "@app/areas/spaces/articles"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import * as pages from "@app/navigation/pages"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
@@ -33,7 +33,7 @@
   const exhausted = $derived($status === "exhausted")
 
   const createArticle = () =>
-    withLogin("write an article", () => goto(pages.articleCreate.path({url})))
+    withLogin("write an article", () => navigate(pages.articleCreate.path({url})))
 
   let author: string | undefined = $state()
   let topic: string | undefined = $state()

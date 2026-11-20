@@ -30,8 +30,8 @@
   } from "@app/areas/spaces/goals"
   import type {GoalFilter, GoalSort} from "@app/areas/spaces/goals"
   import {pushModal} from "@app/navigation/dialogs"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 

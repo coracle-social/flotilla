@@ -20,29 +20,14 @@ export const session = withGetter(writable<Maybe<Session>>(undefined))
 // Set by a tab that logs out, so the others stop showing what it deleted
 const LOGGED_OUT = "flotilla-logged-out"
 
-const loadUser = async ($session: Session) => {
+const openSession = async ($session: Session) => {
   const $user = await User.fromSession($session)
 
-  if ($user) {
-    return $user
+  if (!$user) {
+    throw new Error(`Unable to log in using ${$session.method}`)
   }
 
-  throw new Error(`Unable to log in using ${$session.method}`)
-}
-
-const openSession = async ($session: Session) => {
-  const $user = await loadUser($session)
-
   replaceApp($user, await openRepository($user.pubkey))
-  session.set($session)
-}
-
-// A visitor's events stay in memory for the rest of the session, and the database opens at the next start.
-const upgradeSession = async ($session: Session) => {
-  const $user = await loadUser($session)
-
-  await rememberIdentity($user.pubkey)
-  upgradeApp($user)
   session.set($session)
 }
 
@@ -58,7 +43,16 @@ export const login = async ($session: Session) => {
   if (app.get().user) {
     await openSession($session)
   } else {
-    await upgradeSession($session)
+    const $user = await User.fromSession($session)
+
+    if (!$user) {
+      throw new Error(`Unable to log in using ${$session.method}`)
+    }
+
+    // A visitor's events stay in memory for the rest of the session, and the database opens at the next start.
+    await rememberIdentity($user.pubkey)
+    upgradeApp($user)
+    session.set($session)
   }
 
   await Promise.all(loginHandlers.map(call))

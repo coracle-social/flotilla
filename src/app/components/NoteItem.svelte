@@ -11,10 +11,10 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import {events} from "@app/core/plugins"
+  import {user} from "@app/core/user"
   import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import {isReplyTo} from "@app/tools/targets"
   import {openEventNote} from "@app/navigation/overlays"
-  import {user} from "@app/core/user"
 
   type Props = {
     event: TrustedEvent

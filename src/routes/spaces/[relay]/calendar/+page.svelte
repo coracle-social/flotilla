@@ -33,8 +33,8 @@
   } from "@app/areas/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 

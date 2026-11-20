@@ -16,8 +16,8 @@
   import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 

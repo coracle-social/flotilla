@@ -4,7 +4,6 @@
 </script>
 
 <script lang="ts">
-  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {navigating} from "$app/state"
   import type {Maybe} from "@welshman/lib"
@@ -20,6 +19,7 @@
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
+  import {goToMovedSpace} from "@app/navigation/history"
   import {derivePaidGated} from "@app/areas/spaces/payments"
   import {user} from "@app/core/user"
   import {authenticate} from "@app/core/auth"
@@ -28,7 +28,6 @@
   import {userSpaceUrls} from "@app/core/user"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {goToMovedSpace} from "@app/navigation/history"
   import {promptLogin} from "@app/components/flows/login"
   import type {LayoutProps} from "./$types"
 
@@ -49,6 +48,12 @@
   const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
 
   const showLoginPrompt = once(() => promptLogin("see this space"))
+
+  // Settling a refusal or trusting a relay takes an account, so a visitor is asked to log in instead.
+  const turnAway = () => {
+    turnedAway = true
+    showLoginPrompt()
+  }
 
   // Detect a moved custom domain — the relay's nip-11 document answered with a redirect
   const checkRedirect = once(() => {
@@ -81,6 +86,12 @@
 
   let redirectUrl = $state<Maybe<string>>()
 
+  // A space that turned a visitor away loaded nothing for them, so its pages start over once they log in.
+  let turnedAway = $state(false)
+
+  // Visiting a space is asking to join it, while a visitor who logs in here came for something else.
+  const arrivedSignedIn = Boolean(user.get())
+
   $effect(checkRedirect)
 
   // A modal owns a history entry, so the join prompt waits for the page to settle.
@@ -100,7 +111,7 @@
       }
     } else if ($paidGated) {
       showPaymentGate()
-    } else if ($user && !$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
+    } else if (arrivedSignedIn && !$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
       if (spacesLoaded) {
         joinPrompted.add(url)
         pushModal(SpaceJoin, {url})
@@ -108,35 +119,45 @@
         loadSpaces()
       }
     } else if ($access.status === RelayAccessStatus.LoginRequired) {
-      showLoginPrompt()
+      turnAway()
     } else if ($access.status === RelayAccessStatus.Denied) {
-      showAuthError(stripPrefix($access.reason))
+      if ($user) {
+        showAuthError(stripPrefix($access.reason))
+      } else {
+        turnAway()
+      }
     } else if ($access.status === RelayAccessStatus.Untrusted) {
-      showPendingTrust()
+      if ($user) {
+        showPendingTrust()
+      } else {
+        turnAway()
+      }
     }
   })
 
   // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
-  onMount(() => {
+  $effect(() => {
     if ($user) {
       authenticate(url)
     }
   })
 </script>
 
-{#if $page.url.pathname === pages.space.path({url})}
-  {@render children?.()}
-{:else}
-  <SecondaryNav>
-    <SpaceMenu {url} />
-  </SecondaryNav>
-  <Page>
-    <SpaceNotify {url} />
-    <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
+{#key turnedAway && $user?.pubkey}
+  {#if $page.url.pathname === pages.space.path({url})}
+    {@render children?.()}
+  {:else}
+    <SecondaryNav>
+      <SpaceMenu {url} />
+    </SecondaryNav>
+    <Page>
+      <SpaceNotify {url} />
+      <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
          params change, so this rebuilds it for the second case. The url the page store reports
          arrives a tick after the page is built, so keying on that throws the new page away. -->
-    {#key JSON.stringify(params)}
-      {@render children?.()}
-    {/key}
-  </Page>
-{/if}
+      {#key JSON.stringify(params)}
+        {@render children?.()}
+      {/key}
+    </Page>
+  {/if}
+{/key}

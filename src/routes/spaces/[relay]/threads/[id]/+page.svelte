@@ -22,8 +22,8 @@
   import {getChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
 

@@ -6,6 +6,7 @@
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
   import HomeActivityNote from "@app/components/HomeActivityNote.svelte"
+  import {user} from "@app/core/user"
   import {activityLoaded} from "@app/areas/home/activity/sync"
   import {
     activityCounts,
@@ -13,7 +14,6 @@
     activityUnread,
     readActivity,
   } from "@app/areas/home/activity/stream"
-  import {user} from "@app/core/user"
 
   // Something is waiting and the filters are what is keeping it off the screen.
   const hidden = $derived(

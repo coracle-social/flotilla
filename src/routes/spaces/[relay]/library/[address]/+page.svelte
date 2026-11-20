@@ -24,8 +24,8 @@
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import type {PageProps} from "./$types"
   import {withLogin} from "@app/components/flows/login"
+  import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 

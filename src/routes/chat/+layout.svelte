@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
   import ChatSquarePlus from "@assets/icons/chat-square-plus.svg?dataurl"
@@ -12,6 +11,8 @@
   import ConversationStart from "@app/components/ConversationStart.svelte"
   import ConversationItem from "@app/components/ConversationItem.svelte"
   import MessagesHeader from "@app/components/MessagesHeader.svelte"
+  import LogInPanel from "@app/components/LogInPanel.svelte"
+  import {user} from "@app/core/user"
   import {
     MessagesTab,
     messagesContext,
@@ -21,8 +22,6 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {shouldUnwrap} from "@app/areas/messages"
   import type {LayoutProps} from "./$types"
-  import {user} from "@app/core/user"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
 
   const {children, params}: LayoutProps = $props()
 
@@ -37,7 +36,7 @@
   const promise = sleep(10000)
 
   // Opening messages is consent to decrypt them, which only a user can give.
-  onMount(() => {
+  $effect(() => {
     if ($user) {
       shouldUnwrap.set(true)
     }

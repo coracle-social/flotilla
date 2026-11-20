@@ -1,6 +1,7 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
+  import {user} from "@app/core/user"
   import {navigate} from "@app/navigation/navigate"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
@@ -27,7 +28,6 @@
   import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/areas/spaces/invites"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {user} from "@app/core/user"
   import {promptLogin} from "@app/components/flows/login"
 
   type Props = {

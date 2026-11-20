@@ -26,6 +26,7 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
+  import {user} from "@app/core/user"
   import {deriveRoomMembers, deriveRoomPermissions, deriveUserRooms} from "@app/areas/spaces/rooms"
   import {publishRoomList} from "@app/tools/publish"
   import {
@@ -35,7 +36,6 @@
     toggleRoomNotifications,
   } from "@app/core/settings"
   import {pushModal} from "@app/navigation/dialogs"
-  import {user} from "@app/core/user"
 
   type Props = {
     url: string

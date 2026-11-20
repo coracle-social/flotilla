@@ -66,7 +66,7 @@
 
   const showConnectionStatus = () => pushModal(SpaceConnectionStatus, {url}, {replaceState: sheet})
 
-  const contactOwner = () => openMessages([$relay!.pubkey!], {replaceState: sheet})
+  const contactOwner = () => openMessages([$relay!.pubkey!])
 
   const manageMembership = () => {
     popModal()
