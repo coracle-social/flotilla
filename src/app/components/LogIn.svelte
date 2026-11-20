@@ -9,18 +9,16 @@
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
-  import UserPlusRounded from "@assets/icons/user-plus-rounded.svg?dataurl"
   import Key from "@assets/icons/key.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import SignUp from "@app/components/SignUp.svelte"
   import LogInMenu from "@app/components/LogInMenu.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
@@ -38,7 +36,7 @@
 
   const disabled = $derived(loading ? true : undefined)
 
-  const signUp = () => pushModal(SignUp, {}, {replaceState: true})
+  const back = () => history.back()
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
@@ -185,10 +183,9 @@
         </MenuButton>
       {/if}
     </div>
-    <Divider>Or</Divider>
-    <Button {disabled} onclick={signUp} class="button button-neutral">
-      <Icon icon={UserPlusRounded} />
-      Create an account
+    <Button {disabled} onclick={back} class="button button-ghost">
+      <Icon icon={AltArrowLeft} />
+      Go back
     </Button>
   </ModalBody>
 </Modal>

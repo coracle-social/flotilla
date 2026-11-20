@@ -6,17 +6,15 @@
   import {Publisher, nip01, toSession} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
-  import Login from "@assets/icons/login-3.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import SignUpMenu from "@app/components/SignUpMenu.svelte"
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
@@ -49,7 +47,7 @@
 
   const hasPomade = POMADE_SIGNERS.length >= 3
 
-  const showLogIn = () => pushModal(LogIn, {}, {replaceState: true})
+  const back = () => history.back()
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
@@ -150,10 +148,9 @@
         {HIDE_NOSTR ? "Sign up" : "Generate a key"}
       </Button>
     {/if}
-    <Divider>Or</Divider>
-    <Button onclick={showLogIn} class="button button-neutral">
-      <Icon icon={Login} />
-      Log in instead
+    <Button onclick={back} class="button button-ghost">
+      <Icon icon={AltArrowLeft} />
+      Go back
     </Button>
   </ModalBody>
 </Modal>
