@@ -19,8 +19,8 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {requireUser} from "@app/core/user"
   import {conversationSearch} from "@app/areas/messages"
+  import {user} from "@app/core/user"
   import {deriveUserRoomSearch} from "@app/areas/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import {shareTo, type Share} from "@app/tools/share"
@@ -31,7 +31,6 @@
 
   const {share}: Props = $props()
 
-  const userPubkey = requireUser().pubkey
   const roomSearch = deriveUserRoomSearch()
 
   const toggle = (path: string) => () => {
@@ -93,7 +92,7 @@
         <div class="flex flex-col gap-2">
           {#each conversationResults as conversation (conversation.id)}
             {@const path = pages.conversation.path({pubkeys: conversation.pubkeys})}
-            {@const others = remove(userPubkey, conversation.pubkeys)}
+            {@const others = remove($user.pubkey, conversation.pubkeys)}
             <Button
               type="button"
               class={cx(
@@ -104,7 +103,7 @@
               {#if others.length > 1}
                 <ProfileCircles pubkeys={others} size={5} />
               {:else}
-                <ProfileCircle pubkey={others[0] || userPubkey} size={5} />
+                <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
               {/if}
               <span class="min-w-0 truncate">
                 <ConversationTitle pubkeys={conversation.pubkeys} />

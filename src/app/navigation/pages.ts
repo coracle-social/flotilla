@@ -60,16 +60,13 @@ const readTitle = async (
 
 // Conversations are named by everyone in them but the user, or the user alone for notes to self.
 
-export const getConversationPubkeys = (pubkeys: string[]) => {
-  const $user = user.get()
-
-  return sort(uniq($user ? append($user.pubkey, pubkeys) : pubkeys))
-}
+export const getConversationPubkeys = (pubkeys: string[]) =>
+  sort(uniq(append(user.get().pubkey, pubkeys)))
 
 export const makeConversationId = (pubkeys: string[]) => {
-  const userPubkey = user.get()?.pubkey
+  const userPubkey = user.get().pubkey
   const otherPubkeys = remove(userPubkey, uniq(pubkeys))
-  const visiblePubkeys = otherPubkeys.length === 0 && userPubkey ? [userPubkey] : otherPubkeys
+  const visiblePubkeys = otherPubkeys.length === 0 ? [userPubkey] : otherPubkeys
 
   return sort(visiblePubkeys).join(",")
 }

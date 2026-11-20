@@ -19,7 +19,7 @@ export const groupRoomMessages = ({
   unreadBefore,
 }: {
   events: TrustedEvent[]
-  pubkey: Maybe<string>
+  pubkey: string
   addMemberKind: number
   unreadAfter: number
   unreadBefore: number

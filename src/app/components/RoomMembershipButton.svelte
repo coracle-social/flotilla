@@ -10,7 +10,6 @@
   import {deriveUserRoomMembershipStatus} from "@app/areas/spaces/rooms"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -24,7 +23,7 @@
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
   const inviteCode = $derived($page.url.searchParams.get("code") || "")
 
-  const {loading: joining, submit: submitJoin} = trackSubmit(
+  const {loading: joining, submit: join} = trackSubmit(
     () => "Failed to join the room.",
     async () => {
       const message = await joinRoom(url, h, inviteCode)
@@ -36,8 +35,6 @@
       }
     },
   )
-
-  const join = () => withLogin(submitJoin)
 
   const {loading: leaving, submit: leave} = trackSubmit(
     () => "Failed to leave the room.",

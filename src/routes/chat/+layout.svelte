@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
   import ChatSquarePlus from "@assets/icons/chat-square-plus.svg?dataurl"
@@ -11,8 +12,6 @@
   import ConversationStart from "@app/components/ConversationStart.svelte"
   import ConversationItem from "@app/components/ConversationItem.svelte"
   import MessagesHeader from "@app/components/MessagesHeader.svelte"
-  import LogInPanel from "@app/components/LogInPanel.svelte"
-  import {user} from "@app/core/user"
   import {
     MessagesTab,
     messagesContext,
@@ -35,46 +34,35 @@
 
   const promise = sleep(10000)
 
-  // Opening messages is consent to decrypt them, which only a user can give.
-  $effect(() => {
-    if ($user) {
-      shouldUnwrap.set(true)
-    }
+  onMount(() => {
+    shouldUnwrap.set(true)
   })
 </script>
 
-{#if $user}
-  <SecondaryNav class="relative w-72 lg:w-80">
-    <SecondaryNavSection>
-      <MessagesHeader bind:term bind:tab {conversationsByTab} />
-    </SecondaryNavSection>
-    <div class="overflow-auto">
-      {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
-        <ConversationItem {id} {pubkeys} {messages} />
-      {/each}
-      {#await promise}
-        <div class="divider"></div>
-        <div class="px-6 py-4 text-xs">
-          <Spinner loading>Loading conversations...</Spinner>
-        </div>
-      {/await}
-    </div>
-  </SecondaryNav>
-  <Page>
-    {#key $page.url.pathname}
-      {@render children?.()}
-    {/key}
-  </Page>
+<SecondaryNav class="relative w-72 lg:w-80">
+  <SecondaryNavSection>
+    <MessagesHeader bind:term bind:tab {conversationsByTab} />
+  </SecondaryNavSection>
+  <div class="overflow-auto">
+    {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
+      <ConversationItem {id} {pubkeys} {messages} />
+    {/each}
+    {#await promise}
+      <div class="divider"></div>
+      <div class="px-6 py-4 text-xs">
+        <Spinner loading>Loading conversations...</Spinner>
+      </div>
+    {/await}
+  </div>
+</SecondaryNav>
+<Page>
+  {#key $page.url.pathname}
+    {@render children?.()}
+  {/key}
+</Page>
 
-  {#if !params.chat}
-    <FAB onclick={startConversation}>
-      <Icon icon={ChatSquarePlus} size={7} />
-    </FAB>
-  {/if}
-{:else}
-  <Page>
-    <LogInPanel
-      title="Log in to see your messages"
-      message="Conversations, group chats and message requests live here." />
-  </Page>
+{#if !params.chat}
+  <FAB onclick={startConversation}>
+    <Icon icon={ChatSquarePlus} size={7} />
+  </FAB>
 {/if}

@@ -12,17 +12,17 @@
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@app/components/PrimaryNavItem.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
   import {unreadDots} from "@app/tools/activity"
+  import {userSpaceUrls} from "@app/core/user"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
   import {lastSpaceUrl} from "@app/navigation/history"
-  import {activeSpaceUrls, user, userProfile, userSpaceUrls} from "@app/core/user"
+  import {userProfile} from "@app/core/user"
 
   type Props = {
     children?: Snippet
@@ -34,12 +34,10 @@
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 
-  const logIn = () => pushModal(LogIn)
-
   const showSearch = () => pushModal(Search)
 
   // The menu is reachable everywhere, so it opens on the space the user is in, or the last one.
-  const spaceUrl = $derived($lastSpaceUrl ?? $activeSpaceUrls[0])
+  const spaceUrl = $derived($lastSpaceUrl ?? PLATFORM_RELAYS[0] ?? $userSpaceUrls[0])
 
   const spaceMenuIsOpen = $derived(getModal()?.component === SpaceMenuDrawer)
 
@@ -59,19 +57,13 @@
     <Divider />
   {/if}
   <div class="mt-auto flex flex-col items-center">
-    {#if $user}
-      <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
-        {#if $userProfile?.picture()}
-          <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
-        {:else}
-          <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
-        {/if}
-      </PrimaryNavItem>
-    {:else}
-      <PrimaryNavItem title="Log in" aria-label="Log in" onclick={logIn}>
-        <ImageIcon alt="Log in" src={UserRounded} class="rounded-full" size={8} />
-      </PrimaryNavItem>
-    {/if}
+    <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
+      {#if $userProfile?.picture()}
+        <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
+      {:else}
+        <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
+      {/if}
+    </PrimaryNavItem>
     {#if PLATFORM_RELAYS.length === 0}
       <PrimaryNavItem
         href="/spaces"

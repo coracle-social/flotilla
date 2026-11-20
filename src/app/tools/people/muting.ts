@@ -23,7 +23,7 @@ export const isEventMuted = withGetter(
       if (!$muteList) {
         return false
       }
-      if ($user?.pubkey === e.pubkey) {
+      if ($user.pubkey === e.pubkey) {
         return false
       }
       if (mutedPubkeys.has(e.pubkey)) {

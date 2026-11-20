@@ -14,7 +14,7 @@
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import PostCreateButton from "@app/components/PostCreateButton.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {requireUser, user} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
@@ -55,7 +55,7 @@
       title: "Your Relays",
       subtitle:
         "Where you publish your notes, and where other people send notes intended for you. Be sure to select relays that will accept your notes and let the people who follow you read them.",
-      relays: $relayLists.urls(requireUser().pubkey).$,
+      relays: $relayLists.urls($user.pubkey).$,
       addRelay: (url: string) =>
         $relayLists.update(w => w.addReadUrl(url).addWriteUrl(url)).then(publish),
       removeRelay: (url: string) =>
@@ -69,7 +69,7 @@
   {/snippet}
   {#snippet action()}
     <div class="flex shrink-0 items-center gap-2">
-      {#if $user && !HIDE_NOSTR}
+      {#if !HIDE_NOSTR}
         <Button
           aria-label="Relay settings"
           class="button button-neutral button-xs"
@@ -82,9 +82,7 @@
       </PostCreateButton>
     </div>
   {/snippet}
-  {#if $user}
-    <HealthCheckList class="bg-surface-less @3xl:hidden" />
-  {/if}
+  <HealthCheckList class="bg-surface-less @3xl:hidden" />
   {#if tab === "activity"}
     <HomeActivity />
   {/if}

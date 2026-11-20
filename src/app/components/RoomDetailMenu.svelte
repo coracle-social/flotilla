@@ -21,7 +21,6 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -45,8 +44,7 @@
     },
   )
 
-  const join = () =>
-    withLogin(() => handleLoading(() => joinRoom(url, h), "You have joined the room."))
+  const join = () => handleLoading(() => joinRoom(url, h), "You have joined the room.")
 
   const leave = () => handleLoading(() => leaveRoom(url, h), "You have left the room.")
 

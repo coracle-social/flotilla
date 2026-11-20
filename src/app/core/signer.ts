@@ -4,7 +4,7 @@ import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
 import {Logger} from "@welshman/app"
 import type {LogMessage} from "@welshman/app"
 import {fromApp} from "@app/core/app"
-import {requireUser} from "@app/core/user"
+import {user} from "@app/core/user"
 
 export type SignerRequest = {
   id: string
@@ -76,7 +76,7 @@ const httpAuthByUrl = new Map<
 
 // A NIP-98 GET token for url, reused for maxAge seconds by the same pubkey where the server allows it.
 export const getHttpAuthHeader = (url: string, maxAge = 0) => {
-  const {pubkey, signer} = requireUser()
+  const {pubkey, signer} = user.get()
   const cached = httpAuthByUrl.get(url)
 
   if (cached?.pubkey === pubkey && cached.expiresAt > now()) {

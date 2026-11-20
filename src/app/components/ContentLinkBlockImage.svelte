@@ -3,7 +3,6 @@
   import {displayUrl, once} from "@welshman/lib"
   import {getBlob, makeBlossomAuthEvent, tagSpec, tagValue} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import type {User} from "@welshman/app"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {decryptUrl, getUrlFileName, getUrlTags} from "@lib/media"
@@ -35,39 +34,27 @@
     src = URL.createObjectURL(new File([data], fileName, type ? {type} : undefined))
   }
 
-  // A server may serve the image only to someone who signs for it.
-  const loadWithAuth = once(async (hash: string, $user: User) => {
-    const server = new URL(url).origin
-    const template = makeBlossomAuthEvent({action: "get", server, hashes: [hash]})
-    const authEvent = await $user.signer.sign(template)
-    const res = await getBlob(server, hash, {authEvent})
+  const onError = once(async () => {
+    // If the image failed to load, try authenticating
+    if (hash) {
+      const server = new URL(url).origin
+      const template = makeBlossomAuthEvent({action: "get", server, hashes: [hash]})
+      const authEvent = await $user.signer.sign(template)
+      const res = await getBlob(server, hash, {authEvent})
 
-    if (res.status === 200) {
-      const blob = await res.blob()
-      setBlobSrc(blob, blob.type || undefined)
-      hasError = false
+      if (res.status === 200) {
+        const blob = await res.blob()
+        setBlobSrc(blob, blob.type || undefined)
+      } else {
+        hasError = true
+      }
     } else {
       hasError = true
     }
   })
-
-  const onError = () => {
-    if (hash && $user) {
-      loadWithAuth(hash, $user)
-    } else {
-      hasError = true
-    }
-  }
 
   let hasError = $state(false)
   let src = $state("")
-
-  // A visitor sees a link in place of the image, which is fetched with auth once they log in.
-  $effect(() => {
-    if (hash && $user && hasError && src) {
-      loadWithAuth(hash, $user)
-    }
-  })
 
   onMount(async () => {
     try {

@@ -5,7 +5,6 @@
   import {Poll} from "@welshman/domain"
   import {stopPropagation} from "@lib/html"
   import {reader} from "@app/core/domain"
-  import {user} from "@app/core/user"
 
   type Props = {
     event: TrustedEvent
@@ -54,7 +53,6 @@
             type="radio"
             class="radio"
             checked={selected}
-            disabled={!$user}
             onclick={stopPropagation(noop)}
             onchange={onselect} />
         {:else}
@@ -62,7 +60,6 @@
             type="checkbox"
             class="checkbox"
             checked={selected}
-            disabled={!$user}
             onclick={stopPropagation(noop)}
             onchange={onselect} />
         {/if}

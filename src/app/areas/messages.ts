@@ -48,15 +48,9 @@ export const getConversationPubkeysFromEvent = (event: TrustedEvent) =>
 
 // Anything else decrypted out of a wrap addressed to the user is a rumor about other people.
 export const isUserMessage = (event: TrustedEvent) => {
-  const $user = user.get()
+  const pubkey = user.get().pubkey
 
-  if ($user) {
-    return (
-      event.pubkey === $user.pubkey || tagValues(hexTags("p"), event.tags).includes($user.pubkey)
-    )
-  }
-
-  return false
+  return event.pubkey === pubkey || tagValues(hexTags("p"), event.tags).includes(pubkey)
 }
 
 export class Messages {
@@ -109,7 +103,7 @@ export class Messages {
 
     return conversation.pubkeys.length === 1
       ? display(conversation.pubkeys[0]) + " note to self"
-      : remove(this.app.user?.pubkey, conversation.pubkeys).map(display).join(" ")
+      : remove(user.get().pubkey, conversation.pubkeys).map(display).join(" ")
   }
 
   private addEvents = (events: TrustedEvent[]) => {
@@ -175,7 +169,7 @@ export const MESSAGES_TABS = [
 
 // Both thresholds are at least one, since a zero would wave the whole list through.
 export type MessagesContext = {
-  pubkey: Maybe<string>
+  pubkey: string
   follows: Set<string>
   members: Set<string>
   scores: Map<string, number>
@@ -227,7 +221,7 @@ const relayMembersByUrl = fromApp($app => $app.use(RelayMemberLists).index.$)
 export const messagesContext = derived(
   [user, userFollowList, wotScores, relayMembersByUrl, userRoomList, userSettingsValues],
   ([$user, $followList, $scores, $membersByUrl, $roomList, $settings]): MessagesContext => ({
-    pubkey: $user?.pubkey,
+    pubkey: $user.pubkey,
     follows: new Set($followList?.pubkeys() ?? []),
     members: new Set(
       ($roomList?.urls() ?? []).flatMap(url => $membersByUrl.get(url)?.pubkeys() ?? []),

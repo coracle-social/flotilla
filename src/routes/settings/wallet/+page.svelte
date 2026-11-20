@@ -35,7 +35,7 @@
 
   const updateReceivingAddress = () => pushModal(WalletUpdateReceivingAddress)
 
-  const profile = $profiles.one($user?.pubkey)
+  const profile = $profiles.one($user.pubkey)
   const profileLnurl = $derived($profile?.lnurl())
   const profileLightningAddress = $derived(profileLnurl && displayLnurl(profileLnurl))
   const walletLud16 = $derived($wallet && isNWCWallet($wallet) ? $wallet.info.lud16 : undefined)

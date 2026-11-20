@@ -36,7 +36,7 @@
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import {app} from "@app/core/app"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {deletes, wraps} from "@app/core/plugins"
   import {loadSendDelay} from "@app/core/settings"
   import {messages} from "@app/areas/messages"
@@ -57,8 +57,7 @@
   // Reactions in a conversation arrive gift-wrapped, so no relay holds them as plain events.
 
   const conversation = $messages.one(conversationId)
-  const userPubkey = requireUser().pubkey
-  const others = remove(userPubkey, pubkeys)
+  const others = remove($user.pubkey, pubkeys)
   const messagingRelayLists = $app.use(MessagingRelayLists).index.$
   const missingRelayLists = $derived(others.filter(pk => !$messagingRelayLists.has(pk)))
 
@@ -143,7 +142,7 @@
   }
 
   const canEditEvent = (event: TrustedEvent) =>
-    event.pubkey === userPubkey &&
+    event.pubkey === $user.pubkey &&
     event.kind === DIRECT_MESSAGE &&
     event.created_at >= ago(500, MINUTE)
 
@@ -205,7 +204,7 @@
             {#if others.length > 1}
               <ProfileCircles pubkeys={others} size={5} />
             {:else}
-              <ProfileCircle pubkey={others[0] || userPubkey} size={5} />
+              <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
             {/if}
             <p class="overflow-hidden text-ellipsis whitespace-nowrap">
               <ConversationTitle {pubkeys} />

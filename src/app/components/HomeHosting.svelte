@@ -11,7 +11,6 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {hosting} from "@app/areas/hosting"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     class?: string
@@ -23,7 +22,7 @@
 
   const relays = $derived($tenantRelays.value)
 
-  const openCreate = () => withLogin(() => pushModal(RelayCreate))
+  const openCreate = () => pushModal(RelayCreate)
 </script>
 
 <HomeSection title="Hosting" icon={Server} class={className}>

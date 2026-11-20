@@ -3,11 +3,10 @@ import {derived, writable} from "svelte/store"
 import {append, remove, DAY} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Relay, RelayFee} from "@welshman/domain"
-import {Relays} from "@welshman/app"
+import {Relays, User} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {relayMemberLists, relays} from "@app/core/plugins"
 import {PLATFORM_URL} from "@app/core/env"
-import {requireUser} from "@app/core/user"
 import * as pages from "@app/navigation/pages"
 import {completeSpaceJoin, deriveUserIsSpaceMember} from "@app/areas/spaces/membership"
 
@@ -93,7 +92,7 @@ export const openCheckout = (url: string) => {
   const origin = Capacitor.isNativePlatform() ? PLATFORM_URL : location.origin
   const checkoutUrl = new URL(paymentsUrl)
 
-  checkoutUrl.searchParams.set("pubkey", requireUser().pubkey)
+  checkoutUrl.searchParams.set("pubkey", User.require(app.get()).pubkey)
   checkoutUrl.searchParams.set("return_url", origin + pages.space.path({url}))
 
   pendingCheckouts.update($urls => append(url, $urls))
@@ -107,14 +106,12 @@ export const openCheckout = (url: string) => {
  * and a payment made in another browser lands here too.
  */
 export const reconcileSpaceMembership = async (url: string) => {
-  const {pubkey} = requireUser()
-
   // Auth that ended Forbidden before the payment never retries on its own.
   app.get().pool.get(url).close()
 
   const members = await relayMemberLists.get().forceLoad(url)
 
-  if (!members?.isMember(pubkey)) {
+  if (!members?.isMember(User.require(app.get()).pubkey)) {
     return false
   }
 

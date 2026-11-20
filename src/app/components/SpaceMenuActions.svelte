@@ -35,7 +35,6 @@
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -58,15 +57,13 @@
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
   const joinSpace = () =>
-    withLogin(() =>
-      pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet}),
-    )
+    pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
   const showConnectionStatus = () => pushModal(SpaceConnectionStatus, {url}, {replaceState: sheet})
 
-  const contactOwner = () => openMessages([$relay!.pubkey!])
+  const contactOwner = () => openMessages([$relay!.pubkey!], {replaceState: sheet})
 
   const manageMembership = () => {
     popModal()
@@ -75,7 +72,7 @@
 
   // The owner is a member by construction and has nothing to manage.
   const canManageMembership = $derived(
-    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user?.pubkey && $isMember,
+    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user.pubkey && $isMember,
   )
 
   const toggleSpaceNotifications = () => {
@@ -143,9 +140,7 @@
 {#if !HIDE_NOSTR}
   {@render actionButton(showConnectionStatus, Pulse, "Connection status")}
 {/if}
-{#if $user}
-  {@render actionButton(createInvite, LinkRound, "Invite Members")}
-{/if}
+{@render actionButton(createInvite, LinkRound, "Invite Members")}
 {#if $permissions.review}
   {@render actionButton(
     showActionItems,
@@ -155,7 +150,7 @@
     $actionItems.length > 0,
   )}
 {/if}
-{#if $relay?.pubkey && $relay.pubkey !== $user?.pubkey}
+{#if $relay?.pubkey && $relay.pubkey !== $user.pubkey}
   {@render actionButton(contactOwner, Letter, "Contact Owner")}
 {/if}
 {#if $alertSettings.push}

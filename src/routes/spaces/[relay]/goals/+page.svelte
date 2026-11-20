@@ -30,7 +30,6 @@
   } from "@app/areas/spaces/goals"
   import type {GoalFilter, GoalSort} from "@app/areas/spaces/goals"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -47,7 +46,7 @@
     {value: "ended", label: "Ended"},
   ]
 
-  const createGoal = () => withLogin(() => pushModal(GoalCreate, {url}))
+  const createGoal = () => pushModal(GoalCreate, {url})
 
   let element: HTMLElement | undefined = $state()
   let tab: GoalFilter = $state("all")

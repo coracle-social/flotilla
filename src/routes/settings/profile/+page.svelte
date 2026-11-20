@@ -30,21 +30,20 @@
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import * as pages from "@app/navigation/pages"
   import {clip, pushToast} from "@app/navigation/toast"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {session} from "@app/core/session"
   import {HIDE_NOSTR} from "@app/core/env"
   import {isPomadeSession, requirePomadeSession} from "@app/core/pomade"
   import {trackSubmit} from "@app/components/flows/submit"
 
-  const {pubkey} = requireUser()
-  const npub = nip19.npubEncode(pubkey)
-  const profile = $profiles.one(pubkey)
+  const npub = nip19.npubEncode($user.pubkey)
+  const profile = $profiles.one($user.pubkey)
   const pomadeEmail = $derived(isPomadeSession($session) ? $session.data.email : undefined)
   const nip01Secret = $derived(
     $session?.method === "nip01" ? (($session.data as {secret: string}).secret ?? "") : undefined,
   )
-  const pubkeyDisplay = displayPubkey(pubkey)
+  const pubkeyDisplay = displayPubkey($user.pubkey)
 
   const copyNpub = () => clip(npub)
 
@@ -86,9 +85,9 @@
 <PageContent class="@container">
   <div class="card flex flex-col gap-2">
     <div class="flex justify-between gap-2">
-      <Link href={pages.profile.path({pubkey})} class="flex max-w-full gap-3">
+      <Link href={pages.profile.path({pubkey: $user.pubkey})} class="flex max-w-full gap-3">
         <div class="py-1">
-          <ProfileCircle {pubkey} size={10} />
+          <ProfileCircle pubkey={$user.pubkey} size={10} />
         </div>
         <div class="flex min-w-0 flex-col">
           <div class="flex items-center gap-2">
@@ -103,11 +102,13 @@
           {/if}
         </div>
       </Link>
-      <Link class="button button-neutral whitespace-nowrap" href={pages.profile.path({pubkey})}>
+      <Link
+        class="button button-neutral whitespace-nowrap"
+        href={pages.profile.path({pubkey: $user.pubkey})}>
         View Profile
       </Link>
     </div>
-    <ProfileAbout {pubkey} />
+    <ProfileAbout pubkey={$user.pubkey} />
   </div>
   <div class="card flex flex-col gap-4">
     {#if pomadeEmail}

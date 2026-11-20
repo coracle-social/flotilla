@@ -16,7 +16,6 @@
   import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -26,7 +25,7 @@
   const {events} = feed
   const status = feed.older.status
 
-  const createPoll = () => withLogin(() => pushModal(PollCreate, {url}))
+  const createPoll = () => pushModal(PollCreate, {url})
 
   const {items} = $derived(partitionByActivity(POLL, $events))
 

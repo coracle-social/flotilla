@@ -7,7 +7,6 @@
     displayList,
     filter,
     groupBy,
-    includes,
     map,
     removeUndefined,
     spec,
@@ -42,7 +41,6 @@
   import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/tools/people/people"
-  import {promptLogin, withLogin} from "@app/components/flows/login"
 
   type Props = {
     event: TrustedEvent
@@ -107,10 +105,8 @@
 
   const zapTotal = $derived(fromMsats(sum($zaps.map(zap => zap.invoiceAmount))))
 
-  const includesUser = (pubkeys: string[]) => includes($user?.pubkey, pubkeys)
-
   const toggleReaction = (events: TrustedEvent[]) => {
-    const reaction = events.find(spec({pubkey: $user?.pubkey}))
+    const reaction = events.find(spec({pubkey: $user.pubkey}))
 
     if (reaction) {
       deleteReaction(reaction)
@@ -132,12 +128,10 @@
     pushModal(ProfileList, {title, subtitle, pubkeys, url})
 
   const onReactionClick = (events: TrustedEvent[], pubkeys: string[], title: string) => {
-    if (isMobile && !includesUser(pubkeys)) {
+    if (isMobile && !pubkeys.includes($user.pubkey)) {
       showReactors(pubkeys, title, "Reacted to this message")
-    } else if ($user) {
-      toggleReaction(events)
     } else {
-      promptLogin()
+      toggleReaction(events)
     }
   }
 
@@ -145,12 +139,12 @@
     if (isMobile) {
       showReactors(pubkeys, title, "Zapped this message")
     } else {
-      withLogin(() => pushModal(ZapModal, {url, pubkey: event.pubkey, event}))
+      pushModal(ZapModal, {url, pubkey: event.pubkey, event})
     }
   }
 
   const toggleLike = () => {
-    const own = $reactions.find(spec({pubkey: $user?.pubkey}))
+    const own = $reactions.find(spec({pubkey: $user.pubkey}))
 
     if (own) {
       deleteReaction(own)
@@ -160,7 +154,7 @@
   }
 
   const onEmoji = (content: string) => {
-    const own = $reactions.find(spec({pubkey: $user?.pubkey, content}))
+    const own = $reactions.find(spec({pubkey: $user.pubkey, content}))
 
     if (own) {
       deleteReaction(own)
@@ -247,7 +241,7 @@
         {@const onZapClickHandler = () => onZapClick(pubkeys, info)}
         <Tooltip content={tooltipContent(`${info} zapped`)} {placement} class="flex">
           <Button
-            class={summaryClass(includesUser(pubkeys))}
+            class={summaryClass(pubkeys.includes($user.pubkey))}
             onclick={stopPropagation(onZapClickHandler)}>
             <Reaction event={zaps[0].request} />
             <span>{amount}</span>
@@ -259,7 +253,9 @@
         {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
         {@const onClick = () => onReactionClick(events, pubkeys, info)}
         <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
-          <Button class={summaryClass(includesUser(pubkeys))} onclick={stopPropagation(onClick)}>
+          <Button
+            class={summaryClass(pubkeys.includes($user.pubkey))}
+            onclick={stopPropagation(onClick)}>
             <Reaction event={events[0]} />
             {#if events.length > 1}
               <span>{events.length}</span>
@@ -274,7 +270,11 @@
           content={tooltipContent(zapInfo ? `${zapInfo} zapped` : "Zap")}
           {placement}
           class="flex">
-          <ZapButton {url} {event} aria-label="Zaps" class={summaryClass(includesUser(zapPubkeys))}>
+          <ZapButton
+            {url}
+            {event}
+            aria-label="Zaps"
+            class={summaryClass(zapPubkeys.includes($user.pubkey))}>
             <Icon icon={Bolt} size={4} />
             {#if $zaps.length > 0}
               <span>{zapTotal}</span>
@@ -283,27 +283,20 @@
         </Tooltip>
       {/if}
       {@const reactInfo = displayList(likePubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-      {@const isOwn = includesUser(likePubkeys)}
+      {@const isOwn = likePubkeys.includes($user.pubkey)}
       <Tooltip
         content={tooltipContent(reactInfo ? `${reactInfo} reacted` : "React")}
         {placement}
         class="flex">
-        {#if emojiMenu && $user}
+        {#if emojiMenu}
           <EmojiButton {onEmoji} aria-label="Add a reaction" class={summaryClass(isOwn)}>
             {@render reactLabel()}
           </EmojiButton>
-        {:else if $user}
+        {:else}
           <Button
             aria-label="Likes"
             class={summaryClass(isOwn)}
             onclick={stopPropagation(toggleLike)}>
-            {@render reactLabel()}
-          </Button>
-        {:else}
-          <Button
-            aria-label="React"
-            class={summaryClass(isOwn)}
-            onclick={stopPropagation(promptLogin)}>
             {@render reactLabel()}
           </Button>
         {/if}

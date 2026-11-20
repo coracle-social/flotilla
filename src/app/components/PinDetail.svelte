@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import {uniq} from "@welshman/lib"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
@@ -16,44 +16,30 @@
   import PinContent from "@app/components/PinContent.svelte"
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import PinDetail from "@app/components/PinDetail.svelte"
   import {events, network} from "@app/core/plugins"
-  import {pushModal} from "@app/navigation/dialogs"
   import {buildCommentTree} from "@app/tools/notes"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
     pin: PinReader
-    replyTo?: TrustedEvent
   }
 
-  const {url, pin, replyTo: initialReplyTo}: Props = $props()
+  const {url, pin}: Props = $props()
 
   const filters = getCommentFiltersForRoot([pin.event])
   const comments = $events.asc(filters).$
   const topics = $derived(uniq(pin.topics().map(normalizeTopic)))
   const nodes = $derived(buildCommentTree(pin.event, $comments))
 
-  // The login dialogs replace this one, so a reply that waited on a login opens it again.
   const setReplyTo = (comment?: TrustedEvent) => {
-    if (mounted) {
-      replyTo = comment
-    } else {
-      pushModal(PinDetail, {url, pin, replyTo: comment}, {size: "large"})
-    }
+    replyTo = comment
   }
 
   const clearReplyTo = () => setReplyTo(undefined)
 
-  const replyToPin = () => withLogin(() => setReplyTo(pin.event))
+  const replyToPin = () => setReplyTo(pin.event)
 
-  let replyTo: TrustedEvent | undefined = $state(initialReplyTo)
-  let mounted = true
-
-  onDestroy(() => {
-    mounted = false
-  })
+  let replyTo: TrustedEvent | undefined = $state()
 
   onMount(() => {
     const controller = new AbortController()

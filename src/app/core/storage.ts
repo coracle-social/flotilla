@@ -125,8 +125,6 @@ export const hasCachedIdentity = async () => {
   return hasLegacyCache()
 }
 
-export const rememberIdentity = (pubkey: string) => kv.set(IDENTITY, pubkey)
-
 const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
 
 const onRestoreError = (error: unknown) => console.error("Failed to read the wrap index", error)
@@ -145,7 +143,7 @@ export const openRepository = async (
   pubkey: string,
 ): Promise<Pick<AppOptions, "repository" | "wrapManager">> => {
   // Preferences go with the app container on every platform, and the keychain the session lives in does not
-  await rememberIdentity(pubkey)
+  await kv.set(IDENTITY, pubkey)
 
   try {
     const database = await EventDatabase.open(pubkey)

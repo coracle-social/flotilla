@@ -36,7 +36,7 @@
 
   const {event, replyTo, canEdit, onEdit, pubkeys, showPubkey = false}: Props = $props()
 
-  const isOwn = event.pubkey === $user?.pubkey
+  const isOwn = event.pubkey === $user.pubkey
   const profileDisplay = $profiles.display(event.pubkey).$
   const publication = $derived(
     $publisher.merge($publicationsByEventId.get(event.id) ?? noPublications),

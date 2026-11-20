@@ -11,7 +11,6 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import {events} from "@app/core/plugins"
-  import {user} from "@app/core/user"
   import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import {isReplyTo} from "@app/tools/targets"
   import {openEventNote} from "@app/navigation/overlays"
@@ -47,7 +46,7 @@
   // A kind 1 reply e-tags every note above it, so only the ones answering this note count.
   const replyCount = $derived($related.filter(e => isReplyTo(e, event)).length)
 
-  const openReplies = () => openEventNote(event, {reply: Boolean($user)})
+  const openReplies = () => openEventNote(event, {reply: true})
 
   onMount(() => loadReplies(event, url))
 </script>

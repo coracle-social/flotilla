@@ -15,7 +15,7 @@
 
   const {pubkey, class: className = "button button-neutral"}: Props = $props()
 
-  const follows = $derived($followLists.one($user?.pubkey))
+  const follows = $derived($followLists.one($user.pubkey))
   const isFollowing = $derived(Boolean($follows?.includes(pubkey)))
 
   let wanted = $state<boolean>()
@@ -48,7 +48,7 @@
   }
 </script>
 
-<Button class={className} disabled={loading || !$user} onclick={toggleFollow}>
+<Button class={className} disabled={loading} onclick={toggleFollow}>
   {#if loading}
     <Spinner size="xs" />
   {:else}

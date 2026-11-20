@@ -11,9 +11,9 @@ import {
   RelayLists,
   RoomLists,
   SearchRelayLists,
+  User,
 } from "@welshman/app"
 import type {DerivedPlugin, Plugin} from "@welshman/app"
-import {UserError} from "@lib/util"
 import {app} from "@app/core/app"
 import {
   blockedRelayLists,
@@ -27,27 +27,12 @@ import {
   router,
   searchRelayLists,
 } from "@app/core/plugins"
-import {DEFAULT_SEARCH_RELAYS, DEFAULT_SPACES, PLATFORM_RELAYS} from "@app/core/env"
+import {DEFAULT_SEARCH_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
+import {Settings} from "@app/core/settings"
 import {registerSync} from "@app/core/sync"
 
-export const user = withGetter(derived(app, $app => $app.user))
-
-export class LoginRequired extends UserError {
-  constructor() {
-    super("Log in to continue.")
-  }
-}
-
-// For code that can't go on without a user, which trackSubmit answers by opening the login dialog.
-export const requireUser = () => {
-  const $user = app.get().user
-
-  if ($user) {
-    return $user
-  }
-
-  throw new LoginRequired()
-}
+// Throws while signed out, so use `$app.user` where absence is a legitimate state.
+export const user = withGetter(derived(app, $app => User.require($app)))
 
 // The signed-in user's entry in a keyed collection, e.g. deriveUserItem(Profiles).
 export const deriveUserItem = <T>(Ctor: Plugin<DerivedPlugin<T>>) =>
@@ -90,14 +75,10 @@ export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
 
-// Platform relays, where configured, stand in for the spaces the user has joined, and a visitor gets the defaults.
-export const activeSpaceUrls = derived([user, userSpaceUrls], ([$user, $userSpaceUrls]) => {
-  if (PLATFORM_RELAYS.length > 0) {
-    return PLATFORM_RELAYS
-  }
-
-  return $user ? $userSpaceUrls : DEFAULT_SPACES
-})
+// Platform relays, where configured, stand in for the spaces the user has joined.
+export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
+  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
+)
 
 // Syncing
 
@@ -126,6 +107,7 @@ const syncUserLists = () => {
     muteLists.get().load(pubkey)
     profiles.get().load(pubkey)
     searchRelayLists.get().load(pubkey)
+    app.get().use(Settings).load(pubkey)
   })
 }
 

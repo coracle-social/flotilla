@@ -1,7 +1,7 @@
 <script lang="ts">
   import {remove, uniq} from "@welshman/lib"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
 
   type Props = {
     pubkeys: string[]
@@ -9,8 +9,7 @@
 
   const {pubkeys}: Props = $props()
 
-  const userPubkey = requireUser().pubkey
-  const others = $derived(uniq(remove(userPubkey, pubkeys)))
+  const others = $derived(uniq(remove($user.pubkey, pubkeys)))
 </script>
 
 {#if others.length > 0}

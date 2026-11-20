@@ -29,7 +29,7 @@
 
   const addSpace = () => pushModal(SpaceAdd)
 
-  const userSpacesLoaded = $user ? $roomLists.load($user.pubkey) : undefined
+  const userSpacesLoaded = $roomLists.load($user.pubkey)
   const spaceSearch = deriveSpaceSearch()
 
   let term = $state("")

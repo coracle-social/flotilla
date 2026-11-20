@@ -11,7 +11,6 @@
   import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {withLogin} from "@app/components/flows/login"
 
   const hash = import.meta.env.VITE_BUILD_HASH
 
@@ -19,7 +18,7 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey})
 
-  const zap = () => withLogin(() => pushModal(Zap, {pubkey}))
+  const zap = () => pushModal(Zap, {pubkey})
 </script>
 
 <div class="flex flex-col gap-6 p-8 max-w-2xl h-screen justify-center m-auto">

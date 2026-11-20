@@ -3,6 +3,7 @@ import type {PluginListenerHandle} from "@capacitor/core"
 import {noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
+import {app} from "@app/core/app"
 import {relays} from "@app/core/plugins"
 import {pushModal} from "@app/navigation/dialogs"
 import * as pages from "@app/navigation/pages"
@@ -11,19 +12,20 @@ import {shareTo} from "@app/tools/share"
 import type {Share} from "@app/tools/share"
 import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
-import {withLogin} from "@app/components/flows/login"
 
-const openShareDialog = (share: Share) => withLogin(() => pushModal(ShareDialog, {share}))
+const openShareDialog = (share: Share) => {
+  if (app.get().user?.pubkey) {
+    pushModal(ShareDialog, {share})
+  }
+}
 
 export const shareEvent = (url: Maybe<string>, noun: string, event: TrustedEvent) => {
   if (url) {
-    withLogin(() => {
-      if (relays.get().get(url)?.hasNip(29)) {
-        pushModal(ShareEvent, {url, noun, event})
-      } else {
-        shareTo(pages.spaceChat.path({url}), {type: "event", value: event})
-      }
-    })
+    if (relays.get().get(url)?.hasNip(29)) {
+      pushModal(ShareEvent, {url, noun, event})
+    } else {
+      shareTo(pages.spaceChat.path({url}), {type: "event", value: event})
+    }
   } else {
     openShareDialog({type: "event", value: event})
   }

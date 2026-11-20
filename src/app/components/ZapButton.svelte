@@ -8,7 +8,6 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url?: string
@@ -22,7 +21,7 @@
 
   const {url, event, children, replaceState, ...props}: Props = $props()
 
-  const {loading, submit: loadZapper} = trackSubmit(
+  const {loading, submit: onClick} = trackSubmit(
     () => "Failed to load zap details.",
     async () => {
       // Not on render, since a message can be drawn before its author's profile, and "no lnurl" is final.
@@ -35,10 +34,8 @@
       }
     },
   )
-
-  const zap = () => withLogin(loadZapper)
 </script>
 
-<Button onclick={zap} disabled={$loading} {...props}>
+<Button onclick={onClick} disabled={$loading} {...props}>
   {@render children?.()}
 </Button>

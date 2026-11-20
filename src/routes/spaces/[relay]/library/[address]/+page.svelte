@@ -24,7 +24,6 @@
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -52,7 +51,7 @@
 
   const back = () => history.back()
 
-  const addLink = () => withLogin(() => pushModal(PinSave, {url, address}))
+  const addLink = () => pushModal(PinSave, {url, address})
 
   const showContributors = () =>
     pushModal(ProfileList, {

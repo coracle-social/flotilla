@@ -22,10 +22,9 @@
 
   type Props = {
     email?: string
-    onLogin?: () => unknown
   }
 
-  let {email = $bindable(""), onLogin}: Props = $props()
+  let {email = $bindable("")}: Props = $props()
 
   const back = () => history.back()
 
@@ -35,7 +34,7 @@
       const {ok, peersByPrefix} = await Client.requestChallenge(email)
 
       if (ok) {
-        pushModal(LogInOTPConfirm, {email, peersByPrefix, onLogin})
+        pushModal(LogInOTPConfirm, {email, peersByPrefix})
       } else {
         console.error("Pomade challenge request failed during OTP login")
 

@@ -20,21 +20,19 @@
   import LogInSelect from "@app/components/LogInSelect.svelte"
   import {selectPomadeLogin} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
-  import {pushModal} from "@app/navigation/dialogs"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     email?: string
-    onLogin?: () => unknown
   }
 
-  let {email = $bindable(""), onLogin}: Props = $props()
+  let {email = $bindable("")}: Props = $props()
 
   const back = () => history.back()
 
-  const loginWithOTP = () => pushModal(LogInOTP, {email, onLogin})
+  const loginWithOTP = () => pushModal(LogInOTP, {email})
 
   const {loading, submit: onSubmit} = trackSubmit(
     () => POMADE_NETWORK_ERROR_MESSAGE,
@@ -51,12 +49,12 @@
       }
 
       if (uniq(options.map(o => o.pubkey)).length > 1) {
-        pushModal(LogInSelect, {email, options, clientSecret, onLogin})
+        pushModal(LogInSelect, {email, options, clientSecret})
       } else {
         const res = await selectPomadeLogin(clientSecret, options[0], email)
 
         if (res.ok) {
-          await finishLogin(onLogin)
+          clearModals()
         } else {
           console.error(res.messages)
 

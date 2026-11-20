@@ -16,10 +16,6 @@
       &:hover {
         @apply text-primary;
       }
-
-      &:disabled {
-        @apply pointer-events-none opacity-50;
-      }
     }
   }
 }

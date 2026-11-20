@@ -27,7 +27,6 @@
   import {readEventAloud} from "@app/components/flows/readAloud"
   import {toggleRoomPin} from "@app/areas/spaces/rooms/pins"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -50,7 +49,7 @@
 
   const addToLibrary = () => {
     onClick()
-    withLogin(() => pushModal(PinboardSelect, {url, event}))
+    pushModal(PinboardSelect, {url, event})
   }
 
   const read = () => {
@@ -60,18 +59,16 @@
 
   const createThread = () => {
     onClick()
-    withLogin(() =>
-      pushModal(ThreadCreate, {
-        url,
-        h,
-        initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
-      }),
-    )
+    pushModal(ThreadCreate, {
+      url,
+      h,
+      initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
+    })
   }
 
   const report = () => {
     onClick()
-    withLogin(() => pushModal(Report, {url, event}))
+    pushModal(Report, {url, event})
   }
 
   const showInfo = () => {
@@ -141,7 +138,7 @@
       </Button>
     </li>
   {/if}
-  {#if event.pubkey === $user?.pubkey}
+  {#if event.pubkey === $user.pubkey}
     <li>
       <Button onclick={showDelete} class="text-error">
         <Icon size={4} icon={TrashBin2} />

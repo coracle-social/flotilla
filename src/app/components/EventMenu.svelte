@@ -22,7 +22,6 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {user} from "@app/core/user"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url?: string
@@ -43,11 +42,9 @@
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
-  const report = (spaceUrl: string) => () =>
-    withLogin(() => pushModal(Report, {url: spaceUrl, event}))
+  const report = (spaceUrl: string) => () => pushModal(Report, {url: spaceUrl, event})
 
-  const addToLibrary = (spaceUrl: string) => () =>
-    withLogin(() => pushModal(PinboardSelect, {url: spaceUrl, event}))
+  const addToLibrary = (spaceUrl: string) => () => pushModal(PinboardSelect, {url: spaceUrl, event})
 
   const share = () => shareEvent(url, noun, event)
 
@@ -88,7 +85,7 @@
     </li>
   {/if}
   {@render customActions?.()}
-  {#if event.pubkey === $user?.pubkey}
+  {#if event.pubkey === $user.pubkey}
     <li>
       <Button onclick={showDelete} class="text-error">
         <Icon size={4} icon={TrashBin2} />

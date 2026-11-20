@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
   import {removeUndefined, uniqBy} from "@welshman/lib"
   import type {IEventRef, TrustedEvent} from "@welshman/util"
@@ -11,41 +10,31 @@
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
-  import NoteDetail from "@app/components/NoteDetail.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {pushModal} from "@app/navigation/dialogs"
   import {deriveNote, deriveReplies, loadNote, loadThread} from "@app/tools/notes"
   import type {CommentNode} from "@app/tools/notes"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     ref: IEventRef
     reply?: boolean
     thread?: boolean
-    replyTo?: TrustedEvent
   }
 
-  const {ref, reply = false, thread = false, replyTo: initialReplyTo}: Props = $props()
+  const {ref, reply = false, thread = false}: Props = $props()
 
   const loaded = deriveNote(ref)
   const event = $derived($loaded)
   const replies = $derived(event ? deriveReplies(event) : readable<CommentNode[]>([]))
 
-  // A thread opened as a dialog is replaced by the login dialogs, so a reply that waited on a login opens it again.
   const setReplyTo = (comment?: TrustedEvent) => {
-    if (mounted) {
-      replyTo = comment
-    } else {
-      pushModal(NoteDetail, {ref, thread, replyTo: comment}, {size: "large"})
-    }
+    replyTo = comment
   }
 
   const clearReplyTo = () => setReplyTo(undefined)
 
   const retry = () => loadNote(ref)
 
-  let replyTo: TrustedEvent | undefined = $state(initialReplyTo)
-  let mounted = true
+  let replyTo: TrustedEvent | undefined = $state()
   let threadRoot: TrustedEvent | undefined = $state()
   let parents: TrustedEvent[] = $state([])
   let loading = $state(thread)
@@ -76,10 +65,6 @@
         })
     }
   })
-
-  onDestroy(() => {
-    mounted = false
-  })
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
@@ -94,7 +79,7 @@
   <ModalBody>
     {#if event}
       {@const note = event}
-      {@const replyToNote = () => withLogin(() => setReplyTo(note))}
+      {@const replyToNote = () => setReplyTo(note)}
       {#if loading}
         <Spinner class="justify-center py-4" />
       {/if}

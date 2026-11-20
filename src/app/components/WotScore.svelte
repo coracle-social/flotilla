@@ -30,7 +30,7 @@
   const center = radius + 1
 
   const score = $derived($wot.score(target, WotScope.Follows).$)
-  const follows = $derived($followLists.one($user?.pubkey))
+  const follows = $derived($followLists.one($user.pubkey))
   const active = $derived(Boolean($follows?.includes(target)))
   const normalizedScore = $derived(clamp([0, max], $score) / max)
   const dashOffset = $derived(100 - 44 * normalizedScore)
@@ -38,18 +38,16 @@
   const stroke = $derived(active ? "var(--primary)" : "var(--content)")
 </script>
 
-{#if $user}
-  <div class="relative h-[14px] w-[14px] shrink-0">
-    <svg height="14" width="14" class="absolute">
-      <circle class="wot-background" cx={center} cy={center} r={radius} />
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
-        class="wot-highlight"
-        stroke-dashoffset={dashOffset}
-        {style}
-        {stroke} />
-    </svg>
-  </div>
-{/if}
+<div class="relative h-[14px] w-[14px] shrink-0">
+  <svg height="14" width="14" class="absolute">
+    <circle class="wot-background" cx={center} cy={center} r={radius} />
+    <circle
+      cx={center}
+      cy={center}
+      r={radius}
+      class="wot-highlight"
+      stroke-dashoffset={dashOffset}
+      {style}
+      {stroke} />
+  </svg>
+</div>

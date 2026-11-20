@@ -19,7 +19,7 @@
   import InvoiceListItem from "@app/components/hosting/InvoiceListItem.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {
@@ -118,7 +118,7 @@
 
     try {
       await ensureSessionTenant()
-      await reconcileTenant(requireUser().pubkey)
+      await reconcileTenant(user.get().pubkey)
     } catch (e) {
       const message = hostingErrorMessage(e, "Failed to update billing")
 

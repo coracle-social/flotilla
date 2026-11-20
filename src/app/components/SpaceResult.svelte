@@ -5,10 +5,9 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import {relays} from "@app/core/plugins"
-  import {user, userSpaceUrls} from "@app/core/user"
+  import {userSpaceUrls} from "@app/core/user"
   import {pushModal} from "@app/navigation/dialogs"
   import {goToSpace} from "@app/navigation/history"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -23,16 +22,11 @@
     if ($userSpaceUrls.includes(url)) {
       goToSpace(url)
     } else if (invite) {
-      withLogin(() => pushModal(SpaceInviteAccept, {invite}))
-    } else if ($user) {
-      if ($relay?.isPaid()) {
-        pushModal(SpacePaymentGate, {url})
-      } else {
-        pushModal(SpaceJoin, {url})
-      }
+      pushModal(SpaceInviteAccept, {invite})
+    } else if ($relay?.isPaid()) {
+      pushModal(SpacePaymentGate, {url})
     } else {
-      // A visitor looks around before joining.
-      goToSpace(url)
+      pushModal(SpaceJoin, {url})
     }
   }
 </script>

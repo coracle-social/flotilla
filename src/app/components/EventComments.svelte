@@ -11,7 +11,6 @@
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import {events, network} from "@app/core/plugins"
   import {buildCommentTree} from "@app/tools/notes"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     event: TrustedEvent
@@ -32,7 +31,7 @@
     replyTo = comment
   }
 
-  const commentOnRoot = () => withLogin(() => setReplyTo(event))
+  const commentOnRoot = () => setReplyTo(event)
 
   const clearReplyTo = () => setReplyTo(undefined)
 

@@ -1,9 +1,8 @@
 import {get} from "svelte/store"
-import {ms, noop, on} from "@welshman/lib"
+import {ms, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {AuthStateEvent, AuthStatus, makeSocketPolicyAuth} from "@welshman/net"
-import {Nip01Signer} from "@welshman/signer"
+import {AuthStateEvent, AuthStatus} from "@welshman/net"
 import {
   MessagingRelayLists,
   Publisher,
@@ -45,15 +44,9 @@ const authInputs = ($app: IApp) => {
   ])
 }
 
-// A visitor identifies to relays with a key made for this visit, so a relay that only asks a client to identify serves them.
-const guest = Nip01Signer.ephemeral()
-
-const guestAuthPolicy = ($app: IApp) =>
-  $app.user ? noop : $app.pool.addSocketPolicy(makeSocketPolicyAuth({sign: guest.sign}))
-
 // Authenticates to a relay now rather than when a request first needs it, returning why it failed.
 export const authenticate = async (url: string) => {
-  const {sign} = app.get().user ?? guest
+  const {sign} = User.require(app.get())
   const socket = app.get().pool.get(url)
   const result = await socket.auth.authenticate(sign, AbortSignal.timeout(ms(30)))
 
@@ -91,7 +84,7 @@ const staleAuthPolicy = (socket: Socket) => {
 }
 
 export const registerAuth = () => {
-  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), guestAuthPolicy, $app =>
+  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), $app =>
     $app.pool.addSocketPolicy(staleAuthPolicy),
   )
 }

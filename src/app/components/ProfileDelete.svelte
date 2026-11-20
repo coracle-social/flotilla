@@ -14,10 +14,11 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {INDEXER_RELAYS} from "@app/core/env"
-  import {requireUser, userSpaceUrls} from "@app/core/user"
+  import {userSpaceUrls} from "@app/core/user"
   import {pushToast} from "@app/navigation/toast"
   import {logout} from "@app/core/session"
   import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {publisher, relayLists} from "@app/core/plugins"
   import {writer} from "@app/core/domain"
 
@@ -25,8 +26,7 @@
   let confirmText = $state("")
 
   const CONFIRM_TEXT = "permanently delete my account"
-  const userPubkey = requireUser().pubkey
-  const userWriteRelays = $relayLists.writeUrls(userPubkey).$
+  const userWriteRelays = $relayLists.writeUrls($user.pubkey).$
   const confirmOk = $derived(confirmText.toLowerCase().trim() === CONFIRM_TEXT)
   const showProgress = $derived(progress !== undefined)
 
@@ -38,7 +38,7 @@
       })
     }
 
-    const authored = await $app.repository.query([{authors: [userPubkey]}])
+    const authored = await $app.repository.query([{authors: [$user.pubkey]}])
     const chunks = chunk(500, authored)
     const profileEvent = await writer(Profile).setName("[deleted]").renderTemplate()
     const vanishEvent = makeEvent(62, {tags: [["relay", "ALL_RELAYS"]]})

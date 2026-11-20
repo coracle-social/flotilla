@@ -11,7 +11,7 @@ import {isLink, parse} from "@welshman/content"
 import {Events} from "@welshman/app"
 import {isImageUrl} from "@lib/media"
 import {app, fromApp} from "@app/core/app"
-import {requireUser} from "@app/core/user"
+import {user} from "@app/core/user"
 import {relayManagement} from "@app/core/plugins"
 import {reader, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
@@ -123,7 +123,7 @@ export const removePinsFromShelf = (url: string, pins: PinReader[], address: str
 
 // Your own goes as a kind 5; anyone else's is a NIP-86 ban, which the repository never hears about.
 export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
-  if (event.pubkey === requireUser().pubkey) {
+  if (event.pubkey === user.get().pubkey) {
     const publication = await new PublishBuilder(writer(Delete).addEvent(event, url))
       .toSpace(url)
       .publish()

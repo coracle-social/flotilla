@@ -23,8 +23,7 @@ export const deriveRoomPermissions = (url: string, h: string) =>
   derived(
     [user, fromApp($app => $app.use(Rooms).forRoom(url, h)), deriveUserIsSpaceOwner(url)],
     ([$user, $room, $isOwner]) => {
-      const roles = $user ? $room?.admins?.rolesFor($user.pubkey) : undefined
-      const kinds = roles?.map(Number) ?? []
+      const kinds = $room?.admins?.rolesFor($user.pubkey).map(Number) ?? []
       const can = (kind: number) => $isOwner || kinds.includes(kind)
 
       return {
@@ -45,7 +44,7 @@ export const deriveMemberModeration = (url: string, h = "") =>
     [user, deriveRoomPermissions(url, h), deriveRoomMembers(url, h), deriveSpacePermissions(url)],
     ([$user, $roomPermissions, $roomMembers, $spacePermissions]) =>
       (pubkey: string) => {
-        const other = pubkey !== $user?.pubkey
+        const other = pubkey !== $user.pubkey
         const removeFromRoom =
           other && Boolean(h) && $roomPermissions.removeMembers && $roomMembers.includes(pubkey)
         const removeFromSpace = other && $spacePermissions.removeMembers

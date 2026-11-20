@@ -22,7 +22,7 @@ import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {PLATFORM_URL} from "@app/core/env"
-import {activeSpaceUrls} from "@app/core/user"
+import {userSpaceUrls} from "@app/core/user"
 import {navigate} from "@app/navigation/navigate"
 import type {NavigateOptions} from "@app/navigation/navigate"
 import {openNote} from "@app/navigation/overlays"
@@ -49,9 +49,9 @@ const getMessagePath = (url: string, event: TrustedEvent) => {
   return h ? pages.room.path({url, h, at}) : pages.spaceChat.path({url, at})
 }
 
-// An article is ordinary nostr content, so one outside the reader's spaces reads on a page of its own.
+// An article is ordinary nostr content, so one outside the user's spaces reads on a page of its own.
 const getArticlePath = (address: string, urls: string[]) => {
-  const spaceUrls = get(activeSpaceUrls)
+  const spaceUrls = get(userSpaceUrls)
   const url = urls.find(candidate => spaceUrls.includes(candidate))
 
   return url

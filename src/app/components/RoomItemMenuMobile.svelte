@@ -42,7 +42,6 @@
   import {readEventAloud} from "@app/components/flows/readAloud"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction} from "@app/areas/spaces"
-  import {promptLogin, withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -66,25 +65,17 @@
     publishReaction(url, event, {content: emoji, tags: []})
   }
 
-  const showEmojiPicker = () => {
-    if ($user) {
-      pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
-    } else {
-      promptLogin()
-    }
-  }
+  const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
 
   const createThread = () =>
-    withLogin(() =>
-      pushModal(
-        ThreadCreate,
-        {
-          url,
-          h,
-          initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
-        },
-        {replaceState: true},
-      ),
+    pushModal(
+      ThreadCreate,
+      {
+        url,
+        h,
+        initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
+      },
+      {replaceState: true},
     )
 
   const sendReply = () => {
@@ -109,10 +100,9 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
 
-  const addToLibrary = () =>
-    withLogin(() => pushModal(PinboardSelect, {url, event}, {replaceState: true}))
+  const addToLibrary = () => pushModal(PinboardSelect, {url, event}, {replaceState: true})
 
-  const report = () => withLogin(() => pushModal(Report, {url, event}, {replaceState: true}))
+  const report = () => pushModal(Report, {url, event}, {replaceState: true})
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
@@ -198,7 +188,7 @@
               Message Info
             </Button>
           {/if}
-          {#if event.pubkey === $user?.pubkey}
+          {#if event.pubkey === $user.pubkey}
             <Button class="button button-neutral w-full text-error" onclick={showDelete}>
               <Icon size={4} icon={TrashBin2} />
               Delete Message

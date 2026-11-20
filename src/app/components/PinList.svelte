@@ -43,7 +43,7 @@
   const destinations = $derived($shelves.filter(shelf => shelf.address() !== address))
 
   // A pin is addressable, so shelving it is a rewrite only its author can publish.
-  const canShelve = $derived(selected.every(pin => pin.event.pubkey === $user?.pubkey))
+  const canShelve = $derived(selected.every(pin => pin.event.pubkey === $user.pubkey))
   const canDelete = $derived(canShelve || $permissions.deleteContent)
 
   const toggle = (pin: PinReader) => () => {

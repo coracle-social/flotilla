@@ -15,20 +15,18 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
-  import {pushModal} from "@app/navigation/dialogs"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {selectPomadeLogin} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {pushToast} from "@app/navigation/toast"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {finishLogin} from "@app/components/flows/login"
 
   type Props = {
     email: string
     peersByPrefix: Map<string, string>
-    onLogin?: () => unknown
   }
 
-  const {email, peersByPrefix, onLogin}: Props = $props()
+  const {email, peersByPrefix}: Props = $props()
 
   const back = () => history.back()
 
@@ -51,12 +49,12 @@
       }
 
       if (uniq(options.map(o => o.pubkey)).length > 1) {
-        pushModal(LogInSelect, {email, options, clientSecret, onLogin})
+        pushModal(LogInSelect, {email, options, clientSecret})
       } else {
         const res = await selectPomadeLogin(clientSecret, options[0], email)
 
         if (res.ok) {
-          await finishLogin(onLogin)
+          clearModals()
         } else {
           console.error(res.messages)
 

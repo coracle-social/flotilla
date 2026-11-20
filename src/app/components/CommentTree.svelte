@@ -13,7 +13,6 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import type {CommentNode} from "@app/tools/notes"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     node: CommentNode
@@ -46,7 +45,7 @@
 
   const composing = $derived(replyTo?.id === node.comment.id)
 
-  const reply = () => withLogin(() => setReplyTo?.(node.comment))
+  const reply = () => setReplyTo?.(node.comment)
 
   const clearReplyTo = () => setReplyTo?.(undefined)
 </script>

@@ -36,17 +36,10 @@
   import {forceHealthChecks} from "@app/areas/home/healthChecks"
   import {loginWithPomade} from "@app/core/pomade"
   import {publishRoomList} from "@app/tools/publish"
-  import {pushModal} from "@app/navigation/dialogs"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
   import {domain, roomLists} from "@app/core/plugins"
   import {login} from "@app/core/session"
-  import {finishLogin} from "@app/components/flows/login"
-
-  type Props = {
-    onLogin?: () => unknown
-  }
-
-  const {onLogin}: Props = $props()
 
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
@@ -56,7 +49,7 @@
 
   const hasPomade = POMADE_SIGNERS.length >= 3
 
-  const showLogIn = () => pushModal(LogIn, {onLogin}, {replaceState: true})
+  const showLogIn = () => pushModal(LogIn, {}, {replaceState: true})
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
@@ -91,7 +84,7 @@
     // Wait for all the publications to settle
     await Promise.all(publications.map(publication => publication.settled()))
 
-    await finishLogin(onLogin)
+    clearModals()
   }
 
   const flows = {

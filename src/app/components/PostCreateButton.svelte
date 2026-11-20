@@ -9,7 +9,6 @@
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import PostCreateMenu from "@app/components/PostCreateMenu.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     class?: string
@@ -19,7 +18,7 @@
 
   const {class: className = "", buttonClass, children}: Props = $props()
 
-  const createPost = () => withLogin(() => pushModal(NoteCreate))
+  const createPost = () => pushModal(NoteCreate)
 </script>
 
 <div class={cx("join", className)}>

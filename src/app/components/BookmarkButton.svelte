@@ -11,7 +11,6 @@
     removeBookmark,
   } from "@app/areas/bookmarks"
   import {pushToast} from "@app/navigation/toast"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url?: string
@@ -24,7 +23,9 @@
 
   const isBookmarked = deriveIsBookmarked(getIdOrAddress(event))
 
-  const submit = async () => {
+  const toggle = async () => {
+    onClick?.()
+
     // The repository takes the write at once, so the label flips before the relays answer.
     const bookmarked = $isBookmarked
     const error = await (bookmarked
@@ -36,11 +37,6 @@
     } else {
       pushToast({message: bookmarked ? "Bookmark removed" : "Bookmark saved!"})
     }
-  }
-
-  const toggle = () => {
-    onClick?.()
-    withLogin(submit)
   }
 </script>
 

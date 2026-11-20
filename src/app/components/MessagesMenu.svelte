@@ -7,7 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
@@ -29,7 +29,7 @@
       title: "Messaging Relays",
       subtitle:
         "Where you send and receive direct messages. Be sure to select relays that will accept your messages and messages from people you'd like to be in contact with.",
-      relays: $messagingRelayLists.urls(requireUser().pubkey).$,
+      relays: $messagingRelayLists.urls($user.pubkey).$,
       addRelay: (url: string) => $messagingRelayLists.addUrl(url).then(publish),
       removeRelay: (url: string) => $messagingRelayLists.removeUrl(url).then(publish),
     })

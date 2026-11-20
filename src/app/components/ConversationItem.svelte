@@ -12,7 +12,7 @@
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
   import {unreadDots} from "@app/tools/activity"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
 
   type Props = {
@@ -24,8 +24,7 @@
 
   const {...props}: Props = $props()
 
-  const userPubkey = requireUser().pubkey
-  const others = uniq(remove(userPubkey, props.pubkeys))
+  const others = uniq(remove($user.pubkey, props.pubkeys))
   const active = $derived($page.params.chat === props.id)
   const path = pages.conversation.path({pubkeys: props.pubkeys})
   const openChat = () => openMessages(props.pubkeys)
@@ -50,7 +49,7 @@
           {#if others.length > 1}
             <ProfileCircles pubkeys={others} size={5} />
           {:else}
-            <ProfileCircle pubkey={others[0] || userPubkey} size={5} />
+            <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
           {/if}
           <p class="overflow-hidden text-ellipsis whitespace-nowrap">
             <ConversationTitle pubkeys={props.pubkeys} />
@@ -62,7 +61,7 @@
       </div>
       <p class="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
         <span class="opacity-70">
-          {#if props.messages[0].pubkey === userPubkey}
+          {#if props.messages[0].pubkey === $user.pubkey}
             You:
           {/if}
         </span>

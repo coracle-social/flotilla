@@ -46,7 +46,7 @@
   const bans = url ? $spaceManagement.bannedPubkeys(url) : readable<BannedPubkeyItem[]>([])
   const isBanned = $derived($bans.some(spec({pubkey})))
 
-  const isSelf = $derived($user?.pubkey === pubkey)
+  const isSelf = $derived($user.pubkey === pubkey)
 
   const back = () => history.back()
 

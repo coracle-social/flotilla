@@ -36,7 +36,6 @@
     toggleMute,
     toggleScreenShare,
   } from "@app/areas/spaces/calls"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     url: string
@@ -55,7 +54,7 @@
   // callTargetRoom isn't cleared on cancel or leave, so it can still point at this room.
   const showJoin = $derived(isVoiceRoom && !joiningHere && !connectedHere)
 
-  const openJoinDialog = () => withLogin(() => pushModal(VoiceRoomJoinDialog, {url, h}))
+  const openJoinDialog = () => pushModal(VoiceRoomJoinDialog, {url, h})
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
 
   const pickScreenShareSource: PickSource = sources =>

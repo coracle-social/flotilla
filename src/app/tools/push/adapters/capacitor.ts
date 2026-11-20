@@ -3,14 +3,13 @@ import {PushNotifications} from "@capacitor/push-notifications"
 import {assoc, hash, ms, poll} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import {Address, DELETE, makeEvent} from "@welshman/util"
-import {Relays} from "@welshman/app"
+import {Relays, User} from "@welshman/app"
 import {isGranted, toPermission} from "@lib/push/permission"
 import type {PushPermission} from "@lib/push/permission"
 import {app} from "@app/core/app"
 import {messagingRelayLists, publisher, roomLists} from "@app/core/plugins"
 import {device} from "@app/core/device"
 import {PUSH_BRIDGE} from "@app/core/env"
-import {requireUser} from "@app/core/user"
 import type {PushAdapter} from "@app/tools/push/adapter"
 import {pushRegistration} from "@app/tools/push/registration"
 import {syncRelaySubscriptions} from "@app/tools/push/relaySubscriptions"
@@ -152,7 +151,11 @@ const unsyncRelay = async (relay: string, key: string) => {
 
   const relays = [url]
   const identifier = getSubscriptionIdentifier(relay, key)
-  const address = new Address(PUSH_SUBSCRIPTION, requireUser().pubkey, identifier).toString()
+  const address = new Address(
+    PUSH_SUBSCRIPTION,
+    User.require(app.get()).pubkey,
+    identifier,
+  ).toString()
   const event = makeEvent(DELETE, {tags: [["a", address]]})
   const publication = publisher.get().publish({relays, event})
   const error = await publication.getFatalError()

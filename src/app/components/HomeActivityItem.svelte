@@ -17,7 +17,7 @@
 
   const {path, url, h, pubkeys = [], event} = $derived(item.activity)
 
-  const others = $derived(uniq(remove($user?.pubkey, pubkeys)))
+  const others = $derived(uniq(remove($user.pubkey, pubkeys)))
 </script>
 
 {#if url}
@@ -36,7 +36,7 @@
       <RelayName {url} />
     {/snippet}
   </HomeActivityItemRow>
-{:else if $user}
+{:else}
   <HomeActivityItemRow {path} {event}>
     {#snippet icon()}
       <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />

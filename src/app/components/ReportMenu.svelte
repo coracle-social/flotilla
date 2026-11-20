@@ -99,7 +99,7 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  {#if event.pubkey === $user?.pubkey}
+  {#if event.pubkey === $user.pubkey}
     <li>
       <Button onclick={deleteReport}>
         <Icon icon={Close} />

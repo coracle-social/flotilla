@@ -19,7 +19,6 @@
   import {sortArticles} from "@app/areas/spaces/articles"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import * as pages from "@app/navigation/pages"
-  import {withLogin} from "@app/components/flows/login"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -32,7 +31,7 @@
   const loading = $derived($status === "loading")
   const exhausted = $derived($status === "exhausted")
 
-  const createArticle = () => withLogin(() => navigate(pages.articleCreate.path({url})))
+  const createArticle = () => navigate(pages.articleCreate.path({url}))
 
   let author: string | undefined = $state()
   let topic: string | undefined = $state()

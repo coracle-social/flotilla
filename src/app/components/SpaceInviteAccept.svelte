@@ -1,7 +1,6 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
-  import {user} from "@app/core/user"
   import {navigate} from "@app/navigation/navigate"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
@@ -28,7 +27,6 @@
   import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/areas/spaces/invites"
   import {trackSubmit} from "@app/components/flows/submit"
-  import {promptLogin} from "@app/components/flows/login"
 
   type Props = {
     invite: string
@@ -75,15 +73,6 @@
     },
   )
 
-  // A visitor only gets here through /join, whose dialog remounts after the login, so they join from there.
-  const onSubmit = () => {
-    if ($user) {
-      join()
-    } else {
-      promptLogin()
-    }
-  }
-
   let error = $state(maybe<string>())
   let showScanner = $state(false)
   let notifications = $state(true)
@@ -92,7 +81,7 @@
   const isRoomInvite = $derived(Boolean(inviteData?.h))
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(onSubmit)}>
+<Modal tag="form" onsubmit={preventDefault(join)}>
   <ModalBody>
     {#if !hideHeader}
       <ModalHeader>

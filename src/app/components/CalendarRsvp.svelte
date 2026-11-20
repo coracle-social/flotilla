@@ -62,7 +62,7 @@
   let loading = $state(false)
 
   const people = $derived(getRsvpsByStatus(rsvps))
-  const ownRsvp = $derived(people.latest.find(rsvp => rsvp.pubkey === $user?.pubkey))
+  const ownRsvp = $derived(people.latest.find(rsvp => rsvp.pubkey === $user.pubkey))
   const ownStatus = $derived(ownRsvp ? reader(CalendarRsvp)(ownRsvp).status() : undefined)
   const attending = $derived([...people.accepted, ...people.tentative])
 </script>
@@ -71,15 +71,15 @@
   <div class="flex flex-wrap items-center gap-2">
     <span class="text-sm opacity-75">Are you going?</span>
     <div class="join">
-      <Button class={statusClass("accepted")} disabled={loading || !$user} onclick={accept}>
+      <Button class={statusClass("accepted")} disabled={loading} onclick={accept}>
         <Icon icon={CheckCircle} size={4} />
         Going
       </Button>
-      <Button class={statusClass("tentative")} disabled={loading || !$user} onclick={maybe}>
+      <Button class={statusClass("tentative")} disabled={loading} onclick={maybe}>
         <Icon icon={QuestionCircle} size={4} />
         Maybe
       </Button>
-      <Button class={statusClass("declined")} disabled={loading || !$user} onclick={decline}>
+      <Button class={statusClass("declined")} disabled={loading} onclick={decline}>
         <Icon icon={CloseCircle} size={4} />
         Can't go
       </Button>

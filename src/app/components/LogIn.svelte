@@ -26,17 +26,10 @@
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInEmail from "@app/components/LogInEmail.svelte"
   import LogInKey from "@app/components/LogInKey.svelte"
-  import {pushModal} from "@app/navigation/dialogs"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_NAME, POMADE_SIGNERS, HIDE_NOSTR} from "@app/core/env"
   import {pushToast} from "@app/navigation/toast"
   import {login} from "@app/core/session"
-  import {finishLogin} from "@app/components/flows/login"
-
-  type Props = {
-    onLogin?: () => unknown
-  }
-
-  const {onLogin}: Props = $props()
 
   let signers: Nip55AppInfo[] = $state([])
   let loading: string | undefined = $state()
@@ -45,13 +38,13 @@
 
   const disabled = $derived(loading ? true : undefined)
 
-  const signUp = () => pushModal(SignUp, {onLogin}, {replaceState: true})
+  const signUp = () => pushModal(SignUp, {}, {replaceState: true})
 
   const showInfoNostr = () => pushModal(InfoNostr)
 
   const onSuccess = async (session: Session) => {
     await login(session)
-    await finishLogin(onLogin)
+    clearModals()
   }
 
   const loginWithNip07 = async () => {
@@ -99,11 +92,11 @@
     }
   }
 
-  const loginWithEmail = () => pushModal(LogInEmail, {onLogin})
+  const loginWithEmail = () => pushModal(LogInEmail)
 
-  const loginWithBunker = () => pushModal(LogInBunker, {onLogin})
+  const loginWithBunker = () => pushModal(LogInBunker)
 
-  const loginWithKey = () => pushModal(LogInKey, {onLogin})
+  const loginWithKey = () => pushModal(LogInKey)
 
   const hasSigner = $derived(getNip07() || signers.length > 0)
 

@@ -10,10 +10,8 @@
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
   import HomeSpaces from "@app/components/HomeSpaces.svelte"
-  import HomeWelcome from "@app/components/HomeWelcome.svelte"
   import PostCreateFab from "@app/components/PostCreateFab.svelte"
   import {PLATFORM_RELAYS, ENABLE_HOSTING} from "@app/core/env"
-  import {user} from "@app/core/user"
 
   let element: Element | undefined = $state()
 </script>
@@ -33,15 +31,10 @@
           </Link>
         {/if}
       </div>
-      {#if !$user}
-        <HomeWelcome />
-      {/if}
       <div class="flex min-w-0 flex-col gap-0 @3xl:flex-row @3xl:items-start md:gap-3">
         <HomeFeed class="@3xl:min-w-0 @3xl:flex-1" />
         <div class="contents @3xl:flex @3xl:w-80 @3xl:shrink-0 @3xl:flex-col @3xl:gap-3">
-          {#if $user}
-            <HomeHealthChecks class="@max-3xl:hidden" />
-          {/if}
+          <HomeHealthChecks class="@max-3xl:hidden" />
           {#if PLATFORM_RELAYS.length > 0}
             <HomeSpaces class="@max-3xl:hidden" />
           {:else if ENABLE_HOSTING}

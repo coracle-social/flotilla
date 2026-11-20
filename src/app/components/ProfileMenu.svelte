@@ -1,5 +1,4 @@
 <script lang="ts">
-  import cx from "classnames"
   import type {Snippet} from "svelte"
   import {publish} from "@welshman/app"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
@@ -17,7 +16,6 @@
   import {derivePubkeyMuted} from "@app/tools/people/muting"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     pubkey: string
@@ -30,7 +28,7 @@
 
   const profile = $profiles.one(pubkey)
 
-  const isSelf = $derived($user?.pubkey === pubkey)
+  const isSelf = $derived($user.pubkey === pubkey)
 
   const isMuted = derivePubkeyMuted(pubkey)
 
@@ -38,7 +36,7 @@
 
   const showShare = () => pushModal(ProfileQrCode, {pubkey})
 
-  const submitMute = async () => {
+  const toggleMute = async () => {
     loading = true
 
     try {
@@ -57,8 +55,6 @@
       onClick()
     }
   }
-
-  const toggleMute = () => withLogin(submitMute)
 
   // The menu closes on any click in it, except on an item that closes it once its work is done.
   const onClickCapture = (event: MouseEvent) => {
@@ -88,7 +84,7 @@
     </li>
   {/if}
   {#if !isSelf}
-    <li class={cx({"menu-holds-open": $user})}>
+    <li class="menu-holds-open">
       <Button onclick={toggleMute} disabled={loading}>
         {#if loading}
           <Spinner size="xs" />

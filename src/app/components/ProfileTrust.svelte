@@ -30,46 +30,44 @@
   })
 
   $effect(() => {
-    if ($user && !isSelf) {
+    if (!isSelf) {
       $followLists.load(target)
       $followLists.load($user.pubkey)
     }
   })
 </script>
 
-{#if $user}
-  <div class="card card-sm flex flex-col gap-3 sm:gap-4">
-    <div class="flex items-center gap-2">
-      <Icon icon={Shield} size={5} />
-      <strong>Reputation</strong>
-    </div>
-    <div class="flex flex-col gap-2 border-t border-line pt-4">
-      <div class="flex items-end justify-between gap-2">
-        <span class="text-sm opacity-75">{isSelf ? "Followers" : "Trust score"}</span>
-        <span class="text-lg font-semibold">
-          {#if isSelf}
-            {display}
-          {:else}
-            {display} / 100
-          {/if}
-        </span>
-      </div>
-      {#if !isSelf}
-        <progress class="progress w-full" value={display} max="100"></progress>
-      {/if}
-      <p class="text-sm opacity-75">{trustMessage}</p>
-    </div>
-    {#if !isSelf && $followers.length > 0}
-      <div class="flex flex-col gap-2 border-t border-line pt-4">
-        <p class="text-sm font-medium">People who follow {$profileDisplay}</p>
-        <ProfileCircles pubkeys={$followers} limit={5} />
-        <p class="text-sm opacity-75">
-          {$followers.length}
-          {$followers.length === 1 ? "person" : "people"} you follow also
-          {$followers.length === 1 ? "follows" : "follow"}
-          {$profileDisplay}.
-        </p>
-      </div>
-    {/if}
+<div class="card card-sm flex flex-col gap-3 sm:gap-4">
+  <div class="flex items-center gap-2">
+    <Icon icon={Shield} size={5} />
+    <strong>Reputation</strong>
   </div>
-{/if}
+  <div class="flex flex-col gap-2 border-t border-line pt-4">
+    <div class="flex items-end justify-between gap-2">
+      <span class="text-sm opacity-75">{isSelf ? "Followers" : "Trust score"}</span>
+      <span class="text-lg font-semibold">
+        {#if isSelf}
+          {display}
+        {:else}
+          {display} / 100
+        {/if}
+      </span>
+    </div>
+    {#if !isSelf}
+      <progress class="progress w-full" value={display} max="100"></progress>
+    {/if}
+    <p class="text-sm opacity-75">{trustMessage}</p>
+  </div>
+  {#if !isSelf && $followers.length > 0}
+    <div class="flex flex-col gap-2 border-t border-line pt-4">
+      <p class="text-sm font-medium">People who follow {$profileDisplay}</p>
+      <ProfileCircles pubkeys={$followers} limit={5} />
+      <p class="text-sm opacity-75">
+        {$followers.length}
+        {$followers.length === 1 ? "person" : "people"} you follow also
+        {$followers.length === 1 ? "follows" : "follow"}
+        {$profileDisplay}.
+      </p>
+    </div>
+  {/if}
+</div>

@@ -26,7 +26,6 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {user} from "@app/core/user"
   import {deriveRoomMembers, deriveRoomPermissions, deriveUserRooms} from "@app/areas/spaces/rooms"
   import {publishRoomList} from "@app/tools/publish"
   import {
@@ -167,12 +166,7 @@
           <Icon icon={Bookmark} />
           <span>Favorite</span>
         </div>
-        <input
-          type="checkbox"
-          class="toggle"
-          checked={isFavorite}
-          disabled={!$user}
-          onchange={toggleFavorite} />
+        <input type="checkbox" class="toggle" checked={isFavorite} onchange={toggleFavorite} />
       </div>
       <div class="flex items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-2">
@@ -182,12 +176,7 @@
             <span class="text-sm opacity-75">Hide alerts and unread badges for this room</span>
           </div>
         </div>
-        <input
-          type="checkbox"
-          class="toggle"
-          checked={$isMuted}
-          disabled={!$user}
-          onchange={toggleMuted} />
+        <input type="checkbox" class="toggle" checked={$isMuted} onchange={toggleMuted} />
       </div>
       <div class={cx("flex items-center justify-between", {"opacity-50": $isMuted})}>
         <div class="flex items-center gap-2">
@@ -198,7 +187,7 @@
           type="checkbox"
           class="toggle"
           checked={$shouldNotify}
-          disabled={$isMuted || !$user}
+          disabled={$isMuted}
           onchange={toggleShouldNotify} />
       </div>
     </div>

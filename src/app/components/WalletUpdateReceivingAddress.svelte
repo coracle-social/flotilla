@@ -13,7 +13,7 @@
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import {pushToast} from "@app/navigation/toast"
-  import {requireUser} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/tools/wallet"
   import {trackSubmit} from "@app/components/flows/submit"
@@ -22,7 +22,7 @@
 
   const walletLud16 = $derived($wallet ? getWalletAddress($wallet) : undefined)
 
-  let address = $state($profiles.get(requireUser().pubkey)?.lnurl() || "")
+  let address = $state($profiles.get($user.pubkey)?.lnurl() || "")
 
   const useWalletAddress = () => {
     if (walletLud16) {

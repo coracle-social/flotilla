@@ -9,7 +9,6 @@
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {withLogin} from "@app/components/flows/login"
 
   type Props = {
     includePost?: boolean
@@ -18,11 +17,11 @@
 
   const {includePost = true, onClick}: Props = $props()
 
-  const createPost = () => withLogin(() => pushModal(NoteCreate))
+  const createPost = () => pushModal(NoteCreate)
 
-  const createPoll = () => withLogin(() => pushModal(PollCreate))
+  const createPoll = () => pushModal(PollCreate)
 
-  const createArticle = () => withLogin(() => navigate(pages.networkArticleCreate.path()))
+  const createArticle = () => navigate(pages.networkArticleCreate.path())
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>

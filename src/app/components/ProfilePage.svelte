@@ -41,7 +41,7 @@
 
   const profile = $profiles.one(target)
   const profileDisplay = $profiles.display(target).$
-  const isSelf = $derived($user?.pubkey === target)
+  const isSelf = $derived($user.pubkey === target)
   const website = $derived($profile?.website()?.replace(/^https?:\/\//, ""))
   const websiteHref = $derived(
     website && $profile?.website()?.match(/^https?:\/\//)

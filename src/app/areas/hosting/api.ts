@@ -3,7 +3,7 @@ import type {Maybe} from "@welshman/lib"
 import {now} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
 import {UserError} from "@lib/util"
-import {requireUser} from "@app/core/user"
+import {user} from "@app/core/user"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/core/env"
 import type {
   Activity,
@@ -31,7 +31,7 @@ export class HostingError extends UserError {
 }
 
 export const logUnexpectedError = (e: unknown) => {
-  if (!(e instanceof UserError)) {
+  if (!(e instanceof HostingError)) {
     console.error(e)
   }
 }
@@ -62,7 +62,7 @@ const hostingJson = async <T>(response: Response): Promise<T> => {
 let session: {pubkey: string; token: string; expiresAt: number} | undefined
 
 const getSessionToken = async () => {
-  const {pubkey, signer} = requireUser()
+  const {pubkey, signer} = user.get()
 
   if (session?.pubkey === pubkey && session.expiresAt > now()) {
     return session.token
@@ -209,7 +209,7 @@ export const reconcileInvoice = (invoiceId: string) =>
 let tenantPromise: Maybe<{pubkey: string; promise: Promise<Tenant>}>
 
 export const ensureSessionTenant = async () => {
-  const $pubkey = requireUser().pubkey
+  const $pubkey = user.get().pubkey
 
   if (tenantPromise?.pubkey !== $pubkey) {
     const promise = createTenant(hostingReturnUrl())
@@ -236,7 +236,7 @@ export const createHostedRelay = async (
   return createRelay({
     ...RELAY_FLAG_DEFAULTS,
     ...values,
-    tenant_pubkey: requireUser().pubkey,
+    tenant_pubkey: user.get().pubkey,
     zooid_domain: HOSTING_RELAY_DOMAIN,
     blossom_enabled: features,
     livekit_enabled: features,

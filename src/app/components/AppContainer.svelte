@@ -1,12 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
+  import Dialog from "@lib/components/Dialog.svelte"
+  import Landing from "@app/components/Landing.svelte"
   import Toast from "@app/components/Toast.svelte"
   import CallBanner from "@app/components/CallBanner.svelte"
   import ReadAloudBanner from "@app/components/ReadAloudBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
-  import {getModal, pushModal} from "@app/navigation/dialogs"
-  import {loginRequest} from "@app/navigation/login"
+  import {app} from "@app/core/app"
+  import {getModal} from "@app/navigation/dialogs"
 
   type Props = {
     children: Snippet
@@ -19,21 +20,17 @@
 
     return Boolean(modal && !modal.options.drawer)
   })
-
-  // withLogin can't import the login dialogs, since they render components that call it.
-  $effect(() => {
-    if ($loginRequest) {
-      pushModal(LogIn, $loginRequest)
-      loginRequest.set(undefined)
-    }
-  })
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden" inert={blockingModal}>
   <div class="relative flex min-h-0 flex-1 overflow-hidden">
-    <PrimaryNav>
-      {@render children?.()}
-    </PrimaryNav>
+    {#if $app.user?.pubkey}
+      <PrimaryNav>
+        {@render children?.()}
+      </PrimaryNav>
+    {:else if !getModal()}
+      <Dialog noEscape children={{component: Landing, props: {}}} />
+    {/if}
   </div>
   <CallBanner />
   <ReadAloudBanner />

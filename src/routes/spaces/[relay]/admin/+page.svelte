@@ -8,7 +8,6 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import RelayDetailCard from "@app/components/hosting/RelayDetailCard.svelte"
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
-  import LogInGate from "@app/components/LogInGate.svelte"
   import {PLATFORM_NAME} from "@app/core/env"
   import {deriveHostedRelay, deriveRelayActivity} from "@app/areas/hosting"
   import * as pages from "@app/navigation/pages"
@@ -21,38 +20,34 @@
   const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.value?.id))
 </script>
 
-<LogInGate
-  title="Log in to manage this space"
-  message="Hosting settings are for the people who run this space.">
-  <SpaceBar>
-    {#snippet leading()}
-      <Icon icon={Server} />
-    {/snippet}
-    {#snippet title()}
-      <strong>Hosting settings</strong>
-    {/snippet}
-  </SpaceBar>
+<SpaceBar>
+  {#snippet leading()}
+    <Icon icon={Server} />
+  {/snippet}
+  {#snippet title()}
+    <strong>Hosting settings</strong>
+  {/snippet}
+</SpaceBar>
 
-  <PageContent class="flex flex-col gap-4 p-4">
-    {#if $hostedRelay.value}
-      <RelayDetailCard relay={$hostedRelay.value} />
-      <ActivityFeed activity={$relayActivity.value} loading={$relayActivity.loading} />
-    {:else if $hostedRelay.loading}
-      <div class="flex justify-center p-12">
-        <Spinner>Loading hosting details...</Spinner>
+<PageContent class="flex flex-col gap-4 p-4">
+  {#if $hostedRelay.value}
+    <RelayDetailCard relay={$hostedRelay.value} />
+    <ActivityFeed activity={$relayActivity.value} loading={$relayActivity.loading} />
+  {:else if $hostedRelay.loading}
+    <div class="flex justify-center p-12">
+      <Spinner>Loading hosting details...</Spinner>
+    </div>
+  {:else}
+    <div class="card flex flex-col items-center gap-4 p-8 text-center">
+      <Icon icon={Server} size={10} class="text-content-muted" />
+      <div class="flex flex-col gap-1">
+        <h2 class="text-lg font-bold">Not a {PLATFORM_NAME}-hosted space</h2>
+        <p class="text-sm text-content-muted">
+          This space isn't hosted by {PLATFORM_NAME}, or you don't administer it. Only the owner of
+          a hosted relay can manage its plan, policies, and billing here.
+        </p>
       </div>
-    {:else}
-      <div class="card flex flex-col items-center gap-4 p-8 text-center">
-        <Icon icon={Server} size={10} class="text-content-muted" />
-        <div class="flex flex-col gap-1">
-          <h2 class="text-lg font-bold">Not a {PLATFORM_NAME}-hosted space</h2>
-          <p class="text-sm text-content-muted">
-            This space isn't hosted by {PLATFORM_NAME}, or you don't administer it. Only the owner
-            of a hosted relay can manage its plan, policies, and billing here.
-          </p>
-        </div>
-        <Link class="button button-neutral" href="/settings/hosting">Go to Hosting settings</Link>
-      </div>
-    {/if}
-  </PageContent>
-</LogInGate>
+      <Link class="button button-neutral" href="/settings/hosting">Go to Hosting settings</Link>
+    </div>
+  {/if}
+</PageContent>

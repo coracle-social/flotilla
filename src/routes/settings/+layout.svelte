@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {page} from "$app/state"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
@@ -15,11 +14,8 @@
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import LogInGate from "@app/components/LogInGate.svelte"
   import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
-  import {user} from "@app/core/user"
   import {pushModal} from "@app/navigation/dialogs"
-  import * as pages from "@app/navigation/pages"
 
   type Props = {
     children?: Snippet
@@ -60,23 +56,12 @@
     <SecondaryNavItem href="/settings/about">
       <Icon icon={Code2} /> About
     </SecondaryNavItem>
-    {#if $user}
-      <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
-        <Icon icon={Exit} /> Log Out
-      </SecondaryNavItem>
-    {/if}
+    <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
+      <Icon icon={Exit} /> Log Out
+    </SecondaryNavItem>
   </SecondaryNavSection>
 </SecondaryNav>
 
 <Page>
-  <!-- $app/state's page changes in the same update as children, so a visitor never renders a gated page. -->
-  {#if page.route.id === pages.settingsAbout.id}
-    {@render children?.()}
-  {:else}
-    <LogInGate
-      title="Log in to change your settings"
-      message="Your profile, alerts, wallet and preferences live here.">
-      {@render children?.()}
-    </LogInGate>
-  {/if}
+  {@render children?.()}
 </Page>

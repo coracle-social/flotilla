@@ -249,8 +249,9 @@ export const deriveSpacePermissions = (url?: string) =>
 
 // Relays let the owner named in NIP-11 publish every NIP-29 moderation kind, in any room.
 export const deriveUserIsSpaceOwner = (url: string) =>
-  derived([user, fromApp($app => $app.use(Relays).one(url))], ([$user, $relay]) =>
-    Boolean($user && $relay?.pubkey === $user.pubkey),
+  derived(
+    [user, fromApp($app => $app.use(Relays).one(url))],
+    ([$user, $relay]) => $relay?.pubkey === $user.pubkey,
   )
 
 export const deriveUserCanCreateRoom = (url: string) =>
@@ -262,7 +263,5 @@ export const deriveUserCanCreateRoom = (url: string) =>
     ],
     ([$user, $events, $isOwner]) =>
       $isOwner ||
-      Boolean(
-        $user && $events.some(event => reader(RoomCreatePermission)(event).canCreate($user.pubkey)),
-      ),
+      $events.some(event => reader(RoomCreatePermission)(event).canCreate($user.pubkey)),
   )

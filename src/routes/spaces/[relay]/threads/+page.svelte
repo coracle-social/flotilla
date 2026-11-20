@@ -25,7 +25,6 @@
   import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"
-  import {withLogin} from "@app/components/flows/login"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -49,7 +48,7 @@
   const board = $derived($page.url.searchParams.get("board") ?? undefined)
   const inBoard = $derived(board !== undefined)
   const back = () => history.back()
-  const startTopic = () => withLogin(() => pushModal(ThreadCreate, {url, h: board ?? undefined}))
+  const startTopic = () => pushModal(ThreadCreate, {url, h: board ?? undefined})
   const boardName = $derived(board === "" ? "General" : board ? displayRoom(url, board) : "")
   const boardItems = $derived(
     inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],
