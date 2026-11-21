@@ -78,6 +78,10 @@
           </div>
         {/if}
       </div>
+      <Button class="button button-link self-start" onclick={requestAccess}>
+        <Icon icon={LinkRound} />
+        I have an invite code
+      </Button>
     {:else}
       <p>This space requires a paid membership.</p>
     {/if}
@@ -90,26 +94,25 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <div class="flex flex-wrap justify-end gap-2">
-      <Button class="button button-neutral" onclick={requestAccess}>
+    {#if ENABLE_PAID_SPACES}
+      {#if pending}
+        <Button class="button button-neutral" onclick={reconcile} disabled={$reconciling}>
+          <Spinner loading={$reconciling}>
+            <Icon icon={Refresh} />
+            Waiting for payment…
+          </Spinner>
+        </Button>
+      {:else}
+        <Button class="button button-primary" onclick={join}>
+          Join Space
+          <Icon icon={AltArrowRight} />
+        </Button>
+      {/if}
+    {:else}
+      <Button class="button button-primary" onclick={requestAccess}>
         <Icon icon={LinkRound} />
         I have an invite code
       </Button>
-      {#if ENABLE_PAID_SPACES}
-        {#if pending}
-          <Button class="button button-neutral" onclick={reconcile} disabled={$reconciling}>
-            <Spinner loading={$reconciling}>
-              <Icon icon={Refresh} />
-              Waiting for payment…
-            </Spinner>
-          </Button>
-        {:else}
-          <Button class="button button-primary" onclick={join}>
-            Join Space
-            <Icon icon={AltArrowRight} />
-          </Button>
-        {/if}
-      {/if}
-    </div>
+    {/if}
   </ModalFooter>
 </Modal>
