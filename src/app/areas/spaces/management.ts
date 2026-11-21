@@ -5,7 +5,7 @@ import {RoomCreatePermission} from "@welshman/domain"
 import {Events, RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {fromApp} from "@app/core/app"
-import {user} from "@app/core/user"
+import {user, userSpaceUrls} from "@app/core/user"
 import {reader} from "@app/core/domain"
 import {relayManagement, relayMemberLists, usePlugin} from "@app/core/plugins"
 
@@ -146,14 +146,17 @@ export class SpaceManagement {
 
 export const spaceManagement = usePlugin(SpaceManagement)
 
+// Asking signs an HTTP auth event, and only a joined space has controls to show.
 const deriveSpaceSupportedMethods = (url?: string) =>
-  fromApp($app => {
-    if (url && $app.user) {
-      return $app.use(SpaceManagement).supportedMethods(url)
-    }
+  fromApp($app =>
+    derived(userSpaceUrls, ($userSpaceUrls, set: (methods: string[]) => void) => {
+      if (url && $app.user && $userSpaceUrls.includes(url)) {
+        return $app.use(SpaceManagement).supportedMethods(url).subscribe(set)
+      }
 
-    return readable<string[]>([])
-  })
+      set([])
+    }),
+  )
 
 const getSpacePermissions = (methods: string[]) => {
   const can = (method: string) => methods.includes(method)

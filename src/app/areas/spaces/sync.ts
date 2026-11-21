@@ -5,7 +5,6 @@ import {makeCommentFilter} from "@lib/util"
 import {network, relays} from "@app/core/plugins"
 import {REACTION_KINDS} from "@app/core/env"
 import {pullAndListen, syncEach} from "@app/core/sync"
-import {hasBlossomSupport} from "@app/tools/uploads"
 import {CONTENT_KINDS} from "@app/tools/content"
 import {currentSpaceUrls} from "@app/navigation/history"
 import {userSpaceUrls} from "@app/core/user"
@@ -17,7 +16,6 @@ export const syncSpaceRelays = () => {
   const unsubscribeCurrent = currentSpaceUrls.subscribe($currentSpaceUrls => {
     for (const url of $currentSpaceUrls) {
       relays.get().load(url)
-      hasBlossomSupport(url)
     }
   })
 

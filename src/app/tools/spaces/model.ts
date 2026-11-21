@@ -98,7 +98,7 @@ export const getPendingCheckout = (
 ) => {
   const checkout = $checkouts[url]
 
-  if (checkout?.pubkey === pubkey && checkout.at > ago(10, MINUTE)) {
+  if (checkout && checkout.pubkey === pubkey && checkout.at > ago(10, MINUTE)) {
     return checkout
   }
 }

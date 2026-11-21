@@ -14,6 +14,7 @@
 
   let width = $state(window.innerWidth)
 
+  // The load sends a wide screen on before this renders, so this covers a window widened on the menu.
   $effect(() => {
     if (width > md) {
       goToSpace(url, {replaceState: true})

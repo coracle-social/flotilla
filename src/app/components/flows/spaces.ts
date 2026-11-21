@@ -45,6 +45,18 @@ export const openSpacePrompt = (url: string, step: SpaceStep, options: ModalOpti
     case "add":
       return step.paid ? addPaidSpace(url) : pushModal(SpaceJoin, {url}, options)
     case "waiting":
+      // A checkout that landed adds the space by itself, so the gate opens only once a fresh check says it hasn't.
+      return reconcileSpace(url)
+        .catch(e => {
+          console.error(e)
+
+          return false
+        })
+        .then(isMember => {
+          if (!isMember) {
+            pushModal(SpacePaymentGate, {url}, {...options, noEscape: true})
+          }
+        })
     case "pay":
       return pushModal(SpacePaymentGate, {url}, {...options, noEscape: true})
     case "join":
