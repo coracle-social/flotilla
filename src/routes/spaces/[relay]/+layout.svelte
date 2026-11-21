@@ -22,7 +22,7 @@
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
   import {derivePaidGated} from "@app/areas/spaces/payments"
   import {user} from "@app/core/user"
-  import {authenticate} from "@app/core/auth"
+  import {authenticate, visitRelay} from "@app/core/auth"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/core/user"
@@ -107,6 +107,8 @@
   // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
   onMount(() => {
     authenticate(url)
+
+    return visitRelay(url)
   })
 </script>
 
