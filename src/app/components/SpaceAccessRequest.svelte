@@ -15,7 +15,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {pushToast} from "@app/navigation/toast"
-  import {attemptRelayAccess} from "@app/areas/spaces/membership"
+  import {displayRefusal, requestMembership} from "@app/tools/spaces"
   import {parseInviteLink} from "@app/areas/spaces/invites"
   import {trackSubmit} from "@app/components/flows/submit"
 
@@ -32,13 +32,13 @@
     () => "Failed to request access.",
     async () => {
       const claim = parseInviteLink(value)?.claim || value
-      const message = await attemptRelayAccess(url, claim)
+      const refusal = await requestMembership(url, claim)
 
-      if (message) {
-        return pushToast({theme: "error", message, timeout: 30_000})
+      if (refusal) {
+        pushToast({theme: "error", message: displayRefusal(refusal), timeout: 30_000})
+      } else {
+        callback()
       }
-
-      callback()
     },
   )
 

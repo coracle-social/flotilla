@@ -13,6 +13,7 @@ import * as pages from "@app/navigation/pages"
 import {getActivityTarget} from "@app/navigation/locations"
 import type {Activity} from "@app/tools/activity"
 import {CONTENT_KINDS} from "@app/tools/content"
+import {hasRooms} from "@app/tools/spaces"
 
 // The content item an event belongs to, when it belongs to one at all.
 const getContentTarget = (event: TrustedEvent) => {
@@ -73,7 +74,7 @@ export const spaceActivity = derived(
       // A conversation is its own messages; content and its comments carry the room h but belong to the item.
       const messages = events.filter(spec({kind: MESSAGE}))
 
-      if (relays.get().get(url)?.hasNip(29)) {
+      if (hasRooms(relays.get().get(url))) {
         for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), messages)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {

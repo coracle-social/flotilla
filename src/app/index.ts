@@ -11,10 +11,10 @@ import {registerHome} from "@app/areas/home"
 import {registerPomade} from "@app/core/pomade"
 import {registerPush} from "@app/tools/push"
 import {registerChecked} from "@app/tools/checked"
+import {registerSpaceModel} from "@app/tools/spaces"
 import {registerSpaces} from "@app/areas/spaces"
 import {registerCalls} from "@app/areas/spaces/calls"
 import {registerRoles} from "@app/areas/spaces/roles"
-import {registerMembership} from "@app/areas/spaces/membership"
 import {registerPinboards} from "@app/areas/spaces/pinboards"
 import {registerCommands} from "@app/areas/spaces/rooms/commands"
 import {registerRooms} from "@app/areas/spaces/rooms"
@@ -44,7 +44,7 @@ export const registerAll = () => {
     registerSpaces()
     registerCalls()
     registerRoles()
-    registerMembership()
+    registerSpaceModel()
     registerPinboards()
     registerCommands()
     registerRooms()

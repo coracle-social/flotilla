@@ -21,7 +21,7 @@
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {attemptRelayAccess} from "@app/areas/spaces/membership"
+  import {requestMembership} from "@app/tools/spaces"
   import {
     PLATFORM_NAME,
     POMADE_SIGNERS,
@@ -53,7 +53,7 @@
 
   const completeSignup = async () => {
     // Join default spaces so the relay is warmed up before we publish below
-    await Promise.all(DEFAULT_SPACES.map(url => attemptRelayAccess(url)))
+    await Promise.all(DEFAULT_SPACES.map(url => requestMembership(url)))
 
     const geohash = getKey<string>("signup.geohash")
     const profileWriter = $domain.writer(Profile).update(getKey<ProfileValues>("signup.profile")!)

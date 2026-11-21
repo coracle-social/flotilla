@@ -170,7 +170,8 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
 
   const alice = await as(users.alice, spacePath(closed.url))
 
-  // Turned away rather than joined, so the prompt becomes a request
+  // Asking to join is refused for want of an invite code, so the prompt becomes a request
+  await alice.getByRole("button", {name: "Join Space"}).click()
   await alice.getByRole("button", {name: "Request Access"}).click()
 
   const code = alice.locator("form").filter({hasText: "Invite code*"}).getByRole("textbox")

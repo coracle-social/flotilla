@@ -12,8 +12,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {roomLists} from "@app/core/plugins"
-  import {publishRoomList} from "@app/tools/publish"
+  import {followMove} from "@app/tools/spaces"
   import {goToMovedSpace} from "@app/navigation/history"
   import {trackSubmit} from "@app/components/flows/submit"
 
@@ -29,9 +28,7 @@
   const {loading, submit: confirm} = trackSubmit(
     () => "Failed to move to the new space.",
     async () => {
-      await $roomLists
-        .migrateRelay(url, newUrl)
-        .then(command => command && publishRoomList(command))
+      await followMove(url, newUrl)
       await goToMovedSpace(url, newUrl)
     },
   )

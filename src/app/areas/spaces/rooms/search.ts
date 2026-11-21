@@ -9,6 +9,7 @@ import {fromApp} from "@app/core/app"
 import {relays} from "@app/core/plugins"
 import * as pages from "@app/navigation/pages"
 import {userRoomList, userSpaceUrls} from "@app/core/user"
+import {hasRooms} from "@app/tools/spaces"
 import {displayRoom} from "@app/areas/spaces/rooms/room"
 
 // `RoomList.urls()` throws on a room tag with no relay hint, so skip those tags rather than the list.
@@ -85,7 +86,7 @@ export const deriveUserRoomSearch = () =>
       type Option = {url: string; h?: string; path: string; name: string; isFavorite: boolean}
 
       const options = $userSpaceUrls.flatMap((url): Option[] => {
-        if (relays.get().get(url)?.hasNip(29)) {
+        if (hasRooms(relays.get().get(url))) {
           const favorites = new Set($userRoomList?.roomsForUrl(url) ?? [])
 
           return ($roomsByUrl.get(url) ?? []).map(({h}) => ({

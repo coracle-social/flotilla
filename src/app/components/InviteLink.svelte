@@ -14,6 +14,7 @@
   import {publishRoomInvite} from "@app/areas/spaces/rooms/membership"
   import {relayManagement} from "@app/core/plugins"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
+  import {parseRefusal} from "@app/tools/spaces"
   import {PLATFORM_NAME} from "@app/core/env"
   import {spaceManagement} from "@app/areas/spaces/management"
   import {clip} from "@app/navigation/toast"
@@ -102,7 +103,7 @@
     <p class="flex justify-center items-center">
       <Spinner {loading}>Requesting an invite link...</Spinner>
     </p>
-  {:else if $access.status === RelayAccessStatus.Denied && /failed|timeout|network/i.test($access.reason)}
+  {:else if $access.status === RelayAccessStatus.Denied && parseRefusal($access.reason).kind === "unreachable"}
     <p class="flex justify-center items-center">
       Unable to reach the space. Please check your connection and try again.
     </p>

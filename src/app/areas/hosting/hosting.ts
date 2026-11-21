@@ -4,9 +4,9 @@ import type {Maybe} from "@welshman/lib"
 import {sortBy, spec} from "@welshman/lib"
 import {User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {roomLists, usePlugin} from "@app/core/plugins"
+import {usePlugin} from "@app/core/plugins"
 import {goToMovedSpace} from "@app/navigation/history"
-import {publishRoomList} from "@app/tools/publish"
+import {followMove} from "@app/tools/spaces"
 import type {Activity, HostedRelay, Invoice, Plan, Tenant} from "@app/areas/hosting/model"
 import {autopayConfigured, getHostedRelayUrl, selectPayableInvoice} from "@app/areas/hosting/model"
 import {
@@ -137,10 +137,7 @@ export const followHostedRelay = async (previous: HostedRelay, next: HostedRelay
   const nextUrl = getHostedRelayUrl(next)
 
   if (previousUrl !== nextUrl) {
-    await roomLists
-      .get()
-      .migrateRelay(previousUrl, nextUrl)
-      .then(command => command && publishRoomList(command))
+    await followMove(previousUrl, nextUrl)
     await goToMovedSpace(previousUrl, nextUrl)
   }
 

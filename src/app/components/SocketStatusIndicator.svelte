@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {throttled} from "@welshman/store"
   import StatusIndicator from "@lib/components/StatusIndicator.svelte"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
 
@@ -7,7 +8,7 @@
   }
 
   const {url}: Props = $props()
-  const access = deriveRelayAccess(url)
+  const access = throttled(800, deriveRelayAccess(url))
 </script>
 
 {#if $access.status === RelayAccessStatus.Connecting}
@@ -16,6 +17,8 @@
   <StatusIndicator class="bg-gray-500">Not Connected</StatusIndicator>
 {:else if $access.status === RelayAccessStatus.Unreachable}
   <StatusIndicator class="bg-error">Failed to Connect</StatusIndicator>
+{:else if $access.status === RelayAccessStatus.Unresponsive}
+  <StatusIndicator class="bg-error">Not Responding</StatusIndicator>
 {:else if $access.status === RelayAccessStatus.Authenticating}
   <StatusIndicator class="bg-warning">Authenticating</StatusIndicator>
 {:else if $access.status === RelayAccessStatus.AwaitingSignature}

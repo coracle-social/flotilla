@@ -17,12 +17,10 @@
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceExit from "@app/components/SpaceExit.svelte"
   import SpaceEdit from "@app/components/SpaceEdit.svelte"
-  import SpaceJoin from "@app/components/SpaceJoin.svelte"
-  import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
   import SpaceConnectionStatus from "@app/components/SpaceConnectionStatus.svelte"
-  import {deriveUserIsSpaceMember} from "@app/areas/spaces/membership"
-  import {openCheckout} from "@app/areas/spaces/payments"
+  import {deriveSpaceStep, deriveUserIsSpaceMember, payForSpace} from "@app/tools/spaces"
+  import {openSpacePrompt} from "@app/components/flows/spaces"
   import {user} from "@app/core/user"
   import {relays} from "@app/core/plugins"
   import {ENABLE_PAID_SPACES, HIDE_NOSTR, ENABLE_HOSTING} from "@app/core/env"
@@ -50,14 +48,15 @@
   const shouldNotify = deriveShouldNotify(url)
   const isMember = deriveUserIsSpaceMember(url)
 
+  const step = deriveSpaceStep(url)
+
   const createInvite = () => pushModal(SpaceInvite, {url}, {replaceState: sheet})
 
   const startEdit = () => pushModal(SpaceEdit, {url}, {replaceState: sheet})
 
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
-  const joinSpace = () =>
-    pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
+  const joinSpace = () => openSpacePrompt(url, $step, {replaceState: sheet})
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
@@ -67,7 +66,7 @@
 
   const manageMembership = () => {
     popModal()
-    openCheckout(url)
+    payForSpace(url)
   }
 
   // The owner is a member by construction and has nothing to manage.

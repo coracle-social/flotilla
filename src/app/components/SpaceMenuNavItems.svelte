@@ -21,6 +21,7 @@
   import {CONTENT_KINDS} from "@app/tools/content"
   import * as pages from "@app/navigation/pages"
   import {unreadDots, unreadPaths} from "@app/tools/activity"
+  import {hasRooms} from "@app/tools/spaces"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -60,7 +61,7 @@
 <SecondaryNavItem href={pages.spaceAbout.path({url})}>
   <Icon icon={Home} /> About
 </SecondaryNavItem>
-{#if !$relay?.hasNip(29)}
+{#if !hasRooms($relay)}
   <SecondaryNavItem href={chatPath} notification={$unreadDots.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
@@ -100,7 +101,7 @@
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}
-{#if $relay?.hasNip(29)}
+{#if hasRooms($relay)}
   <SecondaryNavItem onclick={openSearch}>
     <Icon icon={Magnifier} /> Search
   </SecondaryNavItem>

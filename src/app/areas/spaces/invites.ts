@@ -4,7 +4,7 @@ import {User} from "@welshman/app"
 import {app} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
 import {PLATFORM_URL} from "@app/core/env"
-import {attemptRelayAccess, completeSpaceJoin} from "@app/areas/spaces/membership"
+import {displayRefusal, joinSpace} from "@app/tools/spaces"
 import {joinRoom} from "@app/areas/spaces/rooms/membership"
 
 export type InviteData = {
@@ -60,13 +60,11 @@ export const acceptInvite = async (data: InviteData, notifications: boolean) => 
   const spaceUrls = roomLists.get().urls(User.require(app.get()).pubkey).get()
 
   if (!spaceUrls.includes(data.url)) {
-    const error = await attemptRelayAccess(data.url, data.claim)
+    const refusal = await joinSpace(data.url, {claim: data.claim, notifications})
 
-    if (error) {
-      return error
+    if (refusal) {
+      return displayRefusal(refusal)
     }
-
-    await completeSpaceJoin(data.url, notifications)
   }
 
   if (data.h && data.code) {

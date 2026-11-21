@@ -12,11 +12,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {publishRoomList} from "@app/tools/publish"
-  import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
+  import {distrustSpace, trustSpace as trust} from "@app/tools/spaces"
   import {navigate} from "@app/navigation/navigate"
   import {popModal} from "@app/navigation/dialogs"
-  import {roomLists} from "@app/core/plugins"
   import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
@@ -28,8 +26,7 @@
   const {loading: leaving, submit: untrustSpace} = trackSubmit(
     () => "Failed to leave the space.",
     async () => {
-      await $roomLists.removeRelay(url).then(publishRoomList)
-      await removeTrustedRelay(url)
+      await distrustSpace(url)
       navigate("/home")
     },
   )
@@ -37,7 +34,7 @@
   const {loading: trusting, submit: trustSpace} = trackSubmit(
     () => "Failed to trust this space.",
     async () => {
-      await addTrustedRelay(url)
+      await trust(url)
 
       popModal()
     },

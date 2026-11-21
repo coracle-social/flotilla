@@ -1,5 +1,5 @@
 import {derived, readable, writable} from "svelte/store"
-import {assoc, call, dissoc, noop, on} from "@welshman/lib"
+import {ago, assoc, call, dissoc, noop, now, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {RelayMessage, Socket} from "@welshman/net"
 import {
@@ -16,9 +16,8 @@ import {
   isRelayOk,
   matchReason,
 } from "@welshman/net"
-import {throttled} from "@welshman/store"
-import {BlockedRelayLists} from "@welshman/app"
-import type {IApp} from "@welshman/app"
+import {BlockedRelayLists, RelayStats} from "@welshman/app"
+import type {IApp, RelayStatsItem} from "@welshman/app"
 import {appPolicies, fromApp} from "@app/core/app"
 import {isStaleAuth} from "@app/core/auth"
 import {BLOCKED_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
@@ -28,11 +27,13 @@ export enum RelayAccessStatus {
   Connecting = "connecting",
   Disconnected = "disconnected",
   Unreachable = "unreachable",
+  Unresponsive = "unresponsive",
   Authenticating = "authenticating",
   AwaitingSignature = "awaiting-signature",
   SignerFailed = "signer-failed",
   Denied = "denied",
   Untrusted = "untrusted",
+  Declined = "declined",
   Connected = "connected",
 }
 
@@ -44,10 +45,21 @@ export type RelayAccess =
 // Relays that refused several requests in a row, with the reason they gave last.
 const deniedRelays = writable<Record<string, string>>({})
 
+// A socket open for five seconds that was asked something and has heard nothing since it opened isn't answering.
+const isUnresponsive = (socket: Socket, stats: Maybe<RelayStatsItem>) =>
+  Boolean(
+    stats &&
+    socket.status === SocketStatus.Open &&
+    stats.last_request >= stats.last_open &&
+    stats.last_receive < stats.last_open &&
+    stats.last_open < ago(5),
+  )
+
 const getRelayAccess = (
   socket: Socket,
   denial: Maybe<string>,
   pendingTrust: string[],
+  stats: Maybe<RelayStatsItem>,
 ): RelayAccess => {
   if (socket.status === SocketStatus.Opening) {
     return {status: RelayAccessStatus.Connecting}
@@ -59,6 +71,10 @@ const getRelayAccess = (
 
   if (socket.status === SocketStatus.Error) {
     return {status: RelayAccessStatus.Unreachable}
+  }
+
+  if (isUnresponsive(socket, stats)) {
+    return {status: RelayAccessStatus.Unresponsive}
   }
 
   if (socket.auth.status === AuthStatus.PendingSignature) {
@@ -91,6 +107,10 @@ const getRelayAccess = (
     return {status: RelayAccessStatus.Untrusted}
   }
 
+  if (socket.auth.status === AuthStatus.Declined) {
+    return {status: RelayAccessStatus.Declined}
+  }
+
   return {status: RelayAccessStatus.Connected}
 }
 
@@ -108,14 +128,24 @@ export const deriveSocket = (url: string) =>
     })
   })
 
+// Silence has no event to notify on, so a ticking clock re-reads the stats.
+const clock = readable(now(), set => {
+  const interval = setInterval(() => set(now()), 1000)
+
+  return () => clearInterval(interval)
+})
+
 export const deriveRelayAccess = (url: string) =>
-  throttled(
-    800,
-    derived(
-      [deriveSocket(url), deniedRelays, relaysPendingTrust],
-      ([$socket, $deniedRelays, $relaysPendingTrust]) =>
-        getRelayAccess($socket, $deniedRelays[url], $relaysPendingTrust),
-    ),
+  derived(
+    [
+      deriveSocket(url),
+      deniedRelays,
+      relaysPendingTrust,
+      fromApp($app => $app.use(RelayStats).one(url)),
+      clock,
+    ],
+    ([$socket, $deniedRelays, $relaysPendingTrust, $stats]) =>
+      getRelayAccess($socket, $deniedRelays[url], $relaysPendingTrust, $stats),
   )
 
 // Policies

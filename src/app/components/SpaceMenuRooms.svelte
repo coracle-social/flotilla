@@ -9,6 +9,7 @@
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import {relays} from "@app/core/plugins"
+  import {hasRooms} from "@app/tools/spaces"
   import {deriveUserCanCreateRoom} from "@app/areas/spaces/management"
   import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
@@ -95,7 +96,7 @@
   {/if}
 {/snippet}
 
-{#if $relay?.hasNip(29) && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
+{#if hasRooms($relay) && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
   {#if mobile}
     <div class="card space-menu__card flex flex-col gap-1">
       {@render content()}

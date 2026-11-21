@@ -44,6 +44,7 @@
   import * as env from "@app/core/env"
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/tools/theme"
   import {checked, syncChecked, syncCheckedRemote} from "@app/tools/checked"
+  import {pendingCheckouts} from "@app/tools/spaces"
   import {unreadCount, backgroundUnreadCount} from "@app/tools/activity"
   import * as home from "@app/areas/home"
   import {syncBadges} from "@app/shell/badges"
@@ -111,6 +112,7 @@
     // Boot code reads and writes these, e.g. the push transport is picked from the stored fallback flag
     await Promise.all([
       checked.ready,
+      pendingCheckouts.ready,
       device.ready,
       shouldUnwrap.ready,
       wallet.ready,

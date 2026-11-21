@@ -7,6 +7,7 @@
   } from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
   import {AuthStatus, SocketStatus} from "@welshman/net"
+  import {throttled} from "@welshman/store"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
@@ -30,7 +31,7 @@
   const {url}: Props = $props()
 
   const relay = $relays.one(url)
-  const access = deriveRelayAccess(url)
+  const access = throttled(800, deriveRelayAccess(url))
   const socket = deriveSocket(url)
   const stats = $relayStats.one(url)
   const recentErrors = $derived(sortBy(t => -t, $stats?.recent_errors ?? []))
@@ -63,6 +64,8 @@
           Not connected right now. The app reconnects when it needs this space.
         {:else if $access.status === RelayAccessStatus.Unreachable}
           This space couldn't be reached. It may be down, or your network may be blocking it.
+        {:else if $access.status === RelayAccessStatus.Unresponsive}
+          This space accepted a connection but hasn't answered any requests.
         {:else if $access.status === RelayAccessStatus.Authenticating}
           Signing in to this space.
         {:else if $access.status === RelayAccessStatus.AwaitingSignature}
@@ -74,6 +77,8 @@
           Your requests to this space are being refused: {$access.reason}
         {:else if $access.status === RelayAccessStatus.Untrusted}
           This space sends events without signatures, which are held until you choose to trust it.
+        {:else if $access.status === RelayAccessStatus.Declined}
+          Connected without signing in, since you haven't joined this space.
         {:else}
           Connected and working normally.
         {/if}
@@ -102,6 +107,8 @@
             <StatusIndicator class="bg-success">Authenticated</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.Requested}
             <StatusIndicator class="bg-warning">Requested</StatusIndicator>
+          {:else if $socket.auth.status === AuthStatus.Declined}
+            <StatusIndicator class="bg-gray-500">Declined</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.PendingSignature}
             <StatusIndicator class="bg-warning">Waiting for your signer</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.DeniedSignature}

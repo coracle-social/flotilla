@@ -14,7 +14,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {leaveSpace} from "@app/areas/spaces/membership"
+  import {leaveSpace} from "@app/tools/spaces"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {navigate} from "@app/navigation/navigate"
   import {trackSubmit} from "@app/components/flows/submit"

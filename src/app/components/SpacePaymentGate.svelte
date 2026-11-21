@@ -1,9 +1,6 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
   import {maybe} from "@welshman/lib"
   import {Relays} from "@welshman/app"
-  import {App} from "@capacitor/app"
-  import {Capacitor} from "@capacitor/core"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
@@ -18,16 +15,10 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpacePrice from "@app/components/SpacePrice.svelte"
-  import {
-    openCheckout,
-    pendingCheckouts,
-    reconcileSpaceMembership,
-  } from "@app/areas/spaces/payments"
   import {fromApp} from "@app/core/app"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
+  import {deriveSpaceStep, payForSpace, reconcileSpace} from "@app/tools/spaces"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/navigation/toast"
-  import {goToSpace} from "@app/navigation/history"
   import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
@@ -38,74 +29,31 @@
 
   const relay = fromApp($app => $app.use(Relays).one(url))
 
+  const step = deriveSpaceStep(url)
+
   const back = () => history.back()
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url, callback: clearModals})
 
-  const join = () => {
-    error = openCheckout(url)
+  const join = async () => {
+    error = await payForSpace(url)
   }
 
-  // A foreground event and the poll can land at once, so this guards itself.
   const {loading: reconciling, submit: reconcile} = trackSubmit(
     () => "Could not check your membership. Please try again.",
-    async () => {
-      if (await reconcileSpaceMembership(url)) {
-        pushToast({message: "Welcome to the space!"})
-        clearModals()
-        await goToSpace(url, {replaceState: true})
-      }
-    },
+    () => reconcileSpace(url),
   )
 
-  // Each pass reconnects to the relay, so it is worth it only while a checkout is out.
-  const poll = () => {
-    timer = window.setTimeout(async () => {
-      await reconcile()
-
-      // Ten minutes, after which a payment is only noticed on a foreground event.
-      if (pending && ++polls < 120) {
-        poll()
-      }
-    }, 5000)
-  }
-
-  const onVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
-      reconcile()
-    }
-  }
-
   let error = $state(maybe<string>())
-  let polls = 0
-  let timer = 0
-  let listeners: {remove: () => void}[] = []
 
   const paymentsUrl = $derived($relay?.payments_url)
-  const pending = $derived($pendingCheckouts.includes(url))
+  const pending = $derived($step.step !== "pay")
 
+  // Once the space asks for something other than payment, the layout prompts for it.
   $effect(() => {
-    if (pending) {
-      poll()
-
-      return () => clearTimeout(timer)
+    if (!["pay", "waiting"].includes($step.step)) {
+      clearModals()
     }
-  })
-
-  onMount(async () => {
-    await reconcile()
-
-    if (Capacitor.isNativePlatform()) {
-      listeners = [await App.addListener("appStateChange", ({isActive}) => isActive && reconcile())]
-    } else {
-      document.addEventListener("visibilitychange", onVisibilityChange)
-    }
-  })
-
-  onDestroy(() => {
-    clearTimeout(timer)
-    listeners.forEach(listener => listener.remove())
-    document.removeEventListener("visibilitychange", onVisibilityChange)
   })
 </script>
 

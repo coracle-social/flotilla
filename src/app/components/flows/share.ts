@@ -10,6 +10,7 @@ import * as pages from "@app/navigation/pages"
 import {pushToast} from "@app/navigation/toast"
 import {shareTo} from "@app/tools/share"
 import type {Share} from "@app/tools/share"
+import {hasRooms} from "@app/tools/spaces"
 import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
 
@@ -21,7 +22,7 @@ const openShareDialog = (share: Share) => {
 
 export const shareEvent = (url: Maybe<string>, noun: string, event: TrustedEvent) => {
   if (url) {
-    if (relays.get().get(url)?.hasNip(29)) {
+    if (hasRooms(relays.get().get(url))) {
       pushModal(ShareEvent, {url, noun, event})
     } else {
       shareTo(pages.spaceChat.path({url}), {type: "event", value: event})

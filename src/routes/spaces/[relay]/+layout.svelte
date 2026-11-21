@@ -1,32 +1,15 @@
-<script module lang="ts">
-  const joinPrompted = new Set<string>()
-  const redirectPrompted = new Set<string>()
-</script>
-
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {navigating} from "$app/state"
-  import type {Maybe} from "@welshman/lib"
-  import {once} from "@welshman/lib"
-  import {normalizeRelayUrl} from "@welshman/util"
-  import {stripPrefix} from "@lib/util"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
-  import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
-  import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
-  import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
-  import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
-  import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {derivePaidGated} from "@app/areas/spaces/payments"
-  import {user} from "@app/core/user"
-  import {authenticate, visitRelay} from "@app/core/auth"
-  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
-  import {relays, roomLists} from "@app/core/plugins"
-  import {userSpaceUrls} from "@app/core/user"
-  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import {showSpacePrompt, watchSpaceCheckout} from "@app/components/flows/spaces"
+  import {deriveSpaceStep, loadSpace} from "@app/tools/spaces"
+  import {getModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import type {LayoutProps} from "./$types"
 
@@ -34,85 +17,37 @@
 
   const {url} = pages.space.decode(params)
 
-  const access = deriveRelayAccess(url)
+  const step = deriveSpaceStep(url)
 
-  const paidGated = derivePaidGated(url)
-
-  const showAuthError = once((error: string) =>
-    pushModal(SpaceAuthError, {url, error}, {noEscape: true}),
-  )
-
-  const showPaymentGate = once(() => pushModal(SpacePaymentGate, {url}, {noEscape: true}))
-
-  const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
-
-  // Detect a moved custom domain — the relay's nip-11 document answered with a redirect
-  const checkRedirect = once(() => {
-    $relays.load(url).then($relay => {
-      const next = $relay?.redirect_to
-
-      if (next) {
-        redirectUrl = normalizeRelayUrl(next.replace(/^http/, "ws"))
-      }
-    })
-  })
-
-  const loadSpaces = async () => {
-    const currentPubkey = user.get().pubkey
-
-    if (currentPubkey) {
-      // forceLoad skips the hour-stale cache and, unlike load, rethrows fetch errors.
-      try {
-        await $roomLists.forceLoad(currentPubkey, [url])
-      } catch (error) {
-        console.warn(`Failed to load room list for ${currentPubkey}`, error)
-      }
-    }
-
-    spacesLoaded = true
-  }
-
-  // Track this manually since we want to avoid race conditions in which we show this prompt before we load
-  let spacesLoaded = $state(false)
-
-  let redirectUrl = $state<Maybe<string>>()
-
-  $effect(checkRedirect)
-
-  // A modal owns a history entry, so the join prompt waits for the page to settle.
+  // A modal owns a history entry, so a prompt waits for the page to settle.
   $effect(() => {
-    if (getModal() || navigating.to) {
-      return
-    }
-
-    if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
-      redirectPrompted.add(url)
-      pushModal(SpaceRedirect, {url, newUrl: redirectUrl})
-    } else if ($paidGated) {
-      showPaymentGate()
-    } else if (!$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
-      if (spacesLoaded) {
-        joinPrompted.add(url)
-        pushModal(SpaceJoin, {url})
-      } else {
-        loadSpaces()
-      }
-    } else if ($access.status === RelayAccessStatus.Denied) {
-      showAuthError(stripPrefix($access.reason))
-    } else if ($access.status === RelayAccessStatus.Untrusted) {
-      showPendingTrust()
+    if (!getModal() && !navigating.to) {
+      showSpacePrompt(url, $step)
     }
   })
 
-  // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
+  // Visiting a space identifies to it, and a checkout is watched for as long as the page is open.
   onMount(() => {
-    authenticate(url)
+    const unload = loadSpace(url)
+    const unwatch = watchSpaceCheckout(url)
 
-    return visitRelay(url)
+    return () => {
+      unload()
+      unwatch()
+    }
   })
 </script>
 
+{#snippet checking()}
+  {#if $step.step === "checking"}
+    <p class="flex items-center justify-center gap-2 p-4 text-sm text-content-muted">
+      <Spinner loading>Checking this space…</Spinner>
+    </p>
+  {/if}
+{/snippet}
+
 {#if $page.url.pathname === pages.space.path({url})}
+  {@render checking()}
   {@render children?.()}
 {:else}
   <SecondaryNav>
@@ -120,6 +55,7 @@
   </SecondaryNav>
   <Page>
     <SpaceNotify {url} />
+    {@render checking()}
     <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
          params change, so this rebuilds it for the second case. The url the page store reports
          arrives a tick after the page is built, so keying on that throws the new page away. -->
