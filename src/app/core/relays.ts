@@ -1,7 +1,7 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, assoc, call, dissoc, noop, now, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import type {RelayMessage, Socket} from "@welshman/net"
+import type {RelayMessage, RelayStatsItem, Socket} from "@welshman/net"
 import {
   AuthStateEvent,
   AuthStatus,
@@ -17,7 +17,7 @@ import {
   matchReason,
 } from "@welshman/net"
 import {BlockedRelayLists, RelayStats} from "@welshman/app"
-import type {IApp, RelayStatsItem} from "@welshman/app"
+import type {IApp} from "@welshman/app"
 import {appPolicies, fromApp} from "@app/core/app"
 import {isStaleAuth} from "@app/core/auth"
 import {BLOCKED_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
