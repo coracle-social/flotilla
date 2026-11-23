@@ -21,7 +21,7 @@ import {getTargetKeys, getThreadRefs} from "@app/tools/targets"
 // A note to load, with the replies whose p tags name its author when its ref doesn't.
 type NoteRequest = {ref: EventRef; replies?: TrustedEvent[]}
 
-type LoadOptions = {priority?: number; signal?: AbortSignal; timeout?: number}
+type LoadOptions = {priority?: number; signal?: AbortSignal}
 
 // A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
 const getNoteRelays = (ref: IEventRef, replies: TrustedEvent[] = []) =>
@@ -35,7 +35,7 @@ const getNoteRelays = (ref: IEventRef, replies: TrustedEvent[] = []) =>
 /** One note, the very version its ref names, from the repository or else from the relays it lives on. */
 export const loadNote = async (
   ref: IEventRef,
-  {replies = [], timeout = 3000, ...options}: LoadOptions & {replies?: TrustedEvent[]} = {},
+  {replies = [], ...options}: LoadOptions & {replies?: TrustedEvent[]} = {},
 ) => {
   const eventRef = new EventRef(ref)
   const idOrAddress = eventRef.getIdOrAddress()
@@ -48,16 +48,14 @@ export const loadNote = async (
     }
 
     const relays = await getNoteRelays(ref, replies)
-    const loaded = await network
-      .get()
-      .load({relays, filters: eventRef.getFilters(), timeout, ...options})
+    const loaded = await network.get().load({relays, filters: eventRef.getFilters(), ...options})
 
     return first(loaded)
   }
 }
 
 // Many notes at once, filed by id and address, with relays asked only for what the repository lacks.
-const loadNotes = async (requests: NoteRequest[], {timeout = 3000, ...options}: LoadOptions) => {
+const loadNotes = async (requests: NoteRequest[], options: LoadOptions) => {
   const notes = new Map<string, TrustedEvent>()
 
   const file = (event: TrustedEvent) => {
@@ -82,7 +80,7 @@ const loadNotes = async (requests: NoteRequest[], {timeout = 3000, ...options}: 
       const filters = getIdFilters(removeUndefined(missing.map(({ref}) => ref.getAddressOrId())))
       const loaded = await network
         .get()
-        .load({relays: uniq(selections.flat()), filters, timeout, ...options})
+        .load({relays: uniq(selections.flat()), filters, ...options})
 
       for (const event of loaded) {
         file(event)

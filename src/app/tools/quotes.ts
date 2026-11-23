@@ -29,7 +29,7 @@ export const getQuoteRelays = (ref: IEventRef, event: TrustedEvent, url?: string
 export const loadQuote = async (ref: IEventRef, event: TrustedEvent, url?: string) => {
   const relays = await getQuoteRelays(ref, event, url)
   const filters = new EventRef(ref).getFilters()
-  const events = await network.get().load({filters, relays, timeout: 3000})
+  const events = await network.get().load({filters, relays})
 
   return first(sortEventsDesc(events))
 }

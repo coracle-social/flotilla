@@ -67,7 +67,7 @@ const load = async (requests: LoadRequest[], getFilters: (events: TrustedEvent[]
       const filters = getFilters(uniqBy(event => event.id, events))
 
       try {
-        const found = await network.get().load({relays: [relay], filters, timeout: 3000})
+        const found = await network.get().load({relays: [relay], filters})
 
         if (found.length > 0) {
           await network.get().load({relays: [relay], filters: getTargetFilters(found, [DELETE])})

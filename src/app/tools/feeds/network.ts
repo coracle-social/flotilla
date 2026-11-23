@@ -6,7 +6,6 @@ import {
   countBy,
   identity,
   int,
-  ms,
   now,
   partition,
   removeUndefined,
@@ -118,7 +117,7 @@ const makeNoteFeed = ({
     : readable([])
 
   // A note the feed can't draw its card without is given up on rather than holding up the feed.
-  const resolver = makeNoteResolver({timeout: ms(15), priority: 1})
+  const resolver = makeNoteResolver({priority: 1})
 
   const groups: Readable<NoteGroup[]> = derived(
     [drawn, targets, resolver.notes],

@@ -1,4 +1,4 @@
-import {first, ms, now, uniq} from "@welshman/lib"
+import {first, now, uniq} from "@welshman/lib"
 import {EVENT_RSVP, EVENT_TIME, getAddress, getIdFilters} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
@@ -14,12 +14,11 @@ const getEventTitle = (event: TrustedEvent) => reader(TimeEvent)(event).title() 
 
 const loadAttendedEvents = async (pubkey: string) => {
   const $network = network.get()
-  const signal = AbortSignal.timeout(ms(10))
   const rsvpFilter = {kinds: [EVENT_RSVP], authors: [pubkey]}
   const hostedFilter = {kinds: [EVENT_TIME], authors: [pubkey]}
   const relays = roomLists.get().urls(pubkey).get()
 
-  await $network.load({signal, relays, filters: [rsvpFilter, hostedFilter]})
+  await $network.load({relays, filters: [rsvpFilter, hostedFilter]})
 
   const {repository} = app.get()
   const getRelay = (event: TrustedEvent) =>
@@ -49,7 +48,6 @@ const loadAttendedEvents = async (pubkey: string) => {
   })
 
   await $network.load({
-    signal,
     relays: uniq(attended.map(({relay}) => relay)),
     filters: getIdFilters(attended.map(({address}) => address)),
   })

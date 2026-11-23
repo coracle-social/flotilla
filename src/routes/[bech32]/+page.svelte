@@ -44,7 +44,6 @@
           goto("/", {replaceState: true})
         }
       },
-      timeout: 3000,
     })
   }
 

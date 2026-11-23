@@ -76,7 +76,7 @@ const getNoteResolver = ($app: IApp) => {
 
   noteLoader?.resolver.stop()
 
-  const resolver = makeNoteResolver({batchSize: 100, maxAttempts: 2, timeout: 3000})
+  const resolver = makeNoteResolver({batchSize: 100, maxAttempts: 2})
 
   noteLoader = {app: $app, resolver}
 

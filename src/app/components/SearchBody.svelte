@@ -58,7 +58,6 @@
         relays,
         filters,
         signal: controller.signal,
-        timeout: 3000,
       })
 
       results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, [...events, ...results]))
