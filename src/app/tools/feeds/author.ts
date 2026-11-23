@@ -24,7 +24,8 @@ export type AuthorFeedOptions = {
 
 export type AuthorFeed = {events: Readable<TrustedEvent[]>; older: Pager; stop: () => void}
 
-type AuthorGroup = {authors: string[]; urls: string[]}
+// A group's spares are the relays it asks in place of ones that drop out of the feed
+type AuthorGroup = {authors: string[]; urls: string[]; spares: string[]}
 
 // One selection over every follow lands on the few biggest relays, so each group scores its own.
 const chunkAuthors = (authors: string[]) =>
@@ -32,8 +33,9 @@ const chunkAuthors = (authors: string[]) =>
 
 const routeAuthors = async (authors: string[]): Promise<AuthorGroup> => {
   const scenario = await router.get().resolve(authors.map(outbox))
+  const urls = scenario.limit(20).getUrls()
 
-  return {authors, urls: scenario.limit(10).getUrls()}
+  return {authors, urls: urls.slice(0, 10), spares: urls.slice(10)}
 }
 
 const hasRelayList = (pubkey: string) => Boolean(relayLists.get().get(pubkey))
@@ -85,7 +87,7 @@ const mergeTimelines = (timelines: Readable<Timeline[]>, at: number) => {
     ),
   )
 
-  // Timelines answer a page together, so the merged list redraws once for all of them
+  // Timelines fill a page together, so the merged list redraws once for all of them
   const events = throttled(
     150,
     derived(completeByTimeline, $completeByTimeline =>
@@ -120,11 +122,11 @@ export const makeAuthorFeed = ({
 
   const older: Pager = {status, page: merged.older.page, settle: merged.older.settle}
 
-  const startTimelines = ({authors, urls}: AuthorGroup) => {
-    const filters = getFilters(authors)
+  const startTimelines = (group: AuthorGroup) => {
+    const filters = getFilters(group.authors)
     const byUrl = app.get().use(Events).byIdByUrl(filters)
 
-    return urls.map(url =>
+    const startTimeline = (url: string): Timeline =>
       makeTimeline({
         source: projectAsync(byUrl, ($byUrl): EventsById => $byUrl.get(url) ?? new Map()),
         url,
@@ -133,8 +135,18 @@ export const makeAuthorFeed = ({
         interval,
         // The cache would draw a group's history out of order.
         useCache: false,
-      }),
-    )
+        // A relay that drops out of the feed hands its place to the group's next one
+        onDrop: () => {
+          const spare = group.spares.shift()
+
+          if (spare && !controller.signal.aborted) {
+            timelines.update($timelines => [...$timelines, startTimeline(spare)])
+            older.page()
+          }
+        },
+      })
+
+    return group.urls.map(startTimeline)
   }
 
   const addGroups = (groups: AuthorGroup[]) => {

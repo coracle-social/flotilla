@@ -1,9 +1,10 @@
 import {derived} from "svelte/store"
 import {Events} from "@welshman/app"
 import {TimeEvent} from "@welshman/domain"
-import {DAY, MONTH, YEAR, int, ms, now, range, removeUndefined, uniqBy} from "@welshman/lib"
+import {DAY, MONTH, YEAR, int, now, range, removeUndefined, uniqBy} from "@welshman/lib"
 import {EVENT_TIME, compareEventsAsc, getAddress, sortEventsDesc} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
+import {RelayReasonPrefix, matchReason} from "@welshman/net"
 import {strictOrder} from "@lib/order"
 import {makeWalkPager} from "@lib/pager"
 import type {Walk, Window, WindowResult} from "@lib/pager"
@@ -65,27 +66,33 @@ export const makeCalendarFeed = ({url}: CalendarFeedOptions) => {
   )
 
   const load = async ({since, until}: Window): Promise<WindowResult> => {
-    let answered = false
+    let complete = false
+    let retry = false
 
     const days = Array.from(range(since, until, DAY), t => String(Math.floor(t / DAY)))
 
     const loaded = await network.get().load({
       relays: [url],
       priority: 1,
-      // A relay can accept the request and never send EOSE, so the window needs a ceiling.
-      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(ms(3))]),
+      signal: controller.signal,
       threshold: 0.8,
       filters: [{kinds: [EVENT_TIME], "#D": days}],
       onEose: () => {
-        answered = true
+        complete = true
+      },
+      // A relay that wants auth may serve the month once it has it
+      onClosed: reason => {
+        if (matchReason(RelayReasonPrefix.AuthRequired, reason)) {
+          retry = true
+        }
       },
     })
 
-    return {found: loaded.length, answered}
+    return {found: loaded.length, complete, retry}
   }
 
-  const older = makeWalkPager(daysBack(now()), load)
-  const newer = makeWalkPager(daysAhead(now()), load)
+  const older = makeWalkPager({walk: daysBack(now()), request: load})
+  const newer = makeWalkPager({walk: daysAhead(now()), request: load})
 
   const stop = () => controller.abort()
 

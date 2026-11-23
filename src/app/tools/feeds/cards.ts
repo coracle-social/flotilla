@@ -28,7 +28,7 @@ export const getNoteParentRef = (event: TrustedEvent): Maybe<EventRef> => {
   }
 }
 
-// A reply is a candidate for the note it answers, and anything else for itself.
+// A reply is a candidate for the note it replies to, and anything else for itself.
 const fromDrawn = (event: TrustedEvent, facets: NoteFacet[]): NoteGroup => {
   const parent = getNoteParentRef(event)
   const ref = parent ?? EventRef.fromEvent(event)

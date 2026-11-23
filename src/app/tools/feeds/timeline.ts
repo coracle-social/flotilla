@@ -22,6 +22,8 @@ export type TimelineOptions = {
   // The window a page asks for, which an empty window widens.
   interval: number
   useCache: boolean
+  // Called when the relay can't complete a window of older history and the timeline stops paging back
+  onDrop?: () => void
 }
 
 export type Timeline = {
@@ -43,20 +45,21 @@ export const makeTimeline = ({
   at = now(),
   interval,
   useCache,
+  onDrop,
 }: TimelineOptions): Timeline => {
   const controller = new AbortController()
   const kept = keepEvents(source)
-  // The lowest time the relay, or the cache, is known to have answered below.
+  // The lowest time down to which the relay, or the cache, is known to have sent everything.
   const covered = writable(at)
 
   const cover = (timestamp: number) => {
     covered.update($covered => Math.min($covered, timestamp))
   }
 
-  // A window the relay has answered below the cursor leaves the pager behind, so settling pages again.
-  const older = makeWalkPager(
-    olderWalk(at, interval),
-    window =>
+  // A window the relay has covered below the cursor leaves the pager behind, so settling pages again.
+  const older = makeWalkPager({
+    walk: olderWalk(at, interval),
+    request: window =>
       requestWindow({
         url,
         filters,
@@ -65,12 +68,14 @@ export const makeTimeline = ({
         signal: controller.signal,
         onCover: cover,
       }),
-    cursor => cursor.until > get(covered),
-  )
+    isBehind: cursor => cursor.until > get(covered),
+    onDrop,
+  })
 
-  const newer = makeWalkPager(newerWalk(at, interval), window =>
-    requestWindow({url, filters, window, signal: controller.signal}),
-  )
+  const newer = makeWalkPager({
+    walk: newerWalk(at, interval),
+    request: window => requestWindow({url, filters, window, signal: controller.signal}),
+  })
 
   const floor = derived([older.cursor, covered], ([$cursor, $covered]) =>
     Math.min($cursor.until, $covered),

@@ -5,7 +5,14 @@ import {createScroller} from "@lib/html"
 
 export type PagerStatus = "idle" | "loading" | "exhausted"
 
-export type PageResult = {found: number; answered: boolean; exhausted: boolean; behind: boolean}
+// A window is complete once its relay has sent everything in it, and an incomplete one to retry was refused only for now
+export type PageResult = {
+  found: number
+  complete: boolean
+  retry?: boolean
+  exhausted: boolean
+  behind: boolean
+}
 
 export type Pager = {
   status: Readable<PagerStatus>
@@ -13,11 +20,17 @@ export type Pager = {
   settle: () => Promise<void>
 }
 
-export const makePager = (load: () => Promise<PageResult>): Pager => {
+export type PagerOptions = {
+  load: () => Promise<PageResult>
+  // Called when a window ends incomplete and the pager stops, so a feed can replace its relay
+  onDrop?: () => void
+}
+
+export const makePager = ({load, onDrop}: PagerOptions): Pager => {
   const status = writable<PagerStatus>("idle")
 
   let running = false
-  // Before any window is answered a feed is behind by definition.
+  // Before any window is complete a feed is behind by definition.
   let behind = true
 
   const page = async () => {
@@ -40,8 +53,15 @@ export const makePager = (load: () => Promise<PageResult>): Pager => {
           return
         }
 
-        if (!result.answered) {
-          await sleep(ms(3))
+        if (!result.complete) {
+          if (result.retry) {
+            await sleep(ms(3))
+          } else {
+            // A relay that couldn't complete a window is dropped rather than asked again forever
+            status.set("exhausted")
+            onDrop?.()
+          }
+
           return
         }
 
@@ -67,9 +87,9 @@ export const makePager = (load: () => Promise<PageResult>): Pager => {
 
 export type Window = {since: number; until: number}
 
-export type WindowResult = {found: number; answered: boolean}
+export type WindowResult = {found: number; complete: boolean; retry?: boolean}
 
-// A direction through time: where it starts, when it's done, the next window, and where an answered window leaves it.
+// A direction through time: where it starts, when it's done, the next window, and where a complete window leaves it.
 export type Walk<C, R extends WindowResult> = {
   start: C
   isDone: (cursor: C) => boolean
@@ -77,37 +97,46 @@ export type Walk<C, R extends WindowResult> = {
   advance: (cursor: C, window: Window, result: R) => C
 }
 
-// Asks for one window per load, and moves the cursor once a window is answered.
-export const makeWalkPager = <C, R extends WindowResult>(
-  walk: Walk<C, R>,
-  request: (window: Window) => Promise<R>,
-  isBehind: (cursor: C) => boolean = () => false,
-) => {
+export type WalkPagerOptions<C, R extends WindowResult> = {
+  walk: Walk<C, R>
+  request: (window: Window) => Promise<R>
+  isBehind?: (cursor: C) => boolean
+  onDrop?: () => void
+}
+
+// Asks for one window per load, and moves the cursor once a window is complete.
+export const makeWalkPager = <C, R extends WindowResult>({
+  walk,
+  request,
+  isBehind = () => false,
+  onDrop,
+}: WalkPagerOptions<C, R>) => {
   const cursor = writable(walk.start)
 
   const load = async (): Promise<PageResult> => {
     const current = get(cursor)
 
     if (walk.isDone(current)) {
-      return {found: 0, answered: true, exhausted: true, behind: false}
+      return {found: 0, complete: true, exhausted: true, behind: false}
     }
 
     const window = walk.getWindow(current)
     const result = await request(window)
 
-    if (result.answered) {
+    if (result.complete) {
       cursor.set(walk.advance(current, window, result))
     }
 
     return {
       found: result.found,
-      answered: result.answered,
+      complete: result.complete,
+      retry: result.retry,
       exhausted: false,
       behind: isBehind(get(cursor)),
     }
   }
 
-  return {...makePager(load), cursor: readonly(cursor)}
+  return {...makePager({load, onDrop}), cursor: readonly(cursor)}
 }
 
 const combineStatuses = (statuses: PagerStatus[]): PagerStatus => {
