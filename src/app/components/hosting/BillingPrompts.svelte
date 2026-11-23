@@ -73,8 +73,8 @@
   actions: Snippet,
   dismiss?: () => void,
 )}
-  <div class={cx("card card-sm flex items-start gap-3", className)}>
-    <Icon {icon} size={5} class="mt-0.5 shrink-0" />
+  <div class={cx("card card-sm flex items-start gap-3 sm:items-center", className)}>
+    <Icon {icon} size={5} class="mt-0.5 shrink-0 sm:mt-0" />
     <div
       class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <p class="min-w-0 text-sm">{message}</p>
@@ -84,7 +84,7 @@
     </div>
     {#if dismiss}
       <Button
-        class="button button-link button-sm -mt-1 shrink-0"
+        class="button button-link button-sm -mt-1 shrink-0 sm:mt-0"
         aria-label="Dismiss"
         onclick={dismiss}>
         <Icon icon={Close} size={4} />
