@@ -55,7 +55,7 @@ export const makeTimeline = ({
 
   // A window the relay has answered below the cursor leaves the pager behind, so settling pages again.
   const older = makeWalkPager(
-    olderWalk(at),
+    olderWalk(at, interval),
     window =>
       requestWindow({
         url,

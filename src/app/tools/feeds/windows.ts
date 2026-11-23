@@ -22,20 +22,20 @@ export const getCacheFloor = (events: Iterable<TrustedEvent>) => {
 
 export type WindowAnswer = WindowResult & {floor?: number}
 
-export type OlderCursor = {until: number}
-
-// An older page asks for the newest events below until, with no lower bound.
-export type OlderWindow = Pick<Window, "until">
+export type OlderCursor = {until: number; interval: number}
 
 export type NewerCursor = {since: number; interval: number}
 
-// A page is the newest events below until, so the next starts at its oldest, and an empty one leaves nothing below.
-export const olderWalk = (until: number): Walk<OlderCursor, WindowAnswer, OlderWindow> => ({
-  start: {until},
-  isDone: cursor => cursor.until === 0,
-  getWindow: cursor => ({until: cursor.until}),
-  // Stepping a second under the old until keeps a page whose events all sit at until from repeating.
-  advance: (_, window, {floor}) => ({until: floor ? Math.min(floor, window.until - 1) : 0}),
+// Every relay pages back through the same windows of time, so a fast relay's old events can't reach the feed ahead of a slower relay's recent ones.
+export const olderWalk = (until: number, base: number): Walk<OlderCursor, WindowAnswer> => ({
+  start: {until, interval: base},
+  isDone: cursor => isPastHistory(cursor.until),
+  getWindow: cursor => ({since: cursor.until - cursor.interval, until: cursor.until}),
+  // Stepping a second under the old until keeps a window whose events all sit at until from repeating.
+  advance: (cursor, window, {found, floor}) => ({
+    until: floor !== undefined ? Math.min(floor, window.until - 1) : window.since,
+    interval: nextInterval(base, cursor.interval, found),
+  }),
 })
 
 export const newerWalk = (since: number, base: number): Walk<NewerCursor, WindowAnswer> => ({
@@ -54,7 +54,7 @@ export const newerWalk = (since: number, base: number): Walk<NewerCursor, Window
 export type WindowRequest = {
   url: string
   filters: Filter[]
-  window: Partial<Window>
+  window: Window
   limit?: number
   signal: AbortSignal
   onCover?: (timestamp: number) => void
