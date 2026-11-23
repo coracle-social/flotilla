@@ -70,17 +70,17 @@ export type Window = {since: number; until: number}
 export type WindowResult = {found: number; answered: boolean}
 
 // A direction through time: where it starts, when it's done, the next window, and where an answered window leaves it.
-export type Walk<C, R extends WindowResult> = {
+export type Walk<C, R extends WindowResult, W = Window> = {
   start: C
   isDone: (cursor: C) => boolean
-  getWindow: (cursor: C) => Window
-  advance: (cursor: C, window: Window, result: R) => C
+  getWindow: (cursor: C) => W
+  advance: (cursor: C, window: W, result: R) => C
 }
 
 // Asks for one window per load, and moves the cursor once a window is answered.
-export const makeWalkPager = <C, R extends WindowResult>(
-  walk: Walk<C, R>,
-  request: (window: Window) => Promise<R>,
+export const makeWalkPager = <C, R extends WindowResult, W = Window>(
+  walk: Walk<C, R, W>,
+  request: (window: W) => Promise<R>,
   isBehind: (cursor: C) => boolean = () => false,
 ) => {
   const cursor = writable(walk.start)

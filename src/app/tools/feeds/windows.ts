@@ -1,5 +1,5 @@
-import {YEAR, ago, now} from "@welshman/lib"
-import {sortEventsDesc} from "@welshman/util"
+import {YEAR, ago, max, now} from "@welshman/lib"
+import {matchFilter, sortEventsDesc} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import type {Walk, Window, WindowResult} from "@lib/pager"
 import {network} from "@app/core/plugins"
@@ -22,19 +22,20 @@ export const getCacheFloor = (events: Iterable<TrustedEvent>) => {
 
 export type WindowAnswer = WindowResult & {floor?: number}
 
-export type OlderCursor = {until: number; interval: number}
+export type OlderCursor = {until: number}
+
+// An older page asks for the newest events below until, with no lower bound.
+export type OlderWindow = Pick<Window, "until">
 
 export type NewerCursor = {since: number; interval: number}
 
-export const olderWalk = (until: number, base: number): Walk<OlderCursor, WindowAnswer> => ({
-  start: {until, interval: base},
-  isDone: cursor => isPastHistory(cursor.until),
-  getWindow: cursor => ({since: cursor.until - cursor.interval, until: cursor.until}),
-  // Stepping a second under the old until keeps a window whose events all sit at until from repeating.
-  advance: (cursor, window, {found, floor}) => ({
-    until: floor !== undefined ? Math.min(floor, window.until - 1) : window.since,
-    interval: nextInterval(base, cursor.interval, found),
-  }),
+// A page is the newest events below until, so the next starts at its oldest, and an empty one leaves nothing below.
+export const olderWalk = (until: number): Walk<OlderCursor, WindowAnswer, OlderWindow> => ({
+  start: {until},
+  isDone: cursor => cursor.until === 0,
+  getWindow: cursor => ({until: cursor.until}),
+  // Stepping a second under the old until keeps a page whose events all sit at until from repeating.
+  advance: (_, window, {floor}) => ({until: floor ? Math.min(floor, window.until - 1) : 0}),
 })
 
 export const newerWalk = (since: number, base: number): Walk<NewerCursor, WindowAnswer> => ({
@@ -53,7 +54,7 @@ export const newerWalk = (since: number, base: number): Walk<NewerCursor, Window
 export type WindowRequest = {
   url: string
   filters: Filter[]
-  window: Window
+  window: Partial<Window>
   limit?: number
   signal: AbortSignal
   onCover?: (timestamp: number) => void
@@ -67,14 +68,22 @@ export const requestWindow = async ({
   signal,
   onCover,
 }: WindowRequest): Promise<WindowAnswer> => {
+  // The oldest event each filter has brought, since each filter's limit cuts its own page.
+  const oldestByFilter = new Map<number, number>()
+
   let answered = false
-  let floor: number | undefined
 
-  // Relays send newest first, so the window is complete above the oldest event it has sent so far.
   const track = (event: TrustedEvent) => {
-    floor = Math.min(floor ?? event.created_at, event.created_at)
+    filters.forEach((filter, i) => {
+      if (matchFilter(filter, event)) {
+        oldestByFilter.set(i, Math.min(oldestByFilter.get(i) ?? event.created_at, event.created_at))
+      }
+    })
 
-    onCover?.(floor)
+    // Relays answer filters one after another, newest first, so once each has sent something the window is complete above the highest of their oldest.
+    if (onCover && oldestByFilter.size === filters.length) {
+      onCover(max(Array.from(oldestByFilter.values())))
+    }
   }
 
   const events = await network.get().load({
@@ -92,6 +101,9 @@ export const requestWindow = async ({
       answered = true
     },
   })
+
+  // A filter that sent nothing has nothing in the window, so only the others bound where it is complete.
+  const floor = oldestByFilter.size > 0 ? max(Array.from(oldestByFilter.values())) : undefined
 
   return {found: events.length, answered, floor}
 }
