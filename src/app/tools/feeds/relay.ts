@@ -28,11 +28,10 @@ export type RelayFeed = {
 export const makeRelayFeed = ({url, filters, at, interval}: RelayFeedOptions): RelayFeed => {
   const timeline = makeTimeline({
     source: app.get().use(Events).byIdForUrl(url, filters),
-    relays: [url],
+    url,
     filters,
     at,
     interval,
-    quorum: 0.8,
     useCache: true,
   })
 

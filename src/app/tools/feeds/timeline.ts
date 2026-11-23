@@ -16,12 +16,11 @@ import {
 
 export type TimelineOptions = {
   source: AsyncProjection<EventsById>
-  relays: string[]
+  url: string
   filters: Filter[]
   at?: number
   // The window a page asks for, which an empty window widens.
   interval: number
-  quorum: number
   useCache: boolean
 }
 
@@ -39,32 +38,30 @@ export const getCompleteEvents = ($events: EventsById, $floor: number): TrustedE
 
 export const makeTimeline = ({
   source,
-  relays,
+  url,
   filters,
   at = now(),
   interval,
-  quorum,
   useCache,
 }: TimelineOptions): Timeline => {
   const controller = new AbortController()
   const kept = keepEvents(source)
-  // The lowest time every relay, or the cache, is known to have answered below.
+  // The lowest time the relay, or the cache, is known to have answered below.
   const covered = writable(at)
 
   const cover = (timestamp: number) => {
     covered.update($covered => Math.min($covered, timestamp))
   }
 
-  // A window that every relay has answered below the cursor leaves the pager behind, so settling pages again.
+  // A window the relay has answered below the cursor leaves the pager behind, so settling pages again.
   const older = makeWalkPager(
     olderWalk(at, interval),
     window =>
       requestWindow({
-        relays,
+        url,
         filters,
         window,
         limit: WINDOW_LIMIT,
-        quorum,
         signal: controller.signal,
         onCover: cover,
       }),
@@ -72,7 +69,7 @@ export const makeTimeline = ({
   )
 
   const newer = makeWalkPager(newerWalk(at, interval), window =>
-    requestWindow({relays, filters, window, quorum, signal: controller.signal}),
+    requestWindow({url, filters, window, signal: controller.signal}),
   )
 
   const floor = derived([older.cursor, covered], ([$cursor, $covered]) =>

@@ -1,10 +1,10 @@
 import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {Events} from "@welshman/app"
-import {chunks, partition, shuffle} from "@welshman/lib"
+import {chunks, partition, shuffle, uniqBy} from "@welshman/lib"
 import type {MaybeAsync} from "@welshman/lib"
 import {projectAsync, throttled} from "@welshman/store"
-import type {AsyncProjection, EventsById} from "@welshman/store"
+import type {EventsById} from "@welshman/store"
 import {outbox} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {combinePagers} from "@lib/pager"
@@ -63,19 +63,6 @@ const groupAuthors = async (authors: string[], onGroups: (groups: AuthorGroup[])
   }
 }
 
-const eventsOnUrls = (urls: string[], filters: Filter[]): AsyncProjection<EventsById> =>
-  projectAsync(app.get().use(Events).byIdByUrl(filters), $byUrl => {
-    const eventsById: EventsById = new Map()
-
-    for (const url of urls) {
-      for (const [id, event] of $byUrl.get(url) ?? []) {
-        eventsById.set(id, event)
-      }
-    }
-
-    return eventsById
-  })
-
 // The values of a changing list of stores, as one store.
 const collect = <T>(stores: Readable<Readable<T>[]>): Readable<T[]> =>
   derived(stores, ($stores, set) => {
@@ -102,7 +89,7 @@ const mergeTimelines = (timelines: Readable<Timeline[]>, at: number) => {
   const events = throttled(
     150,
     derived(completeByTimeline, $completeByTimeline =>
-      $completeByTimeline.flat().filter(event => event.created_at <= at),
+      uniqBy(event => event.id, $completeByTimeline.flat()).filter(event => event.created_at <= at),
     ),
   )
 
@@ -133,25 +120,26 @@ export const makeAuthorFeed = ({
 
   const older: Pager = {status, page: merged.older.page, settle: merged.older.settle}
 
-  const startTimeline = ({authors, urls}: AuthorGroup) => {
+  const startTimelines = ({authors, urls}: AuthorGroup) => {
     const filters = getFilters(authors)
+    const byUrl = app.get().use(Events).byIdByUrl(filters)
 
-    return makeTimeline({
-      source: eventsOnUrls(urls, filters),
-      relays: urls,
-      filters,
-      at,
-      interval,
-      // Half a group's relays answering is enough to show its page; the rest are asked again next page.
-      quorum: 0.5,
-      // The cache would draw a group's history out of order.
-      useCache: false,
-    })
+    return urls.map(url =>
+      makeTimeline({
+        source: projectAsync(byUrl, ($byUrl): EventsById => $byUrl.get(url) ?? new Map()),
+        url,
+        filters,
+        at,
+        interval,
+        // The cache would draw a group's history out of order.
+        useCache: false,
+      }),
+    )
   }
 
   const addGroups = (groups: AuthorGroup[]) => {
     if (!controller.signal.aborted) {
-      timelines.update($timelines => [...$timelines, ...groups.map(startTimeline)])
+      timelines.update($timelines => [...$timelines, ...groups.flatMap(startTimelines)])
       older.page()
     }
   }
