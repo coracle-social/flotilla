@@ -21,7 +21,6 @@
   } from "@app/tools/spaces"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
-  import {goToSpace} from "@app/navigation/history"
   import {trackSubmit} from "@app/components/flows/submit"
 
   type Props = {
@@ -34,10 +33,7 @@
 
   const back = () => history.back()
 
-  const welcome = async () => {
-    pushToast({message: "Welcome to the space!"})
-    await goToSpace(url, {replaceState: true})
-  }
+  const welcome = () => pushToast({message: "Welcome to the space!"})
 
   const {loading, submit: join} = trackSubmit(
     () => "Failed to join space. Please try again.",
@@ -46,12 +42,12 @@
         pushModal(SpaceAccessRequest, {url, callback: back})
       } else if (add) {
         await addSpace(url, notifications)
-        await welcome()
+        welcome()
       } else {
         const joinRefusal = await joinSpace(url, {notifications})
 
         if (!joinRefusal) {
-          await welcome()
+          welcome()
         }
       }
     },
@@ -63,9 +59,14 @@
   const refusal = $derived($joinRefusals[url])
   const needsInvite = $derived(refusal?.kind === "claim" || refusal?.kind === "rejected")
 
-  // A refusal can change what the space asks for, and the layout prompts for that instead.
+  // Once the join has settled, whatever the space asks for next is the layout's to prompt.
   $effect(() => {
-    if (["moved", "refused", "unreachable", "untrusted", "pay", "waiting"].includes($step.step)) {
+    if (
+      !$loading &&
+      ["open", "moved", "refused", "unreachable", "untrusted", "pay", "waiting"].includes(
+        $step.step,
+      )
+    ) {
       clearModals()
     }
   })

@@ -17,7 +17,6 @@ import {
 import type {SpaceStep} from "@app/tools/spaces"
 import {pushModal} from "@app/navigation/dialogs"
 import type {ModalOptions} from "@app/navigation/dialogs"
-import {goToSpace} from "@app/navigation/history"
 import {pushToast} from "@app/navigation/toast"
 
 // Paying for a space is consent to add it, so a payment that lands adds the space without asking.
@@ -25,7 +24,6 @@ const addPaidSpace = async (url: string) => {
   try {
     await addSpace(url, true)
     pushToast({message: "Welcome to the space!"})
-    await goToSpace(url, {replaceState: true})
   } catch (e) {
     console.error(e)
     pushToast({theme: "error", message: "Failed to add the space. Please try again."})
