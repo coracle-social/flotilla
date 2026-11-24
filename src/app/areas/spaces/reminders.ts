@@ -16,7 +16,10 @@ const loadAttendedEvents = async (pubkey: string) => {
   const $network = network.get()
   const rsvpFilter = {kinds: [EVENT_RSVP], authors: [pubkey]}
   const hostedFilter = {kinds: [EVENT_TIME], authors: [pubkey]}
-  const relays = roomLists.get().urls(pubkey).get()
+  const relays = await roomLists
+    .get()
+    .index.read(pubkey)
+    .then(l => l?.urls() ?? [])
 
   await $network.load({relays, filters: [rsvpFilter, hostedFilter]})
 

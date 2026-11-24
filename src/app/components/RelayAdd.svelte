@@ -60,7 +60,7 @@
   let element: Element | undefined = $state()
 
   const loading = new SvelteSet<string>()
-  const relaySearch = $app.use(Relays).relaySearch
+  const relaySearch = $app.use(Relays).getSearch()
   const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
 
   const searchResults = $derived(
@@ -86,13 +86,19 @@
   )
 
   // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists and from every relay stats has a row for.
-  onMount(() => {
+  const seedRelays = async () => {
+    await $relayLists.index.readAll()
+
     const listUrls = $relayLists.all.get().flatMap(list => list.urls())
     const statsUrls = $relayStats.all.get().map(stats => stats.url)
 
     for (const url of uniq([...listUrls, ...statsUrls]).filter(isShareableRelayUrl)) {
       $app.use(Relays).load(url)
     }
+  }
+
+  onMount(() => {
+    seedRelays().catch(error => console.error("Failed to seed relay search", error))
 
     const scroller = createScroller({
       element: element!,

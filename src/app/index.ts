@@ -27,11 +27,11 @@ export const registerAll = () => {
   // Hot reloading the root layout calls this again.
   if (!registered) {
     registered = true
+    registerStorage()
     registerIngest()
     registerAuth()
     registerRelays()
     registerNotify()
-    registerStorage()
     registerSettings()
     registerUser()
     registerBookmarks()

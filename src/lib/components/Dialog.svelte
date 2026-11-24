@@ -106,8 +106,17 @@
   onMount(() => {
     const overlay = element
 
-    // Focus-trap comes back here whenever what held focus is removed, so it is the dialog itself.
-    const getInitialFocus = () => panel.querySelector<HTMLElement>("[autofocus]") ?? panel
+    // The trap focuses on a timeout, so a child like the editor may already have focused itself.
+    const getInitialFocus = () => {
+      const {activeElement} = document
+
+      if (activeElement instanceof HTMLElement && panel.contains(activeElement)) {
+        return activeElement
+      }
+
+      // Focus-trap comes back here whenever what held focus is removed, so it is the dialog itself.
+      return panel.querySelector<HTMLElement>("[autofocus]") ?? panel
+    }
 
     const holdsFocus = () => {
       const {activeElement} = document

@@ -7,6 +7,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import {userSpaceUrls} from "@app/core/user"
   import {roomLists} from "@app/core/plugins"
+  import {spacePubkeysByUrl} from "@app/areas/spaces/rooms/search"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
@@ -32,7 +33,7 @@
   {#if spaceUrls.length > 0}
     <div class="flex flex-col gap-2 border-t border-line pt-4">
       {#each spaceUrls as url (url)}
-        {@const count = $roomLists.pubkeysForUrl(url).get().length}
+        {@const count = $spacePubkeysByUrl.get(url)?.size ?? 0}
         {@const isMember = !isSelf && $userSpaceUrls.includes(url)}
         <Link
           href={pages.space.path({url})}

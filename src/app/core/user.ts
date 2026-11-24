@@ -13,7 +13,7 @@ import {
   SearchRelayLists,
   User,
 } from "@welshman/app"
-import type {DerivedPlugin, Plugin} from "@welshman/app"
+import type {CollectionPlugin, Plugin} from "@welshman/app"
 import {app} from "@app/core/app"
 import {
   blockedRelayLists,
@@ -35,7 +35,7 @@ import {registerSync} from "@app/core/sync"
 export const user = withGetter(derived(app, $app => User.require($app)))
 
 // The signed-in user's entry in a keyed collection, e.g. deriveUserItem(Profiles).
-export const deriveUserItem = <T>(Ctor: Plugin<DerivedPlugin<T>>) =>
+export const deriveUserItem = <T>(Ctor: Plugin<CollectionPlugin<T>>) =>
   derived(app, ($app, set: (item: Maybe<T>) => void) => {
     let previous: Maybe<T>
 

@@ -1,5 +1,5 @@
 import {derived} from "svelte/store"
-import {addToMapKey, dec, indexBy, nth, uniq} from "@welshman/lib"
+import {addToMapKey, dec, identity, indexBy, nth, uniq} from "@welshman/lib"
 import {Relay} from "@welshman/domain"
 import type {RoomListReader} from "@welshman/domain"
 import {isRelayUrl, normalizeRelayUrl} from "@welshman/util"
@@ -21,10 +21,10 @@ const listUrls = (list: RoomListReader) =>
   )
 
 // Who lists each space, rebuilt once a second while room lists stream in by the hundred.
-const spacePubkeysByUrl = derived(
+export const spacePubkeysByUrl = derived(
   throttled(
     1000,
-    fromApp($app => $app.use(RoomLists).all.$),
+    fromApp($app => $app.use(RoomLists).projectAll(identity).$),
   ),
   $roomLists => {
     const result = new Map<string, Set<string>>()

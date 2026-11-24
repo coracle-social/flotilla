@@ -72,7 +72,7 @@ export const makeEditor = async ({
 }) => {
   const searchProfiles = derived(
     [
-      fromApp($app => $app.use(Profiles).profileSearch),
+      fromApp($app => $app.use(Profiles).getSearch()),
       throttled(
         800,
         fromApp($app => $app.use(RelayMemberLists).forUrl(url ?? "")),
@@ -187,11 +187,9 @@ export const makeEditor = async ({
   }
 
   // A name links only when it is the whole name or handle of exactly one person.
-  const findMentionedPubkey = (term: string) => {
+  const findMentionedPubkey = (search: (term: string) => string[], term: string) => {
     const name = term.toLowerCase()
-    const pubkeys = uniq(
-      get(searchProfiles)(term).filter(pubkey => getProfileNames(pubkey).includes(name)),
-    )
+    const pubkeys = uniq(search(term).filter(pubkey => getProfileNames(pubkey).includes(name)))
 
     if (pubkeys.length === 1) {
       return pubkeys[0]
@@ -200,7 +198,7 @@ export const makeEditor = async ({
 
   // Dictation, pasting and phone keyboards never open the suggestion list, so link what they leave.
   const resolveMentions = (view: EditorView) => {
-    const mentions: {from: number; to: number; pubkey: string}[] = []
+    const names: {from: number; term: string}[] = []
 
     view.state.doc.descendants((node, pos, parent) => {
       const isCode =
@@ -209,29 +207,37 @@ export const makeEditor = async ({
       if (node.isText && !isCode) {
         for (const match of (node.text ?? "").matchAll(/(?:^|\s)@([\p{L}\p{N}_.-]+)/gu)) {
           const term = match[1]
-          const from = pos + match.index + match[0].length - term.length - 1
-          const pubkey = findMentionedPubkey(term)
 
-          if (pubkey) {
-            mentions.push({from, to: from + term.length + 1, pubkey})
-          }
+          names.push({from: pos + match.index + match[0].length - term.length - 1, term})
         }
       }
     })
 
-    if (mentions.length > 0) {
+    // Each build of the search indexes every profile, so the names share one
+    if (names.length > 0) {
+      const search = get(searchProfiles)
       const tr = view.state.tr
 
       // Backwards, so a replacement never moves a range this still has to visit.
-      for (const {from, to, pubkey} of mentions.reverse()) {
-        const relays = relayLists.get().writeUrls(pubkey).get()
-        const bech32 = nprofileEncode({pubkey, relays})
-        const attrs = {type: "nprofile", bech32, pubkey, relays}
+      for (const {from, term} of names.reverse()) {
+        const pubkey = findMentionedPubkey(search, term)
 
-        tr.replaceWith(from, to, tr.doc.type.schema.nodes.nprofile.create(attrs))
+        if (pubkey) {
+          const relays = relayLists.get().writeUrls(pubkey).get()
+          const bech32 = nprofileEncode({pubkey, relays})
+          const attrs = {type: "nprofile", bech32, pubkey, relays}
+
+          tr.replaceWith(
+            from,
+            from + term.length + 1,
+            tr.doc.type.schema.nodes.nprofile.create(attrs),
+          )
+        }
       }
 
-      view.dispatch(tr)
+      if (tr.docChanged) {
+        view.dispatch(tr)
+      }
     }
   }
 

@@ -63,7 +63,9 @@ export class Settings extends DerivedPlugin<AppDataReader> {
 
   constructor(app: IApp) {
     super(app, {
+      name: "settings",
       filters: [settingsFilter],
+      getFilters: authors => [{...settingsFilter, authors}],
       eventToItem: app.use(Domain).reader(AppData),
       getKey: settings => settings.author(),
     })

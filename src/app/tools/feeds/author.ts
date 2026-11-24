@@ -55,6 +55,9 @@ const groupAuthors = async (authors: string[], onGroups: (groups: AuthorGroup[])
   if (PLATFORM_RELAYS.length > 0) {
     onGroups([await routeAuthors(authors)])
   } else {
+    // Relay lists are read by author, so the stored ones are read before deciding which are known
+    await Promise.all(authors.map(pubkey => relayLists.get().index.read(pubkey)))
+
     const [known, unknown] = partition(hasRelayList, authors)
 
     onGroups(await Promise.all(chunkAuthors(known).map(routeAuthors)))

@@ -158,11 +158,15 @@ export class EventDatabase {
 
   // Nothing cached in the last day goes, since another tab may be showing it.
   sweep = async () => {
+    // Each step holds the worker, so it waits for a quiet spell rather than delaying what's on screen
+    await this.sqlite.call("idle")
     await this.sqlite.prune()
+    await this.sqlite.call("idle")
 
     const ids = await this.sqlite.call("getEvictable", ago(1, DAY))
 
     if (ids.length > 0) {
+      await this.sqlite.call("idle")
       await this.sqlite.evict([{ids}])
     }
   }

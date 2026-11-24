@@ -3,7 +3,7 @@ import type {Unsubscriber} from "svelte/store"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {noop, batch, call, makeQueue, ms} from "@welshman/lib"
+import {noop, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import {MemoryRepository, withGetter} from "@welshman/store"
@@ -125,8 +125,6 @@ export const hasCachedIdentity = async () => {
   // The login this allows records the marker, so the fallback only answers once per install
   return hasLegacyCache()
 }
-
-const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
 
 const onRestoreError = (error: unknown) => console.error("Failed to read the wrap index", error)
 
@@ -305,14 +303,23 @@ export const pluginCachesPolicy: AppPolicy = $app => {
   return noop
 }
 
-// A sweep holds up every read queued behind it in the worker, so it waits until the app has started
+// The sweep waits for the worker to go quiet, so it starts with the app and runs once startup's reads settle
 export const sweepPolicy: AppPolicy = $app => {
   const database = EventDatabase.of($app.repository)
 
   if (database) {
-    const timeout = setTimeout(() => database.sweep().catch(onSweepError), ms(10))
+    let isStopped = false
 
-    return () => clearTimeout(timeout)
+    database.sweep().catch(error => {
+      // Closing the database rejects the wait for a quiet spell
+      if (!isStopped) {
+        console.error("Failed to sweep the event database", error)
+      }
+    })
+
+    return () => {
+      isStopped = true
+    }
   }
 
   return noop

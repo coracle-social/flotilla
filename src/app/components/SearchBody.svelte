@@ -31,7 +31,7 @@
 
   const {placeholder, relays, filter, url, members, badges, empty}: Props = $props()
 
-  const profileSearch = $profiles.profileSearch
+  const profileSearch = $profiles.getSearch()
 
   let term = $state("")
   let results = $state<TrustedEvent[]>([])

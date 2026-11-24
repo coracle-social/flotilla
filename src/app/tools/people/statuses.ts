@@ -10,7 +10,9 @@ const filter = {kinds: [STATUS], "#d": ["general"]}
 export class Statuses extends DerivedPlugin<TrustedEvent> {
   constructor(app: IApp) {
     super(app, {
+      name: "statuses",
       filters: [filter],
+      getFilters: authors => [{...filter, authors}],
       eventToItem: event => event,
       getKey: event => event.pubkey,
     })

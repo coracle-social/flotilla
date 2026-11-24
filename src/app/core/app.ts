@@ -1,12 +1,17 @@
 import {derived, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {always} from "@welshman/lib"
+import {DAY, HOUR, always, int} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {RouteOverrides} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import type {ReadableWithGetter} from "@welshman/store"
 import {
   App,
+  FollowLists,
+  MuteLists,
+  Profiles,
+  RelayLists,
+  RoomLists,
   SearchRelayLists,
   User,
   appPolicyCacheDecrypt,
@@ -14,7 +19,7 @@ import {
   appPolicyRelayStats,
   appPolicyWraps,
 } from "@welshman/app"
-import type {AppOptions, AppPolicy} from "@welshman/app"
+import type {AppOptions, AppPolicy, PluginClass} from "@welshman/app"
 import {
   DEFAULT_RELAYS,
   DEFAULT_SEARCH_RELAYS,
@@ -68,6 +73,13 @@ const makeApp = (user?: User, stores: AppStores = {}) => {
         return urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS
       },
       routes: PLATFORM_RELAYS.length > 0 ? platformRoutes : {},
+      minimumFreshness: new Map<PluginClass, number>([
+        [Profiles, int(HOUR)],
+        [RelayLists, int(DAY)],
+        [FollowLists, int(DAY)],
+        [MuteLists, int(DAY)],
+        [RoomLists, int(DAY)],
+      ]),
     },
     policies: appPolicies,
   })

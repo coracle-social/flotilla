@@ -27,7 +27,7 @@
 
   let {value = $bindable(), term = writable(""), autofocus = false}: Props = $props()
 
-  const profileSearch = $profiles.profileSearch
+  const profileSearch = $profiles.getSearch()
 
   const search = (term: string) => $profileSearch.searchValues(term)
 
