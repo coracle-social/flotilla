@@ -1,7 +1,7 @@
 import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {Events} from "@welshman/app"
-import {chunks, partition, shuffle, uniqBy} from "@welshman/lib"
+import {countBy, identity, intersection, partition, sortBy, uniqBy, without} from "@welshman/lib"
 import type {MaybeAsync} from "@welshman/lib"
 import {projectAsync, throttled} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
@@ -28,15 +28,52 @@ export type AuthorFeedOptions = {
 
 export type AuthorFeed = {events: Readable<TrustedEvent[]>; older: Pager; stop: () => void}
 
-// One selection over every follow lands on the few biggest relays, so each group scores its own.
-const chunkAuthors = (authors: string[]) =>
-  chunks(3, shuffle(authors)).filter(group => group.length > 0)
+// The relays the router would ask for an author's notes, leaving out any it won't use.
+const getOutboxUrls = async (pubkey: string) => {
+  const scenario = await router.get().resolve([outbox(pubkey)])
 
-const routeAuthors = async (authors: string[]): Promise<AuthorGroup> => {
-  const scenario = await router.get().resolve(authors.map(outbox))
-  const urls = scenario.limit(20).getUrls()
+  return scenario.limit(Infinity).getUrls()
+}
 
-  return {authors, urls: urls.slice(0, 10), spares: urls.slice(10)}
+// The relay the most of `urls` name, where an open one wins a tie because it costs no new connection.
+const pickRelay = (urls: string[]) => {
+  const counts = countBy(identity, urls)
+  const getScore = (url: string) => (counts.get(url) ?? 0) + (app.get().pool.has(url) ? 0.5 : 0)
+
+  return sortBy(url => -getScore(url), counts.keys())[0]
+}
+
+// Relays picked one at a time until each list has `count` of its urls picked, or all it has.
+const cover = (urlLists: string[][], count: number, chosen: string[] = []): string[] => {
+  const candidates = urlLists
+    .filter(urls => intersection(urls, chosen).length < Math.min(count, urls.length))
+    .flatMap(urls => without(chosen, urls))
+
+  return candidates.length > 0 ? cover(urlLists, count, [...chosen, pickRelay(candidates)]) : chosen
+}
+
+// Each relay is asked for every author who writes to it, and its spares give each of them one more relay.
+const routeAuthors = async (authors: string[]): Promise<AuthorGroup[]> => {
+  const outboxes = await Promise.all(
+    authors.map(async pubkey => ({pubkey, urls: await getOutboxUrls(pubkey)})),
+  )
+  const chosen = cover(
+    outboxes.map(({urls}) => urls),
+    2,
+  )
+
+  return chosen.map(url => {
+    const writers = outboxes.filter(({urls}) => urls.includes(url))
+
+    return {
+      authors: writers.map(({pubkey}) => pubkey),
+      urls: [url],
+      spares: cover(
+        writers.map(({urls}) => without(chosen, urls)),
+        1,
+      ),
+    }
+  })
 }
 
 const hasRelayList = (pubkey: string) => Boolean(relayLists.get().get(pubkey))
@@ -59,18 +96,18 @@ export const groupAuthors = async (
   const authors = await pubkeys
 
   if (PLATFORM_RELAYS.length > 0) {
-    onGroups([await routeAuthors(authors)])
+    onGroups(await routeAuthors(authors))
   } else {
     // Relay lists are read by author, so the stored ones are read before deciding which are known
     await Promise.all(authors.map(pubkey => relayLists.get().index.read(pubkey)))
 
     const [known, unknown] = partition(hasRelayList, authors)
 
-    onGroups(await Promise.all(chunkAuthors(known).map(routeAuthors)))
+    onGroups(await routeAuthors(known))
 
     await loadRelayLists(unknown)
 
-    onGroups(await Promise.all(chunkAuthors(unknown.filter(hasRelayList)).map(routeAuthors)))
+    onGroups(await routeAuthors(unknown.filter(hasRelayList)))
   }
 }
 
