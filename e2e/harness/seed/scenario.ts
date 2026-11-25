@@ -15,7 +15,7 @@ import type {SeededOpenRelay} from "./openRelay"
 export type At = (count: number, unit: number) => number
 
 export type SeedTools = {
-  // Names a space the container already serves. Its policy is the backend's: a toml, or caravel/config.ts.
+  // Names a space the container already serves. Its policy is the backend's, in caravel/config.ts.
   relay: (name: SpaceName) => SeededSpace
   // Names one of the public relays, where the follow graph lives. See ARCHITECTURE.md, "The follow graph".
   open: (name: OpenRelayName) => SeededOpenRelay

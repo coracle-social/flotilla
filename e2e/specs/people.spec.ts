@@ -290,16 +290,11 @@ test("US-134 write a public post", async ({seed, as}) => {
 
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
-    const other = relay("other")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.profile(user.alice, {name: "Alice Anderson"})
     space.relayList(user.alice)
-
-    // Her second space is in no relay list of hers, so a post reaching it was routed there as a space.
-    other.room("general", {name: "General"})
-    other.join(user.alice, "general")
   })
 
   const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
@@ -315,7 +310,6 @@ test("US-134 write a public post", async ({seed, as}) => {
   await composer.getByRole("button", {name: "Post"}).click()
 
   await expect(toast(page)).toContainText("Your post has been published!")
-  await expect(notes(page).filter({hasText: post})).toBeVisible()
 
   await toast(page).getByRole("button", {name: "View it"}).click()
 
@@ -327,9 +321,9 @@ test("US-134 write a public post", async ({seed, as}) => {
         getPublished(page.context())
           .filter(({event}) => event.content === post)
           .map(({url}) => url),
-      ).sort(),
+      ),
     )
-    .toEqual([scenario.space("other").url, scenario.space("space").url].sort())
+    .toEqual([scenario.space("space").url])
 
   // The same composer is how a post starts from home, out of the feed it posts into.
   await page.goto("/home")

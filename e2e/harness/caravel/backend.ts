@@ -103,7 +103,7 @@ const manage = async (name: TenantName, method: string, params: string[]) => {
   }
 }
 
-// admin is the tenant and owns every relay, as it owns every toml in zooid/docker/config.
+// admin is the tenant and owns every relay, since seeding signs room fixtures as admin.
 const provision = async () => {
   // POST /tenants creates a Stripe customer, so the tenant is written straight into the database.
   await compose(

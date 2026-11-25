@@ -8,7 +8,6 @@ import {normalizeRelayUrl} from "@welshman/util"
 import {RelayServer} from "./relay/server"
 import {describeDockerProblem} from "./relay/docker"
 import type {Backend} from "./relay/types"
-import {zooid} from "./zooid/backend"
 import {caravel} from "./caravel/backend"
 import {
   installHttpRoutes,
@@ -116,7 +115,7 @@ export type {
 export type {WebLnInfo} from "./app/webln"
 
 // The project is named for the relay the suite runs against. See playwright.config.ts.
-const backends: Record<string, Backend> = {zooid, caravel}
+const backends: Record<string, Backend> = {caravel}
 
 const getBackend = (name: string) => {
   const backend = backends[name]

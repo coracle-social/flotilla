@@ -6,29 +6,21 @@ test's control. Nothing in this directory opens a connection to a host the test 
 ## The relay
 
 Every spec runs against a real relay in a container, so protocol drift between the client's
-assumptions and a real relay shows up as a failing test. There are two implementations, and a run
-picks one:
+assumptions and a real relay shows up as a failing test. The relay is
+[caravel](https://gitea.coracle.social/coracle/caravel). `E2E_RELAY` names the backend a run uses,
+and caravel is the default and the only one.
 
-- [zooid](https://github.com/coracle-social/zooid), the default, and the implementation Flotilla is
-  built for.
-- [caravel](https://gitea.coracle.social/coracle/caravel), from its monolith rewrite, which serves the
-  relays itself rather than in front of zooid. `E2E_RELAY=caravel pnpm test` (or
-  `pnpm test:caravel`) runs the whole suite against it.
+caravel is multi-tenant: one process binds each virtual relay to a `Host` header.
+`harness/relay/config.ts` names them, and a scenario picks one by name. A second space costs a config
+entry and no extra process, which is what keeps outbox routing and cross-space isolation testable.
 
-Both are multi-tenant: one process binds each virtual relay to a `Host` header. `harness/relay/config.ts`
-names them, the same hosts on either backend, and a scenario picks one by name. A second space costs
-a config entry and no extra process, which is what keeps outbox routing and cross-space isolation
-testable.
+`harness/relay/` is what doesn't depend on the backend: the tenant names, the transport, the seeding
+connections and the container's lifecycle in `RelayServer`. The backend, `harness/caravel/backend.ts`,
+is the rest — how its image reaches the machine, how a fresh container comes up with its relays
+configured, and its logs. The project is named for the backend, so a report says which relay it ran
+against.
 
-`harness/relay/` is everything the backends share: the tenant names, the transport, the seeding
-connections and the container's lifecycle in `RelayServer`. A backend (`harness/zooid/backend.ts`,
-`harness/caravel/backend.ts`) is the rest — how its image reaches the machine, how a fresh container
-comes up with its relays configured, and its logs. The project is named for the backend, so a report
-says which relay it ran against.
-
-A relay's policy is its backend's own configuration and nothing else: a toml apiece in
-`harness/zooid/docker/config/` for zooid, and for caravel the settings in `harness/caravel/config.ts`,
-which say what each toml says in caravel's terms. A scenario says what is _on_ a relay — its rooms,
+A relay's policy is the settings in `harness/caravel/config.ts` and nothing else. A scenario says what is _on_ a relay — its rooms,
 its members, its messages — never what the relay _is_, so there is no policy negotiation anywhere in
 the harness. `space` and `other` are the same permissive policy, for specs that need two relays;
 `closed` refuses a join that carries no invite claim, which is what raises "Request Access";
@@ -37,10 +29,9 @@ space?"; `delegated` grants each member one management method. Seeding a members
 therefore not possible — `join()` and `member()` publish a claimless join and the relay refuses it —
 so a scenario there seeds admin-created rooms and lets the spec do the joining.
 
-Most of a toml maps onto a caravel setting directly. Two don't. zooid grants `member_methods` to
-whoever is a member, while caravel grants a method to one pubkey at a time, so the caravel backend
-assigns them as each join is accepted. caravel would also give every member the two claim methods
-by default, which no toml does, so its relays are created with that off.
+caravel grants a management method to one pubkey at a time, so the backend assigns `delegated`'s
+as each join is accepted. caravel would also give every member the two claim methods by default, so
+its relays are created with that off.
 
 `indexer` and `outbox` are not spaces: groups are off, anyone may read and write, and nothing seeded
 on them carries an `h` tag. They are what "The follow graph" below is made of.
@@ -54,16 +45,14 @@ decision. Handed `ws://localhost:3334/`, the client would load a space by its ex
 resolve nothing else: no outbox loads for profiles or relay lists, no relay hints.
 
 So the client is given `wss://space.test/` and never learns the container has an address. Everything
-that speaks to it goes through `relay/transport.ts`, which dials `127.0.0.1:3334` — the port both
-backends publish — carrying the two headers a TLS terminator adds in front of a real deployment:
+that speaks to it goes through `relay/transport.ts`, which dials `127.0.0.1:3334` — the port
+caravel publishes — carrying the two headers a TLS terminator adds in front of a real deployment:
 
-- `Host: space.test` — this is what selects which relay answers: zooid's dispatcher binds a toml to
-  a Host (`cmd/relay/main.go`), and caravel resolves a host to the relay whose subdomain it is.
-- `X-Forwarded-Proto: https` — khatru, under zooid, derives the url it checks NIP-42 and NIP-86
-  signatures against from Host plus this (`getBaseURL` in `khatru/relay.go`), arriving at
-  `wss://space.test/`, which is exactly what the client signed into its `relay` tag. caravel compares
-  only the host, so it ignores the header. Seeding signs the same url, so a fixture is written over
-  the same relay the app talks to.
+- `Host: space.test` — this is what selects which relay answers: caravel resolves a host to the
+  relay whose subdomain it is.
+- `X-Forwarded-Proto: https`, which caravel ignores: it checks the `relay` tag of a NIP-42 or NIP-86
+  signature by host alone, so the `wss://space.test/` the client signed matches. Seeding signs the
+  same url, so a fixture is written over the same relay the app talks to.
 
 `.test` is reserved by RFC 2606 and resolves nowhere, so a url that ever escapes this process fails
 to connect rather than reaching a host.
@@ -218,7 +207,7 @@ Three things this does not cover:
 - **WebRTC.** `livekit-client` opens an `RTCPeerConnection`, and Playwright cannot see one. A voice
   or video room reaches its sfu over ice and dtls with nothing in between. `mockLivekit` decides
   where the client is pointed, which is why its `serverUrl` has to be something the test owns, and
-  why `[livekit]` is omitted from the zooid config entirely and caravel is given no LiveKit server. A spec that joins a call escapes this
+  why caravel is given no LiveKit server. A spec that joins a call escapes this
   document's guarantee and needs its own answer.
 - **Playwright's own fixtures.** `context`, `page` and `request` are overridden to throw, but
   `playwright` cannot be — it is where the browser comes from. A spec that reaches the network
@@ -360,8 +349,7 @@ wins. Without it a spec reds on a display name where an `npub` is drawn.
 
 ### Why a reader has to name the relays it reads from
 
-zooid answers no REQ without NIP-42, whatever `public_read` says, and caravel's relays are created
-with anonymous reads off to match. `shouldAuth` is conservative: it identifies only to relays the
+The relays answer no REQ without NIP-42, since they are created with anonymous reads off. `shouldAuth` is conservative: it identifies only to relays the
 user's own room list or relay list names, a platform build's platform relays, and a space whose page
 is open. So a relay a spec expects the client to read from has to appear in that user's list, and a relay list is seeded for the reader
 as well as for the people they follow.
@@ -391,21 +379,16 @@ e2e/
     keys.ts                deterministic keypairs
     ui.ts                  the locators specs share: dialogs, the composer, a room's messages
     files.ts               the bytes an upload spec picks, and the browser's own file chooser
-    relay/                 what every backend shares
+    relay/                 what doesn't depend on the backend
       config.ts            the virtual relays and their hosts — the one place they are named
       server.ts            container lifecycle, reset, seeding over its own authenticated socket
       docker.ts            the docker and compose commands, and why one cannot be driven
       transport.ts         the only thing that knows the container's address: ws and http to it
       testRelay.ts         the seeding affordances a scenario builds on
       types.ts             TestRelay, RoomOptions, RelayConnection, and the Backend contract
-    zooid/
-      backend.ts           the pinned image, and a fresh container on a fresh copy of the tomls
-      docker/
-        compose.yaml       no data volume; tmpfs for /app/data and /app/media
-        config/            one toml per virtual relay: its host, and its whole policy
     caravel/
       backend.ts           the published image, and the relays created through its api
-      config.ts            each toml's policy as caravel's relay settings
+      config.ts            each relay's policy, as caravel's relay settings
       docker/
         compose.yaml       caravel and its postgres, both on tmpfs
     net/
@@ -441,18 +424,12 @@ importing anything under `src` would pull sveltekit into the node process.
 ## Resetting between tests
 
 `RelayServer.reset()` recreates the container rather than restarting it, and waits until every
-relay answers its NIP-11 document. Nothing either backend stores outlives its container, so a fresh
-container is a fresh database:
-
-- zooid has no volume mounted for `/app/data`, so storage lives in the container's writable layer and
-  a tmpfs. What it mounts as its config is a copy of `docker/config`, staged outside the repo and
-  refreshed on the way up — zooid saves a relay's toml back when a NIP-86 call edits its name — so
-  every test starts against the same relays with nothing in them.
-- caravel keeps everything in a Postgres whose data directory is a tmpfs, recreated alongside it. Its
-  relays are rows rather than files, so once it answers, the backend creates them: the tenant is
-  written straight into the database, because `POST /tenants` creates a Stripe customer, and each
-  relay is created through the API as that tenant, with admin's NIP-98 session. Every relay is on
-  the free plan, which leaves billing nothing to charge and caps a relay at ten members.
+relay answers its NIP-11 document. caravel keeps everything in a Postgres whose data directory is a
+tmpfs, recreated alongside it, so a fresh container is a fresh database. Its relays are rows rather
+than files, so once it answers, the backend creates them: the tenant is written straight into the
+database, because `POST /tenants` creates a Stripe customer, and each relay is created through the
+API as that tenant, with admin's NIP-98 session. Every relay is on the free plan, which leaves
+billing nothing to charge and caps a relay at ten members.
 
 The container is a worker fixture, so docker's start-up cost is paid once per worker rather than once
 per test. So is fetching or building the image, under the worker fixture's own timeout, since a cold
@@ -490,20 +467,15 @@ The suite is not run by agents (see CLAUDE.md).
 ```sh
 pnpm exec playwright install # once
 pnpm test                    # starts and stops the container itself
-pnpm test:caravel            # the same suite, against caravel
 ```
 
 Every test skips when docker is unavailable, rather than failing.
 
-Neither relay is pinned. zooid and caravel each publish `latest` on every push to master, and the
-harness pulls its backend at the start of every run, which costs a manifest check when the image is
-already on the machine. A digest was pinned once to keep a run on one build, and the image cached
-under that reference went stale: the suite ran a zooid that predated the nip-29 delete-event op and
-red a moderation spec for a relay that had since fixed it. `ZOOID_IMAGE` names another reference,
-which is how a spec is tried against a zooid built from a checkout.
-
-zooid keeps everything in Postgres now, so its compose file brings up a `postgres:16-alpine` service
-alongside the relay and hands it a `DATABASE_URL`.
+The relay is not pinned. caravel publishes `latest` on every push to master, and the harness pulls
+it at the start of every run, which costs a manifest check when the image is already on the machine.
+A digest was pinned once to keep a run on one build, and the image cached under that reference went
+stale: the suite ran a relay that predated the nip-29 delete-event op and red a moderation spec for
+a relay that had since fixed it.
 
 caravel's image is amd64, so a host of another architecture runs the container under emulation.
 `CARAVEL_IMAGE` names another reference, such as a digest. `CARAVEL_SOURCE` builds from a checkout

@@ -255,7 +255,7 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // Contact and terms are nip-11 fields zooid doesn't publish.
+  // Contact and terms are nip-11 fields the test relays don't publish.
   const relayInfo = {
     [space.url]: {
       contact: "harbormaster@space.test",

@@ -29,7 +29,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # The same port zooid publishes, so e2e/harness/relay/transport.ts needs no backend of its own.
+    # The port e2e/harness/relay/transport.ts dials.
     ports:
       - "127.0.0.1:3334:2892"
     environment:

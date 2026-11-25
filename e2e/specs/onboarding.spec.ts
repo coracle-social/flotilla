@@ -14,6 +14,7 @@ const nsecFor = (user: TestUser) => nsecEncode(hexToBytes(user.secret))
 // The only way to watch a session come into existence: one `as()` injects is re-applied on every navigation.
 const logInWithKey = async (page: Page, key: string) => {
   await page.getByRole("button", {name: "Log in"}).click()
+  await page.getByRole("button", {name: "More ways to log in"}).click()
   await page.getByRole("button", {name: "Log in with Key"}).click()
   await page.getByPlaceholder("Your private key").fill(key)
   // The landing page's own "Log in" is still behind the dialog, so submit is named by the form.
@@ -53,7 +54,7 @@ test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
 
   await page.getByRole("button", {name: "Create an account"}).click()
 
-  await expect(page.getByRole("heading", {name: "Create an Account"})).toBeVisible()
+  await expect(page.getByRole("heading", {name: "Sign up with Nostr"})).toBeVisible()
 })
 
 test("US-002 sign up by generating a new key", async ({seed, visit}) => {
@@ -72,7 +73,7 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await expect(page.getByRole("heading", {name: "Backup your Key"})).toHaveCount(0)
   await expect(page.getByRole("heading", {name: "You're all set!"})).toBeVisible()
 
-  await page.getByRole("button", {name: "Go to Dashboard"}).click()
+  await page.getByRole("button", {name: "Complete Setup"}).click()
 
   await expect(page).toHaveURL(/\/home$/)
 
@@ -128,6 +129,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
   const withNcryptsec = await visit()
 
   await withNcryptsec.getByRole("button", {name: "Log in"}).click()
+  await withNcryptsec.getByRole("button", {name: "More ways to log in"}).click()
   await withNcryptsec.getByRole("button", {name: "Log in with Key"}).click()
 
   const submit = withNcryptsec.locator("form").getByRole("button", {name: "Log in", exact: true})

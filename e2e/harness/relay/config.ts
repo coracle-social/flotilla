@@ -4,7 +4,7 @@
 export const spaceTenants = {
   space: "space.test",
   other: "other.test",
-  // Policy space.toml cannot express at the same time: no invite, stripped signatures, delegated management.
+  // Policy space cannot have at the same time: no invite, stripped signatures, delegated management.
   closed: "closed.test",
   unsigned: "unsigned.test",
   delegated: "delegated.test",

@@ -71,6 +71,8 @@ export const boot = async (
         VITE_BLOCKED_RELAYS: "",
         // A developer's .env.local may point the hosting api at their own backend, which nothing mocks.
         VITE_HOSTING_BACKEND_URL: HOSTING_ORIGIN,
+        // Nothing serves the email signers .env names, so login and signup lead with nostr methods.
+        VITE_POMADE_SIGNERS: "",
         // Nothing serves this url, so a push bridge connection is reported as a leak.
         VITE_PUSH_BRIDGE: "ws://localhost:1/",
         ...env,

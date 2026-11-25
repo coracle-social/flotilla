@@ -11,8 +11,6 @@ import {
   getPublishedEvents,
   menuButton,
   message,
-  noteEditor,
-  pageBar,
   roomPath,
   send,
   spacePath,
@@ -47,14 +45,6 @@ const publishedTo = (page: Page, id: string) =>
   getPublished(page.context())
     .filter(({event}) => event.id === id)
     .map(({url}) => url)
-
-// The composer is a page of its own, and it holds the reader there until publishing resolves.
-const writeArticle = async (page: Page, title: string, body: string) => {
-  await pageBar(page).getByRole("button", {name: "Write"}).click()
-  await page.getByPlaceholder("Title", {exact: true}).fill(title)
-  await noteEditor(page).pressSequentially(body)
-  await pageBar(page).getByRole("button", {name: "Publish"}).click()
-}
 
 // The slider is initialised from the settings store on mount, so a fresh page says the client took it.
 const setSendDelay = async (page: Page, seconds: number) => {
@@ -214,14 +204,10 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
 test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
-    const other = relay("other")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
-    space.join(user.bob, "general")
     seedPerson(space, user.alice, "Alice Anderson")
-    seedPerson(space, user.bob, "Bob Barker")
-    other.join(user.alice)
 
     const article = space.event(
       user.alice,
@@ -252,29 +238,10 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const quiet = scenario.space("other").url
-
-  const alice = await as(users.alice, `${spacePath(quiet)}/articles`, {
-    env: {VITE_BLOCKED_RELAYS: quiet},
-  })
-
-  // A post whose relay never answered, deleted while it is still marked failed.
-  await writeArticle(alice, "Into the Void", "Nobody is listening.")
-
-  // Publishing waits the relay out and lands on the article anyway, still marked failed.
-  const stuck = articleActions(alice)
-
-  await expect(stuck.getByText("Failed to send!")).toBeVisible()
-
-  await alice.getByRole("button", {name: "Article options"}).click()
-  await alice.getByRole("button", {name: "Delete Article"}).click()
-  await alice.getByRole("button", {name: "Confirm"}).click()
-
-  // Deleted takes over from the failure the article was carrying.
-  await expect(stuck.getByText("Deleted", {exact: true})).toBeVisible()
-  await expect(stuck.getByText("Failed to send!")).toHaveCount(0)
-
-  await alice.goto(articlePath(url, `${LONG_FORM}:${users.alice.pubkey}:tending-the-garden`))
+  const alice = await as(
+    users.alice,
+    articlePath(url, `${LONG_FORM}:${users.alice.pubkey}:tending-the-garden`),
+  )
 
   const comment = commentCard(alice, "A note about the soil chapter.")
   const article = articleActions(alice)

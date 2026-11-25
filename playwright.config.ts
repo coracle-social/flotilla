@@ -11,9 +11,9 @@ const deviceNames: Record<string, string> = {
 
 const browserName = process.env.E2E_BROWSER ?? "chromium"
 
-// The relay the suite runs against, the same way: `E2E_RELAY=caravel pnpm test`. The harness picks the
-// backend by the project's name.
-const relayName = process.env.E2E_RELAY ?? "zooid"
+// The relay the suite runs against, named the same way by E2E_RELAY. The harness picks the backend by
+// the project's name.
+const relayName = process.env.E2E_RELAY ?? "caravel"
 
 const device = devices[deviceNames[browserName]]
 

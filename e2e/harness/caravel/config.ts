@@ -17,20 +17,21 @@ export type RelaySettings = {
   push_enabled: boolean
 }
 
-// Each tenant's toml in zooid/docker/config, said in caravel's terms. Every space starts from this one.
+// Each relay's policy, which a scenario never sets. Every space starts from this one.
 const space: RelaySettings = {
   info_name: "space",
   info_description: "Throwaway relay for Flotilla's end-to-end suite.",
   policy_public_read: false,
-  // zooid answers no REQ without nip-42, whatever public_read says.
+  // No REQ is answered without nip-42, whatever public_read says.
   policy_anonymous_read: false,
   policy_public_write: false,
   policy_public_join: true,
   policy_strip_signatures: false,
   groups_enabled: true,
   management_enabled: true,
-  // caravel's default hands every member the claim methods, which no toml does.
+  // caravel's default would hand every member the claim methods.
   members_can_invite: false,
+  // Each of these would have the relay or the client talk to a service the test did not create.
   blossom_enabled: false,
   livekit_enabled: false,
   push_enabled: false,
@@ -55,7 +56,7 @@ export const relaySettings: Record<TenantName, RelaySettings> = {
   outbox: {...open, info_name: "outbox"},
 }
 
-// zooid's member_methods. caravel grants a method to one pubkey at a time, so each is granted on joining.
+// Methods every member holds. caravel grants a method to one pubkey at a time, so each is granted on joining.
 export const memberMethods: Partial<Record<TenantName, string[]>> = {
   delegated: ["allowpubkey"],
 }

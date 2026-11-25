@@ -21,7 +21,7 @@ identities:
   every space, room, event and directory management control is unlocked. A
   member the relay answers with fewer methods gets fewer controls (US-127).
 
-The test architecture is described in `e2e/ARCHITECTURE.md`: real zooid relays in
+The test architecture is described in `e2e/ARCHITECTURE.md`: real caravel relays in
 docker, with every socket and http request terminated in the test process.
 Services with a mock seam are mocked per scenario. Features that live past a
 boundary with no seam are listed under "Out of scope" below.
@@ -1425,14 +1425,13 @@ Acceptance:
 ### US-134 — Write a public post
 
 As alice, I want to write a post from my own profile or from my network feed, so
-that the people who follow me and the spaces I favorited both see it.
+that the people who follow me see it.
 
 Acceptance:
 
 - "Create post" on her profile and at the top of home's Network section both
   open the same composer.
-- Submitting it publishes the post to her own relays and to every space she
-  favorited, and it appears at the top of her profile's notes.
+- Submitting it publishes the post to her own relays.
 - A toast says the post went out, and offers to open it.
 
 ### US-150 — Post an article or a poll
