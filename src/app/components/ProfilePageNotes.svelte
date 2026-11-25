@@ -20,7 +20,7 @@
 
   const feed = makeProfileFeed(pubkey)
 
-  const {entries, loading, status} = feed
+  const {entries, loading, showReplies, status} = feed
 
   let element: HTMLElement | undefined = $state()
 
@@ -40,7 +40,7 @@
   {:else}
     {#each $entries as entry (entry.key)}
       <div in:fly>
-        <NoteEntry {entry} spaceUrls={$spaceUrls} />
+        <NoteEntry {entry} showReplies={$showReplies} spaceUrls={$spaceUrls} />
       </div>
     {/each}
     <NoteFeedFooter

@@ -98,7 +98,7 @@
         </Button>
         <p class={cx("md:pr-6", {"welshman-content-error": theme === "error"})}>
           {#if $toast.message}
-            {@html renderAsHtml(parse({content: $toast.message}))}
+            {@html renderAsHtml(parse({content: $toast.message})).toString()}
             {#if $toast.action}
               <Button class="button button-link cursor-pointer underline" onclick={onActionClick}>
                 {$toast.action.message}

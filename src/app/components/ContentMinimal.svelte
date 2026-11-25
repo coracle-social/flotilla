@@ -151,7 +151,7 @@
             {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
           </Button>
         {:else}
-          {@html renderAsHtml(parsed)}
+          {@html renderAsHtml(parsed).toString()}
         {/if}
       {/each}
     </div>

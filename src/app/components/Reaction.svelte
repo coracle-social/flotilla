@@ -23,7 +23,7 @@
       {#if isEmoji(parsed)}
         <ContentEmoji value={parsed.value} />
       {:else}
-        {@html renderAsHtml(parsed)}
+        {@html renderAsHtml(parsed).toString()}
       {/if}
     {/each}
   </span>

@@ -24,7 +24,7 @@
     <div class="min-w-0 grow">
       <RelayName {url} class="text-sm font-bold" />
       <div class="welshman-content text-sm">
-        {@html renderAsHtml(parse({content: $notify.message}))}
+        {@html renderAsHtml(parse({content: $notify.message})).toString()}
       </div>
     </div>
     <Button class="shrink-0 text-content-subtle hover:text-content" onclick={dismiss}>

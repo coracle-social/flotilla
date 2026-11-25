@@ -9,7 +9,6 @@ import {
   int,
   now,
   partition,
-  removeUndefined,
   sortBy,
 } from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -32,17 +31,10 @@ import {ENABLE_ZAPS} from "@app/core/env"
 import {followLists, roomLists} from "@app/core/plugins"
 import {groupAuthors, makeAuthorFeed} from "@app/tools/feeds/author"
 import type {AuthorFeed, AuthorGroup} from "@app/tools/feeds/author"
-import {
-  getEntries,
-  getNoteKey,
-  getNoteParentRef,
-  groupByCandidate,
-  groupByNote,
-} from "@app/tools/feeds/cards"
-import type {DrawnEvent, NoteEntry, NoteGroup} from "@app/tools/feeds/cards"
+import {getNoteKey, groupNotes, isNoteEntry} from "@app/tools/feeds/cards"
+import type {NoteEntry, NoteGroup} from "@app/tools/feeds/cards"
 import {includedNoteFacets, includesAnyFacet, whenIncluded} from "@app/tools/feeds/facets"
 import type {FacetCounts, NoteFacet} from "@app/tools/feeds/facets"
-import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/tools/notes"
 import {derivePinnedEvents} from "@app/tools/people/pins"
 import {CONTENT_KINDS, getPublishedTimestamp} from "@app/tools/content"
@@ -51,6 +43,7 @@ export type NoteFeedStatus = "loading" | "ready" | "empty" | "filtered"
 
 export type NoteFeed = {
   entries: Readable<NoteEntry[]>
+  showReplies: Readable<boolean>
   counts: Readable<FacetCounts>
   status: Readable<NoteFeedStatus>
   loading: Readable<boolean>
@@ -116,23 +109,14 @@ const makeNoteFeed = ({
     ? ["notes", "replies", "interactions"]
     : ["notes", "replies"]
 
-  const drawn: Readable<DrawnEvent[]> = derived([pinned, noteSource.events], ([$pinned, $events]) =>
-    [...$pinned, ...$events].map(
-      (event): DrawnEvent => ({event, facet: getNoteParentRef(event) ? "replies" : "notes"}),
-    ),
-  )
-
-  const targets: Readable<EventRef[]> = interactionSource
-    ? derived(interactionSource.events, $events => removeUndefined($events.map(getTargetRef)))
-    : readable([])
-
   // A note the feed can't draw its card without is given up on rather than holding up the feed.
   const resolver = makeNoteResolver({priority: 1})
 
-  const groups: Readable<NoteGroup[]> = derived(
-    [drawn, targets, resolver.notes],
-    ([$drawn, $targets, $resolved]) => groupByNote(groupByCandidate($drawn, $targets), $resolved),
-  )
+  const groups = groupNotes({
+    drawn: derived([pinned, noteSource.events], ([$pinned, $events]) => [...$pinned, ...$events]),
+    interactions: interactionSource?.events ?? readable([]),
+    resolved: resolver.notes,
+  })
 
   const visible = derived([groups, included], ([$groups, $included]) =>
     $groups.filter(group => includesAnyFacet($included, group.facets)),
@@ -158,10 +142,7 @@ const makeNoteFeed = ({
       const cards = derived([groups, pinnedKeys], ([$groups, $pinnedKeys]) =>
         partition(
           entry => $pinnedKeys.has(entry.key),
-          getEntries(
-            $groups.filter(group => includesAnyFacet($included, group.facets)),
-            $included,
-          ),
+          $groups.filter(isNoteEntry).filter(entry => includesAnyFacet($included, entry.facets)),
         ),
       )
 
@@ -178,6 +159,8 @@ const makeNoteFeed = ({
     },
     [] as NoteEntry[],
   )
+
+  const showReplies = derived(included, $included => $included.includes("replies"))
 
   const unresolved = derived([visible, resolver.notes], ([$visible, $resolved]) =>
     $visible.filter(group => !group.note && !$resolved.has(group.key)),
@@ -233,7 +216,7 @@ const makeNoteFeed = ({
     interactionSource?.stop()
   }
 
-  return {entries, counts, status, loading, older, stop}
+  return {entries, showReplies, counts, status, loading, older, stop}
 }
 
 const getInteractionFilters = (authors: string[]) => {

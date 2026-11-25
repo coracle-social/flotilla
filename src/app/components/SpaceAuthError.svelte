@@ -49,7 +49,7 @@
       We received an error from the space indicating you don't have access to <RelayLabel {url} />:
     </p>
     <p class="card welshman-content">
-      {@html renderAsHtml(parse({content: ucFirst(error)}))}
+      {@html renderAsHtml(parse({content: ucFirst(error)})).toString()}
     </p>
   </ModalBody>
   <ModalFooter>

@@ -156,7 +156,7 @@
           {#if command}
             <ContentCommand {command} value={parsed.value} />
           {:else}
-            {@html renderAsHtml(parsed)}
+            {@html renderAsHtml(parsed).toString()}
           {/if}
         {:else if isNewline(parsed) && !isBlock(i - 1)}
           <ContentNewline value={parsed.value} />
@@ -194,7 +194,7 @@
             {event}
             inline={!isBlock(i)} />
         {:else if isEllipsis(parsed) && expandInline}
-          {@html renderAsHtml(parsed)}
+          {@html renderAsHtml(parsed).toString()}
           <button
             type="button"
             class="pointer-events-auto text-sm underline"
@@ -202,7 +202,7 @@
             Read more
           </button>
         {:else}
-          {@html renderAsHtml(parsed)}
+          {@html renderAsHtml(parsed).toString()}
         {/if}
       {/each}
     </div>

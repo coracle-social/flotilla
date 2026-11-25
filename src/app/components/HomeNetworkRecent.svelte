@@ -11,7 +11,7 @@
 
   const feed = makeNetworkFeed()
 
-  const {counts, entries, loading, status} = feed
+  const {counts, entries, loading, showReplies, status} = feed
 
   const follows = $derived($userFollowList?.pubkeys())
 
@@ -44,7 +44,7 @@
       <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
     {:else}
       {#each $entries as entry (entry.key)}
-        <NoteEntry {entry} />
+        <NoteEntry {entry} showReplies={$showReplies} />
       {/each}
       <NoteFeedFooter
         status={$status}
