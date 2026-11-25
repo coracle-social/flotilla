@@ -10,6 +10,7 @@ import {
   getIdFilters,
   hexTags,
   outbox,
+  seen,
   tagValues,
 } from "@welshman/util"
 import type {Filter, IEventRef, TrustedEvent} from "@welshman/util"
@@ -23,13 +24,14 @@ type NoteRequest = {ref: EventRef; replies?: TrustedEvent[]}
 
 type LoadOptions = {priority?: number; signal?: AbortSignal}
 
-// A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
+// A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author, and a comment in a space sits beside its parent.
 const getNoteRelays = (ref: IEventRef, replies: TrustedEvent[] = []) =>
   router
     .get()
     .resolver.relays([
       ...new EventRef(ref).getRelaySelections(),
       ...replies.flatMap(reply => tagValues(hexTags("p"), reply.tags)).map(outbox),
+      ...replies.map(reply => seen(EventRef.fromEvent(reply))),
     ])
 
 /** One note, the very version its ref names, from the repository or else from the relays it lives on. */

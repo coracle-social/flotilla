@@ -10,9 +10,10 @@
   type Props = {
     replies: TrustedEvent[]
     quoteNote: Snippet<[TrustedEvent]>
+    spaceUrls?: string[]
   }
 
-  const {replies, quoteNote}: Props = $props()
+  const {replies, quoteNote, spaceUrls}: Props = $props()
 
   let showEvery = $state(false)
 
@@ -36,6 +37,7 @@
         card={false}
         interactive
         showReply
+        {spaceUrls}
         onOpen={openReply(reply)} />
     {/each}
     {#if shown.length < sorted.length}

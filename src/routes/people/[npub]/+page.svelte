@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import cx from "classnames"
   import {goto} from "$app/navigation"
   import type {Filter} from "@welshman/util"
   import {ROOMS, NOTE, FOLLOWS} from "@welshman/util"
@@ -7,6 +8,7 @@
   import {PinLists} from "@welshman/app"
   import Page from "@lib/components/Page.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import ScrollToTop from "@lib/components/ScrollToTop.svelte"
   import ProfilePage from "@app/components/ProfilePage.svelte"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
@@ -26,6 +28,10 @@
   const {params}: PageProps = $props()
 
   const {pubkey} = pages.profile.decode(params)
+
+  const isSelf = $derived($user.pubkey === pubkey)
+
+  let element: Element | undefined = $state()
 
   onMount(async () => {
     if (!pubkey) {
@@ -67,9 +73,11 @@
 </script>
 
 <Page>
-  <PageContent class="p-0 md:p-4">
+  <PageContent bind:element class="p-0 md:p-4">
     {#if pubkey}
       <ProfilePage {pubkey} />
     {/if}
   </PageContent>
+  <!-- Your own profile has the create post FAB in this corner on a phone, so the scroll button goes above it. -->
+  <ScrollToTop {element} class={cx({"max-md:bottom-20": isSelf})} />
 </Page>

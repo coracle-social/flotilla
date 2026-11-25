@@ -4,6 +4,7 @@ import {
   HOUR,
   MONTH,
   countBy,
+  difference,
   identity,
   int,
   now,
@@ -11,17 +12,26 @@ import {
   removeUndefined,
   sortBy,
 } from "@welshman/lib"
-import type {Maybe, MaybeAsync} from "@welshman/lib"
-import {EventRef, GENERIC_REPOST, NOTE, REACTION, REPOST, ZAP_RECEIPT} from "@welshman/util"
+import type {Maybe} from "@welshman/lib"
+import {
+  EventRef,
+  GENERIC_REPOST,
+  HIGHLIGHT,
+  NOTE,
+  REACTION,
+  REPOST,
+  ZAP_RECEIPT,
+} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
-import {appendOnly} from "@lib/order"
+import {appendOnly, strictOrder} from "@lib/order"
 import {combinePagers} from "@lib/pager"
 import type {Pager, PagerStatus} from "@lib/pager"
+import {makeCommentFilter} from "@lib/util"
 import {app} from "@app/core/app"
 import {ENABLE_ZAPS} from "@app/core/env"
-import {followLists} from "@app/core/plugins"
-import {makeAuthorFeed} from "@app/tools/feeds/author"
-import type {AuthorFeed} from "@app/tools/feeds/author"
+import {followLists, roomLists} from "@app/core/plugins"
+import {groupAuthors, makeAuthorFeed} from "@app/tools/feeds/author"
+import type {AuthorFeed, AuthorGroup} from "@app/tools/feeds/author"
 import {
   getEntries,
   getNoteKey,
@@ -94,13 +104,13 @@ const makeNoteFeed = ({
   interactionSource,
   pinned = readable<TrustedEvent[]>([]),
   included = readable<NoteFacet[]>(["notes", "replies", "interactions"]),
-  at,
+  order,
 }: {
   noteSource: AuthorFeed
   interactionSource?: AuthorFeed
   pinned?: Readable<TrustedEvent[]>
   included?: Readable<NoteFacet[]>
-  at: number
+  order: (cards: Readable<NoteEntry[]>) => Readable<NoteEntry[]>
 }): NoteFeed => {
   const sourceFacets: NoteFacet[] = interactionSource
     ? ["notes", "replies", "interactions"]
@@ -141,7 +151,7 @@ const makeNoteFeed = ({
     $pinned => new Set($pinned.map(event => getNoteKey(EventRef.fromEvent(event)))),
   )
 
-  // Each filter is a list of its own, so changing it sorts the cards again; within one, a card keeps its place.
+  // Each filter is a list of its own, so changing it orders the cards afresh.
   const entries = derived(
     included,
     ($included, set) => {
@@ -159,12 +169,7 @@ const makeNoteFeed = ({
         sortBy(entry => -byPublished(entry), $pinnedCards),
       )
 
-      const otherCards = appendOnly(
-        derived(cards, ([, $otherCards]) => $otherCards),
-        entry => entry.key,
-        byPublished,
-        at,
-      )
+      const otherCards = order(derived(cards, ([, $otherCards]) => $otherCards))
 
       return derived([pinnedCards, otherCards], ([$pinnedCards, $otherCards]) => [
         ...$pinnedCards,
@@ -231,14 +236,6 @@ const makeNoteFeed = ({
   return {entries, counts, status, loading, older, stop}
 }
 
-const makeNoteSource = (pubkeys: MaybeAsync<string[]>, at: number, interval: number): AuthorFeed =>
-  makeAuthorFeed({
-    pubkeys,
-    at,
-    interval,
-    getFilters: authors => [{kinds: [NOTE, ...CONTENT_KINDS], authors}],
-  })
-
 const getInteractionFilters = (authors: string[]) => {
   const filters: Filter[] = [{kinds: [REACTION, REPOST, GENERIC_REPOST], authors}]
 
@@ -270,17 +267,28 @@ export const makeNetworkFeed = (): NoteFeed => {
 
   // Follows' interactions are asked for the first time their facet is shown.
   const interactionSource = makeAuthorFeed({
-    pubkeys: whenIncluded("interactions", controller.signal).then(() => follows),
+    route: onGroups =>
+      groupAuthors(
+        whenIncluded("interactions", controller.signal).then(() => follows),
+        onGroups,
+      ),
     at,
     interval: int(HOUR),
     getFilters: getInteractionFilters,
   })
 
+  const noteSource = makeAuthorFeed({
+    route: onGroups => groupAuthors(follows, onGroups),
+    at,
+    interval: int(HOUR),
+    getFilters: authors => [{kinds: [NOTE, ...CONTENT_KINDS], authors}],
+  })
+
   const feed = makeNoteFeed({
-    noteSource: makeNoteSource(follows, at, int(HOUR)),
+    noteSource,
     interactionSource,
     included: includedNoteFacets,
-    at,
+    order: cards => appendOnly(cards, entry => entry.key, byPublished, at),
   })
 
   const stop = () => {
@@ -291,12 +299,47 @@ export const makeNetworkFeed = (): NoteFeed => {
   return {...feed, stop}
 }
 
+// A person's spaces hold posts their outbox may not, and a space that is also in the outbox is asked once.
+const routeProfile = async (pubkey: string, onGroups: (groups: AuthorGroup[]) => void) => {
+  const roomList = await roomLists
+    .get()
+    .load(pubkey)
+    .catch(error => console.error(error))
+  const spaceUrls = roomList ? roomList.urls() : []
+
+  onGroups([{authors: [pubkey], urls: spaceUrls, spares: []}])
+
+  await groupAuthors([pubkey], groups =>
+    onGroups(
+      groups.map(group => ({
+        authors: group.authors,
+        urls: difference(group.urls, spaceUrls),
+        spares: difference(group.spares, spaceUrls),
+      })),
+    ),
+  )
+}
+
+// Comments are asked for only on the kinds the profile draws, which leaves chat out.
+const getProfileFilters = (authors: string[]) => {
+  const kinds = [NOTE, HIGHLIGHT, ...CONTENT_KINDS]
+
+  return [{kinds, authors}, makeCommentFilter(kinds, {authors})]
+}
+
 export const makeProfileFeed = (pubkey: string): NoteFeed => {
   const at = now()
 
-  return makeNoteFeed({
-    noteSource: makeNoteSource([pubkey], at, int(MONTH)),
-    pinned: derivePinnedEvents(pubkey),
+  const noteSource = makeAuthorFeed({
+    route: onGroups => routeProfile(pubkey, onGroups),
     at,
+    interval: int(MONTH),
+    getFilters: getProfileFilters,
+  })
+
+  return makeNoteFeed({
+    noteSource,
+    pinned: derivePinnedEvents(pubkey),
+    order: cards => strictOrder(cards, (a, b) => byPublished(b) - byPublished(a)),
   })
 }

@@ -4,6 +4,7 @@
   import {fly} from "@lib/transition"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
+  import {roomLists} from "@app/core/plugins"
   import {makeProfileFeed} from "@app/tools/feeds/network"
   import {derivePubkeyMuted} from "@app/tools/people/muting"
 
@@ -14,6 +15,8 @@
   const {pubkey}: Props = $props()
 
   const muted = derivePubkeyMuted(pubkey)
+
+  const spaceUrls = $roomLists.urls(pubkey).$
 
   const feed = makeProfileFeed(pubkey)
 
@@ -37,7 +40,7 @@
   {:else}
     {#each $entries as entry (entry.key)}
       <div in:fly>
-        <NoteEntry {entry} />
+        <NoteEntry {entry} spaceUrls={$spaceUrls} />
       </div>
     {/each}
     <NoteFeedFooter

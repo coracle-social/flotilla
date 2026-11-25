@@ -15,17 +15,18 @@ import {relayLists, router} from "@app/core/plugins"
 import {getCompleteEvents, makeTimeline} from "@app/tools/feeds/timeline"
 import type {Timeline} from "@app/tools/feeds/timeline"
 
+// A group's spares are the relays it asks in place of ones that drop out of the feed
+export type AuthorGroup = {authors: string[]; urls: string[]; spares: string[]}
+
 export type AuthorFeedOptions = {
-  pubkeys: MaybeAsync<string[]>
+  // Hands each batch of groups to the feed as it's routed, and settles once every author has a place
+  route: (onGroups: (groups: AuthorGroup[]) => void) => Promise<void>
   getFilters: (authors: string[]) => Filter[]
   at: number
   interval: number
 }
 
 export type AuthorFeed = {events: Readable<TrustedEvent[]>; older: Pager; stop: () => void}
-
-// A group's spares are the relays it asks in place of ones that drop out of the feed
-type AuthorGroup = {authors: string[]; urls: string[]; spares: string[]}
 
 // One selection over every follow lands on the few biggest relays, so each group scores its own.
 const chunkAuthors = (authors: string[]) =>
@@ -51,7 +52,12 @@ const loadRelayLists = (pubkeys: string[]) =>
   )
 
 // Authors whose relay list is known are grouped first, so their groups ask while the rest look for a list.
-const groupAuthors = async (authors: string[], onGroups: (groups: AuthorGroup[]) => void) => {
+export const groupAuthors = async (
+  pubkeys: MaybeAsync<string[]>,
+  onGroups: (groups: AuthorGroup[]) => void,
+) => {
+  const authors = await pubkeys
+
   if (PLATFORM_RELAYS.length > 0) {
     onGroups([await routeAuthors(authors)])
   } else {
@@ -106,7 +112,7 @@ const mergeTimelines = (timelines: Readable<Timeline[]>, at: number) => {
 }
 
 export const makeAuthorFeed = ({
-  pubkeys,
+  route,
   getFilters,
   at,
   interval,
@@ -160,7 +166,7 @@ export const makeAuthorFeed = ({
   }
 
   const start = async () => {
-    await groupAuthors(await pubkeys, addGroups)
+    await route(addGroups)
 
     grouped.set(true)
   }

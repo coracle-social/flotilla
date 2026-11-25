@@ -7,9 +7,10 @@
 
   type Props = {
     entry: NoteEntry
+    spaceUrls?: string[]
   }
 
-  const {entry}: Props = $props()
+  const {entry, spaceUrls}: Props = $props()
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
@@ -17,6 +18,6 @@
 {/snippet}
 
 <div data-component="NoteEntry" class="flex flex-col gap-1">
-  <NoteItem event={entry.note} customActions={quoteNote} showReply showThreadLinks />
-  <ReplyList replies={entry.replies} {quoteNote} />
+  <NoteItem event={entry.note} customActions={quoteNote} showReply showThreadLinks {spaceUrls} />
+  <ReplyList replies={entry.replies} {spaceUrls} {quoteNote} />
 </div>

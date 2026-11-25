@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import cx from "classnames"
-  import {stopPropagation} from "@lib/html"
   import {navigate} from "@app/navigation/navigate"
 
   type Props = {
@@ -18,8 +17,13 @@
 
   const {children, href, external = false, replaceState = false, ...restProps}: Props = $props()
 
-  const go = (e: Event) => {
-    if (!external) {
+  // A modified click opens a new tab or window, which only the browser can do.
+  const isModified = (e: MouseEvent) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+
+  const onClick = (e: MouseEvent) => {
+    e.stopPropagation()
+
+    if (!external && !isModified(e)) {
       e.preventDefault()
 
       navigate(href, {replaceState})
@@ -30,7 +34,7 @@
 <a
   {href}
   {...restProps}
-  onclick={stopPropagation(go)}
+  onclick={onClick}
   class={cx("cursor-pointer", restProps.class)}
   rel={external ? "noopener noreferer" : ""}
   target={external ? "_blank" : ""}>

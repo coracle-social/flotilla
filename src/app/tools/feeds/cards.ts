@@ -1,8 +1,8 @@
 import {groupBy, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {EventRef, NOTE, sortEventsDesc} from "@welshman/util"
+import {EventRef, sortEventsDesc} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
-import {getTargetRef} from "@app/tools/targets"
+import {getTargetRef, isReplyKind} from "@app/tools/targets"
 import type {NoteFacet} from "@app/tools/feeds/facets"
 
 // A card as the feed draws it: a note and the replies under it.
@@ -23,7 +23,7 @@ export type DrawnEvent = {event: TrustedEvent; facet: NoteFacet}
 export const getNoteKey = (ref: IEventRef): string => new EventRef(ref).getAddressOrId() ?? ""
 
 export const getNoteParentRef = (event: TrustedEvent): Maybe<EventRef> => {
-  if (event.kind === NOTE) {
+  if (isReplyKind(event)) {
     return getTargetRef(event)
   }
 }

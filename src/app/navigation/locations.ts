@@ -42,6 +42,13 @@ export const getActivityTarget = (event: TrustedEvent) => {
   return {kind: event.kind, idOrAddress: getIdOrAddress(event)}
 }
 
+// The page an event has in one space, which for a comment is the page of what it's on.
+export const getSpaceEventPath = (event: TrustedEvent, url: string) => {
+  const {kind, idOrAddress} = getActivityTarget(event)
+
+  return pages.makeContentPath(url, kind, idOrAddress) ?? pages.space.path({url})
+}
+
 const getMessagePath = (url: string, event: TrustedEvent) => {
   const h = tagValue(tagSpec("h"), event.tags)
   const at = event.created_at
