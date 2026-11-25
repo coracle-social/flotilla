@@ -101,7 +101,7 @@
     </Button>
   </div>
 {:else if isImage}
-  <Link {external} {href} class="my-2 block">
+  <Link {external} {href} class="my-2 block w-fit">
     <button type="button" onclick={stopPropagation(preventDefault(expand))}>
       <ContentLinkBlockImage {url} {event} class="m-auto max-h-96 rounded-2xl" />
     </button>
@@ -110,9 +110,9 @@
   <ContentLinkFile {url} {event} />
 {:else}
   {#await loadPreview(url)}
-    <Link {external} {href} class="my-2 block">
+    <Link {external} {href} class="my-2 block max-w-xl">
       <div
-        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl border-line">
+        class="border border-solid flex flex-col overflow-hidden leading-normal rounded-2xl border-line">
         <div class="flex flex-col gap-2 p-4">
           <Spinner>
             <span class="overflow-hidden text-ellipsis whitespace-nowrap">{displayUrl(url)}</span>
@@ -121,9 +121,9 @@
       </div>
     </Link>
   {:then preview}
-    <Link {external} {href} class="my-2 block">
+    <Link {external} {href} class="my-2 block max-w-xl">
       <div
-        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl border-line">
+        class="border border-solid flex flex-col overflow-hidden leading-normal rounded-2xl border-line">
         {#if preview.image && !hideImage}
           <img
             alt=""

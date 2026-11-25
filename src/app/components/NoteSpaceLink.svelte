@@ -18,5 +18,5 @@
 
 <Link {href} class="button button-neutral button-xs min-w-0 rounded-full">
   <Icon icon={ArrowRight} size={4} />
-  <span class="truncate">View on <RelayName {url} /></span>
+  <span class="truncate">View on <RelayName {url} class="text-primary" /></span>
 </Link>
