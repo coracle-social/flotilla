@@ -5,6 +5,8 @@ Firebase, Google Services, Plausible, and the ACINQ native secp256k1 library.
 Welshman's optional `nostr-wasm` accelerator uses its pure JavaScript verifier.
 The normal Play/Zapstore build is unchanged.
 
+The build sets `VITE_ENABLE_LOCAL_STT=false`, which removes on-device dictation, since its speech engine is a prebuilt wasm downloaded from Hugging Face. Dictation still works with an OpenRouter key.
+
 Background notifications use `AndroidPushFallbackWorker`: WorkManager polls the
 configured relays about every 15 minutes and posts local notifications. Android
 Doze and background scheduling can delay delivery further.

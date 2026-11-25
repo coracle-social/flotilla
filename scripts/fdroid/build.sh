@@ -8,4 +8,5 @@ pnpm exec tsc --module esnext --moduleResolution bundler --target es2020 \
   --declaration --skipLibCheck --outDir node_modules/nostr-signer-capacitor-plugin/dist/esm \
   .fdroid/signer/src/index.ts
 export VITE_BUILD_HASH=$(cat .fdroid/build-hash)
+export VITE_ENABLE_LOCAL_STT=false
 source scripts/build/app.sh

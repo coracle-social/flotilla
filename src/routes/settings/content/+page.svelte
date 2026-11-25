@@ -25,7 +25,7 @@
   import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
   import {pushToast} from "@app/navigation/toast"
-  import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
+  import {PLATFORM_NAME, HIDE_NOSTR, ENABLE_LOCAL_STT} from "@app/core/env"
   import {flTheme, flThemes, theme} from "@app/tools/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
   import {trackSubmit} from "@app/components/flows/submit"
@@ -295,7 +295,9 @@
           </p>
         {/snippet}
       </Field>
-      <LocalSttSettings />
+      {#if ENABLE_LOCAL_STT}
+        <LocalSttSettings />
+      {/if}
     </div>
     <SettingsFooter {dirty} loading={$loading} {reset} />
   </PageContent>

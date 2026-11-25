@@ -26,6 +26,9 @@ export const ENABLE_PAID_SPACES = Capacitor.getPlatform() !== "ios"
 // Apple doesn't allow selling hosting outside their payment system.
 export const ENABLE_HOSTING = Capacitor.getPlatform() !== "ios"
 
+// F-Droid doesn't allow the speech engine, a prebuilt wasm downloaded at runtime rather than built from source.
+export const ENABLE_LOCAL_STT = env("VITE_ENABLE_LOCAL_STT") !== "false"
+
 export const SIGNER_RELAYS = fromCsv(env("VITE_SIGNER_RELAYS")).map(normalizeRelayUrl)
 
 export const BLOCKED_RELAYS = fromCsv(env("VITE_BLOCKED_RELAYS")).map(normalizeRelayUrl)
