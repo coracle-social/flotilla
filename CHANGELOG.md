@@ -1,5 +1,20 @@
 # Changelog
 
+# 1.16.0
+
+* Show the notes your follows liked, reposted or zapped in the network feed
+* Open a note's thread in a dialog with its parents and replies
+* Show a person's posts and comments from their spaces on their profile
+* Improve space probing and join dialog state
+* Keep audio playing in the background on Android
+* Play shared videos in the content preview
+* Show muted notes behind a card you can reveal
+* Ask for notification permission in a dialog, and fix permission checks in Android release builds
+* Load feeds and room history faster, and stop skipping events from relays that send short pages
+* Explain why an image won't load
+* Link mentions typed without picking a suggestion, and wrap long inline code
+* Turn off on-device dictation in the F-Droid build
+
 # 1.15.1
 
 * Fix app stalling on startup
